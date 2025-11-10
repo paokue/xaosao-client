@@ -1,0 +1,30 @@
+import { useState, useEffect } from "react"
+
+const slogans = [
+    "Find love — not just a date.",
+    "Your perfect match is waiting!",
+    "Love is just a swipe away.",
+    "Connecting hearts, creating magic!",
+    "Where souls meet and hearts unite.",
+    "Discover your happily-ever-after.",
+    "Every love story starts here.",
+    "Find your person, find your peace.",
+];
+
+export function DynamicSlogan() {
+    const [currentSlogan, setCurrentSlogan] = useState(0)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentSlogan((prev) => (prev + 1) % slogans.length)
+        }, 20000)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    return (
+        <h2 className="text-3xl sm:text-7xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-6 font-serif">
+            {slogans[currentSlogan]}
+        </h2>
+    )
+}

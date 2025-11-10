@@ -1,0 +1,793 @@
+import React, { useState } from "react";
+import {
+    X,
+    User,
+    Heart,
+    MapPin,
+    Calendar,
+    Minimize,
+    Maximize,
+    ChevronLeft,
+    ChevronRight,
+    MessageSquareText,
+    LoaderCircle,
+    UserPlus,
+} from "lucide-react";
+import type { Route } from "./+types/discover";
+import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
+
+// swiper
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import Rating from "~/components/ui/rating";
+import { Badge } from "~/components/ui/badge";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+
+// service and backend
+import { capitalize } from "~/utils/functions/textFormat";
+import { calculateAgeFromDOB, calculateDistance } from "~/utils";
+import { getUserTokenFromSession, requireUserSession } from "~/services";
+import type { Gender, IAvailableStatus, IUserImages } from "~/interfaces/base";
+import { createCustomerInteraction, customerAddFriend } from "~/services/interaction.server";
+import type { IHotmodelsResponse, ImodelsResponse, INearbyModelResponse } from "~/interfaces";
+import { getHotModels, getModelsForCustomer, getNearbyModels } from "~/services/model.server";
+
+interface LoaderReturn {
+    models: ImodelsResponse[];
+    hotModels: IHotmodelsResponse[];
+    nearbyModels: INearbyModelResponse[]
+    latitude: number;
+    longitude: number;
+    hasActiveSubscription: boolean;
+}
+
+interface DiscoverPageProps {
+    loaderData: LoaderReturn;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+    const customerId = await requireUserSession(request);
+    const { hasActiveSubscription } = await import("~/services/package.server");
+
+    const latitude = 17;
+    const longitude = 16;
+
+    // Check if customer has active subscription
+    const hasSubscription = await hasActiveSubscription(customerId);
+
+    // Get models for this customer
+    const response = await getModelsForCustomer(customerId);
+    const models: ImodelsResponse[] = response.map((model) => ({
+        ...model,
+        gender: model.gender as Gender,
+        available_status: model.available_status as IAvailableStatus,
+    }));
+
+    const res = await getHotModels(customerId);
+    const hotModels: IHotmodelsResponse[] = res.map((model) => ({
+        ...model,
+    }));
+
+    const nearbyModels = await getNearbyModels(customerId as string)
+
+    return {
+        models,
+        hotModels,
+        nearbyModels,
+        latitude,
+        longitude,
+        hasActiveSubscription: hasSubscription,
+    };
+};
+
+export async function action({
+    request,
+}: Route.ActionArgs) {
+    const customerId = await requireUserSession(request)
+    const token = await getUserTokenFromSession(request)
+    const formData = await request.formData();
+    const like = formData.get("like") === "true";
+    const pass = formData.get("pass") === "true";
+    const addFriend = formData.get("isFriend") === "true";
+    const modelId = formData.get("modelId") as string;
+
+    if (request.method === "POST") {
+        if (addFriend === true) {
+            console.log("Add Friend")
+            try {
+                const res = await customerAddFriend(customerId, modelId, token);
+                if (res?.success) {
+                    return redirect(`/dashboard/?toastMessage=Add+friend+successfully!&toastType=success`);
+                }
+            } catch (error: any) {
+                return redirect(`/dashboard/?toastMessage=${error.message}&toastType=error`);
+            }
+        } else {
+            if (like === false && pass === false) return { success: false, error: true, message: "Invalid request action to process!" };
+            const actionType = like === true ? "LIKE" : "PASS"
+            try {
+                const res = await createCustomerInteraction(customerId, modelId, actionType);
+                if (res?.success) {
+                    return redirect(`/dashboard/?toastMessage=Interaction+successfully!&toastType=success`);
+                }
+            } catch (error: any) {
+                return redirect(`/dashboard/?toastMessage=${error.message}&toastType=error`);
+            }
+        }
+    }
+
+    return redirect(`/dashboard/?toastMessage=Invalid+request+method.+Please+try+again+later&toastType=warning`);
+}
+
+export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
+    const navigate = useNavigate();
+    const navigation = useNavigation()
+    const [searchParams] = useSearchParams();
+    const { models, hotModels, nearbyModels, latitude, longitude, hasActiveSubscription } = loaderData;
+    const isSubmitting =
+        navigation.state !== "idle" && navigation.formMethod === "POST"
+
+    // Handler for chat button click with subscription check
+    const handleChatClick = (modelFirstName: string) => {
+        if (!hasActiveSubscription) {
+            navigate("/dashboard/packages?toastMessage=Please+subscribe+to+a+package+to+chat+with+models&toastType=warning");
+        } else {
+            navigate(`/dashboard/chat?id=${modelFirstName}`);
+        }
+    };
+
+    const selectedId = searchParams.get("profileId") || models?.[0]?.id;
+    const selectedProfile = models.find((p) => p.id === selectedId);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const [images, setImages] = React.useState<IUserImages[]>(models?.[0]?.Images ?? []);
+    const [touchEndX, setTouchEndX] = React.useState<number | null>(null)
+    const [touchStartX, setTouchStartX] = React.useState<number | null>(null)
+    const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
+
+    // For toast messages
+    const toastMessage = searchParams.get("toastMessage");
+    const toastType = searchParams.get("toastType");
+    const showToast = (message: string, type: "success" | "error" | "warning" = "success", duration = 3000) => {
+        searchParams.set("toastMessage", message);
+        searchParams.set("toastType", type);
+        searchParams.set("toastDuration", String(duration));
+        navigate({ search: searchParams.toString() }, { replace: true });
+    };
+    React.useEffect(() => {
+        if (toastMessage) {
+            showToast(toastMessage, toastType as any);
+        }
+    }, [toastMessage, toastType]);
+
+    const handlePrev = () => {
+        if (selectedIndex === null) return;
+        setSelectedIndex((prev) => (prev! - 1 + images.length) % images.length)
+    };
+
+    const handleNext = () => {
+        if (selectedIndex === null) return;
+        setSelectedIndex((prev) => (prev! + 1) % images.length)
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStartX(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        setTouchEndX(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchStartX || !touchEndX) return;
+        const distance = touchStartX - touchEndX;
+
+        if (distance > 50) {
+            handleNext();
+        } else if (distance < -50) {
+            handlePrev();
+        }
+
+        setTouchStartX(null);
+        setTouchEndX(null);
+    };
+
+    if (models.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center">
+                    <Heart className="h-16 w-16 text-pink-500 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
+                    <p className="text-muted-foreground">
+                        Check back later for new matches!
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const toggleFullscreen = async () => {
+        const doc: any = document;
+        const docEl: any = document.documentElement;
+
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
+            if (docEl.requestFullscreen) {
+                await docEl.requestFullscreen();
+                setIsFullscreen(true);
+                return;
+            }
+            if (docEl.webkitRequestFullscreen) {
+                await docEl.webkitRequestFullscreen();
+                setIsFullscreen(true);
+                return;
+            }
+            document.body.style.height = "100vh";
+            document.body.style.overflow = "hidden";
+            setIsFullscreen(true);
+        } else {
+            if (doc.exitFullscreen) {
+                await doc.exitFullscreen();
+                setIsFullscreen(false);
+                return;
+            }
+            if (doc.webkitExitFullscreen) {
+                await doc.webkitExitFullscreen();
+                setIsFullscreen(false);
+                return;
+            }
+
+            document.body.style.height = "";
+            document.body.style.overflow = "";
+            setIsFullscreen(false);
+        }
+    };
+
+    const handleProfileClick = (id: string) => {
+        searchParams.set("profileId", id);
+        navigate({ search: searchParams.toString() }, { replace: false });
+    };
+
+    if (isSubmitting) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                <div className="flex items-center justify-center gap-2">
+                    {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
+                    <p className="text-rose-600">Processing....</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-2 sm:space-y-8 p-0 sm:p-6">
+            <div>
+                <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
+                    <div className="space-y-1">
+                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">Online matchers:</h1>
+                    </div>
+                </div>
+                <div
+                    className="px-2 sm:px-0 bg-gray-100 sm:bg-white flex items-center justify-start space-x-8 sm:space-x-10 overflow-x-auto overflow-y-hidden whitespace-nowrap mb-2 sm:mb-0 py-2 sm:py-6"
+                    style={{
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none',
+                    }}
+                >
+                    {models.map((data) => (
+                        <div
+                            key={data.id}
+                            className="flex-shrink-0 cursor-pointer"
+                            onClick={() => handleProfileClick(data.id)}
+                        >
+                            <div
+                                className={`text-center overflow-hidden space-y-3 transition-colors ${selectedProfile?.id === data.id
+                                    ? "text-rose-500 border-b-2 border-rose-500 pb-1"
+                                    : ""
+                                    }`}
+                            >
+                                <div
+                                    className={`border-3 ${selectedProfile?.id === data.id
+                                        ? "border-rose-500"
+                                        : "border-gray-600"
+                                        } rounded-full w-20 h-20 flex items-center justify-center hover:border-rose-500`}
+                                >
+                                    <img
+                                        src={data?.profile || ""}
+                                        alt="Profile"
+                                        className="w-full h-full rounded-full object-cover"
+                                    />
+                                </div>
+                                <p className="text-xs">{data.firstName}&nbsp;{data.lastName}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {selectedProfile ? (
+                    <div className="flex gap-6 p-3 sm:p-0">
+                        <div className="bg-gray-800 rounded-2xl overflow-hidden w-full sm:w-1/2">
+                            <Swiper
+                                modules={[Pagination, Navigation]}
+                                navigation={{
+                                    prevEl: ".custom-prev",
+                                    nextEl: ".custom-next",
+                                }}
+                                pagination={{ clickable: true }}
+                                spaceBetween={10}
+                                className="w-full h-96 custom-swiper1"
+                            >
+                                {selectedProfile?.Images?.map((img: IUserImages) => (
+                                    <SwiperSlide key={img.id}>
+                                        <div className="relative">
+                                            <img
+                                                src={img.name}
+                                                alt={`${img.name}`}
+                                                className="w-full h-96 object-cover cursor-pointer"
+                                                onClick={() => navigate(`/dashboard/user-profile/${selectedProfile.id}`)}
+                                            />
+                                        </div>
+
+                                        <div className="block sm:hidden absolute bottom-8 left-4 text-white gap-4">
+                                            <h3 className="flex items-center justify-start text-md mb-1 text-shadow-lg"><User size={16} />&nbsp;{selectedProfile.firstName}&nbsp;{selectedProfile.lastName}</h3>
+                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><Calendar size={16} />&nbsp;Age: {calculateAgeFromDOB(selectedProfile.dob)} years old</h3>
+                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><MapPin size={16} />&nbsp;Location: {calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} km</h3>
+                                        </div>
+                                        <Form method="post">
+                                            <input type="hidden" name="like" value={selectedProfile.customerAction === "LIKE" ? "true" : "flase"} id="likeInput" />
+                                            <input type="hidden" name="pass" value="false" id="passInput" />
+                                            <input type="hidden" name="modelId" value={selectedProfile.id} />
+                                            <input type="hidden" name="isFriend" value="false" id="isFriend" />
+
+                                            <div className="absolute top-4 right-4 flex sm:hidden space-x-3">
+                                                {selectedProfile?.isContact ?
+                                                    <button
+                                                        type="button"
+                                                        className="cursor-pointer p-2 rounded-full bg-rose-100 text-rose-500 transition-colors"
+                                                        onClick={() => handleChatClick(selectedProfile.firstName)}
+                                                    >
+                                                        <MessageSquareText className="w-4 h-4" />
+                                                    </button>
+                                                    :
+                                                    <button
+                                                        type="submit"
+                                                        className="cursor-pointer bg-gray-700 text-gray-300 p-2 rounded-full hover:bg-rose-100 hover:text-rose-500 transition-colors"
+                                                        onClick={() => {
+                                                            (document.getElementById("isFriend") as HTMLInputElement).value = "true";
+                                                        }}
+                                                    >
+                                                        <UserPlus className="w-4 h-4" />
+                                                    </button>
+                                                }
+                                                <button
+                                                    type="submit"
+                                                    className={`${selectedProfile.customerAction === "LIKE" ? "bg-rose-100 text-rose-500" : "bg-gray-700 text-gray-300"} cursor-pointer p-2 rounded-full  hover:text-rose-500 hover:bg-rose-200 transition-colors`}
+                                                    onClick={() => {
+                                                        (document.getElementById("likeInput") as HTMLInputElement).value = "true";
+                                                        (document.getElementById("passInput") as HTMLInputElement).value = "false";
+                                                    }}
+                                                >
+                                                    <Heart className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="cursor-pointer bg-gray-700 p-2 rounded-full text-white transition-colors"
+                                                    onClick={() => {
+                                                        (document.getElementById("likeInput") as HTMLInputElement).value = "false";
+                                                        (document.getElementById("passInput") as HTMLInputElement).value = "true";
+                                                    }}
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+
+                                            {/* large screen  */}
+                                            <div className="absolute bottom-4 right-4 hidden sm:flex space-x-3">
+                                                {selectedProfile.isContact ?
+                                                    <button
+                                                        type="button"
+                                                        className="cursor-pointer p-2 rounded-full bg-rose-100 text-rose-500 transition-colors"
+                                                        onClick={() => handleChatClick(selectedProfile.firstName)}
+                                                    >
+                                                        <MessageSquareText className="w-4 h-4" />
+                                                    </button>
+                                                    :
+                                                    <button
+                                                        type="submit"
+                                                        className="cursor-pointer bg-gray-700 text-gray-300 p-2 rounded-full hover:bg-rose-100 hover:text-rose-500 transition-colors"
+                                                        onClick={() => {
+                                                            (document.getElementById("isFriend") as HTMLInputElement).value = "true";
+                                                        }}
+                                                    >
+                                                        <UserPlus className="w-4 h-4" />
+                                                    </button>
+                                                }
+                                                <button
+                                                    type="submit"
+                                                    className={`${selectedProfile.customerAction === "LIKE" ? "bg-rose-100 text-rose-500" : "bg-gray-700 text-gray-300"} cursor-pointer p-2 rounded-full  hover:text-rose-500 hover:bg-rose-200 transition-colors`}
+                                                    onClick={() => {
+                                                        (document.getElementById("likeInput") as HTMLInputElement).value = "true";
+                                                        (document.getElementById("passInput") as HTMLInputElement).value = "false";
+                                                    }}
+                                                >
+                                                    <Heart className={`w-4 h-4 ${selectedProfile.customerAction === "LIKE" ? "text-rose-500 fill-rose-500" : ""}`} />
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="cursor-pointer bg-gray-700 p-2 rounded-full text-gray-300 hover:text-rose-500 hover:bg-rose-200 transition-colors"
+                                                    onClick={() => {
+                                                        (document.getElementById("likeInput") as HTMLInputElement).value = "false";
+                                                        (document.getElementById("passInput") as HTMLInputElement).value = "true";
+                                                    }}
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </Form>
+
+                                    </SwiperSlide>
+                                ))}
+
+                                <button className="custom-prev hidden">
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
+                                <button className="custom-next hidden">
+                                    <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </Swiper>
+                        </div>
+
+                        <div className="hidden sm:block w-1/2 rounded-2xl p-6 bg-rose-50 space-y-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-md font-bold text-gray-700 uppercase">
+                                    About - {selectedProfile.firstName}&nbsp;{selectedProfile.lastName}
+                                </h2>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <h3 className="text-sm mb-1">Full Name:</h3>
+                                    <strong className="font-medium">{selectedProfile.firstName}&nbsp;{selectedProfile.lastName}</strong>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm mb-1">Gender:</h3>
+                                    <strong className="font-medium">{selectedProfile.gender}</strong>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm mb-1">Available Status:</h3>
+                                    <strong className="font-medium">{selectedProfile.available_status}</strong>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm mb-1">Age:</h3>
+                                    <strong className="font-medium">{calculateAgeFromDOB(selectedProfile.dob.toLocaleDateString())} Years old</strong>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm mb-1">Rating:</h3>
+                                    <div className="flex items-center">
+                                        {selectedProfile.rating === 0 ?
+                                            <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 px-3 py-1">
+                                                {capitalize("No Rating")}
+                                            </Badge> : <Rating value={selectedProfile.rating} />}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm mb-1">Address:</h3>
+                                    <strong className="font-medium">{selectedProfile.address}</strong>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-sm mb-1">Bio:</h3>
+                                <strong className="font-medium">{selectedProfile.bio}</strong>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-12">
+                        <p className="text-gray-400 text-lg">Click on a profile above to see details</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="flex flex-col items-start justify-start p-3 w-full space-y-4">
+                <div className="flex items-start justify-between w-full mb-2 sm:mb-4">
+                    <div className="space-y-1">
+                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">
+                            Daily Picks For Today:
+                        </h1>
+                        <p className="text-sm font-normal text-gray-600">
+                            Anyone your type here? Don't hesitate to praise! You might not
+                            have another chance to meet them again if you miss this
+                            opportunity.
+                        </p>
+                    </div>
+                </div>
+
+                <Swiper
+                    modules={[Navigation, Pagination]}
+                    navigation={{
+                        prevEl: ".custom-prev",
+                        nextEl: ".custom-next",
+                    }}
+                    pagination={{ clickable: true }}
+                    spaceBetween={20}
+                    breakpoints={{
+                        0: { slidesPerView: 1 },
+                        768: { slidesPerView: 2 },
+                        1024: { slidesPerView: 3 },
+                    }}
+                    className="w-full custom-swiper"
+                >
+                    {hotModels.map((model) => (
+                        <SwiperSlide key={model.id}>
+                            <div className="relative shadow-md bg-white rounded-2xl overflow-hidden cursor-pointer hover:scale-105 transition-transform h-60">
+                                <Form method="post">
+                                    <input type="hidden" name="modelId" value={model.id} />
+                                    <input type="hidden" name="isFriend" value="true" id="isFriend" />
+                                    <div className="relative h-full overflow-hidden">
+                                        <img
+                                            src={model.Images?.[0]?.name ?? ""}
+                                            alt={model.firstName + model.lastName}
+                                            className="w-full h-full object-cover transition-transform duration-300"
+                                            onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                        />
+                                        {model?.isContact ?
+                                            <button
+                                                type="button"
+                                                className="absolute top-4 right-4 rounded-lg py-1.5 px-2 bg-rose-100 text-rose-500  shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                                onClick={() => handleChatClick(model.firstName)}
+                                            >
+                                                <MessageSquareText className="w-4 h-4" />
+                                            </button>
+                                            :
+                                            <button
+                                                type="submit"
+                                                className="absolute top-4 right-4 rounded-lg py-1.5 px-2 bg-gray-700 hover:bg-rose-100 text-gray-300 hover:text-rose-500 shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                                onClick={() => {
+                                                    (document.getElementById("isFriend") as HTMLInputElement).value = "true";
+                                                }}
+                                            >
+                                                <UserPlus className="w-4 h-4" />
+                                            </button>
+                                        }
+
+                                        <div className="absolute top-0 left-4 right-4 text-white transition-all duration-300">
+                                            <div className="flex items-center space-x-3 mt-2">
+                                                <div className="w-12 h-12">
+                                                    <img
+                                                        src={model.profile ?? ""}
+                                                        alt="Profile"
+                                                        className="w-full h-full rounded-full object-cover border-2 border-gray-700"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <h2
+                                                        className="text-sm"
+                                                        style={{
+                                                            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                                                        }}
+                                                    >
+                                                        {model.firstName + " " + model.lastName}
+                                                    </h2>
+                                                    <p
+                                                        className="text-xs text-white"
+                                                        style={{
+                                                            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                                                        }}
+                                                    >
+                                                        Age: {calculateAgeFromDOB(model.dob.toLocaleDateString())} Years
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Form>
+                            </div>
+                        </SwiperSlide>
+                    ))}
+
+                    <button className="custom-prev hidden sm:block cursor-pointer absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white shadow-lg border text-gray-600 hover:bg-gray-50">
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button className="custom-next hidden sm:block cursor-pointer absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white shadow-lg border text-gray-600 hover:bg-gray-50">
+                        <ChevronRight className="h-5 w-5" />
+                    </button>
+                </Swiper>
+            </div>
+
+            <div className="flex flex-col items-start justify-start p-4 w-full space-y-4">
+                <div className="space-y-2">
+                    <h1 className="text-md font-bold text-gray-700 uppercase text-shadow-md">Nearby you:</h1>
+                    <p className="text-sm font-normal text-gray-600">
+                        Discover people in your area who share similar interests and values. These profiles are from users near your location.
+                    </p>
+                </div>
+
+                <div className="hidden sm:block">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                        {nearbyModels?.map((model) => (
+                            <div
+                                key={model.id}
+                                className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden h-auto w-full group"
+                            >
+                                <Form method="post">
+                                    <input type="hidden" name="modelId" value={model.id} />
+                                    {model?.isContact ?
+                                        <button
+                                            type="button"
+                                            className="absolute top-4 right-4 rounded-lg py-1.5 px-2 bg-rose-100 text-rose-500 shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                            onClick={() => navigate(`/dashboard/chat?id=${model.firstName}`)}
+                                        >
+                                            <MessageSquareText className="w-4 h-4" />
+                                        </button>
+                                        :
+                                        <button
+                                            type="submit"
+                                            name="isFriend"
+                                            value="true"
+                                            className="absolute top-4 right-4 rounded-lg py-1.5 px-2 bg-gray-700 hover:bg-rose-100 text-gray-300 hover:text-rose-500 shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                            onClick={() => {
+                                                (document.getElementById("isFriend") as HTMLInputElement).value = "true";
+                                            }}
+                                        >
+                                            <UserPlus className="w-4 h-4" />
+                                        </button>
+                                    }
+                                </Form>
+                                <div className="relative h-full overflow-hidden">
+                                    <div
+                                        onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                        className="w-full h-[30vh]"
+                                    >
+                                        <img
+                                            src={model.Images[0]?.name ?? ""}
+                                            alt={model.firstName}
+                                            className="cursor-pointer w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                    </div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                                    <div className="absolute bottom-4 left-4 right-4 text-white sm:opacity-0 sm:group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 space-y-1">
+                                        <div className="flex items-center gap-2 justify-start">
+                                            <h2
+                                                className="text-md"
+                                                style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
+                                            >
+                                                {model.firstName}&nbsp;{model.lastName},
+                                            </h2>
+                                            <p
+                                                className="text-sm text-white"
+                                                style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
+                                            >
+                                                Age: {calculateAgeFromDOB(model.dob)} Years old
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center text-sm opacity-90 mb-3">
+                                            <MapPin className="h-4 w-4 mr-1 text-rose-500" />
+                                            {model.distance} Km
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="block sm:hidden w-full space-y-8">
+                    {nearbyModels?.map((model) => (
+                        <div key={model.id} className="flex items-start justify-between pb-4 border-b">
+                            <div className="flex items-start justify-start gap-2">
+                                <img
+                                    src={model.profile ?? ""}
+                                    alt="Profile"
+                                    className="w-14 h-14 border-1 border-gray-600 rounded-full object-cover cursor-pointer"
+                                    onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                />
+                                <div className="space-y-0.5">
+                                    <h2
+                                        className="text-md"
+                                    >
+                                        {model.firstName}&nbsp;{model.lastName}
+                                    </h2>
+                                    <div className="flex items-start justify-start gap-2">
+                                        <p
+                                            className="text-sm text-gray-700"
+                                        >
+                                            Age: {calculateAgeFromDOB(model.dob)} Years old,
+                                        </p>
+                                        <div className="flex items-center text-sm opacity-90">
+                                            <MapPin className="h-3 w-3 mr-1 text-rose-500" />
+                                            {model.distance} Km
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start justify-start gap-2 mt-4">
+                                        {model.Images && model.Images.map((image, index) => (
+                                            <img
+                                                key={image.name + index}
+                                                src={image.name ?? ""}
+                                                alt="Profile"
+                                                className="w-24 h-24 rounded-2xl object-cover cursor-pointer"
+                                                onClick={(e) => { setImages(model.Images), setSelectedIndex(index) }}
+                                            />
+                                        ))}
+
+                                        {selectedIndex !== null && (
+                                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+                                                <button
+                                                    className="absolute top-4 right-4 text-white"
+                                                    onClick={() => setSelectedIndex(null)}
+                                                >
+                                                    <X size={32} />
+                                                </button>
+
+                                                <button
+                                                    className="absolute left-4 text-white hidden sm:block"
+                                                    onClick={handlePrev}
+                                                >
+                                                    <ChevronLeft size={40} />
+                                                </button>
+
+                                                <img
+                                                    src={images[selectedIndex].name}
+                                                    alt="Selected"
+                                                    className="h-full sm:max-h-[80vh] w-full sm:max-w-[90vw] object-contain rounded-lg shadow-lg"
+                                                    onTouchStart={handleTouchStart}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={handleTouchEnd}
+                                                />
+
+                                                <button
+                                                    className="absolute right-4 text-white hidden sm:block"
+                                                    onClick={handleNext}
+                                                >
+                                                    <ChevronRight size={40} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Form method="post">
+                                <input type="hidden" name="modelId" value={model.id} />
+                                <input type="hidden" name="isFriend" value="true" id="isFriend" />
+                                {model?.isContact ?
+                                    <button
+                                        type="button"
+                                        className="rounded-lg py-1.5 px-2 bg-rose-100 text-rose-500 shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                        onClick={() => navigate(`/dashboard/chat?id=${model.firstName}`)}
+                                    >
+                                        <MessageSquareText className="w-4 h-4" />
+                                    </button>
+                                    :
+                                    <button
+                                        type="submit"
+                                        name="isFriend"
+                                        value="true"
+                                        className="rounded-lg py-1.5 px-2 bg-gray-700 hover:bg-rose-100 text-gray-300 hover:text-rose-500 shadow-lg transition-all duration-300 cursor-pointer z-10"
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                    </button>
+                                }
+                            </Form>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <button
+                onClick={toggleFullscreen}
+                className="cursor-pointer fixed bottom-16 right-4 sm:bottom-4 sm:right-4 z-50 p-3 rounded-full bg-rose-500 text-white shadow-lg hover:bg-rose-600 transition"
+            >
+                {isFullscreen ? (
+                    <Minimize className="w-5 h-5" />
+                ) : (
+                    <Maximize className="w-5 h-5" />
+                )}
+            </button>
+        </div>
+    );
+}

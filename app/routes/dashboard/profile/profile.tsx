@@ -1,0 +1,461 @@
+import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
+import { AlertCircle, BadgeCheck, Forward, LoaderCircle, Plus, Settings, UserPlus, UserRoundPen } from 'lucide-react';
+
+// components
+import { Badge } from '~/components/ui/badge';
+import { Separator } from '~/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+
+// insterface and services
+import { calculateAgeFromDOB } from '~/utils';
+import { requireUserSession } from '~/services';
+import { createCustomerImage, getCustomerProfile, updateCustomerImage } from '~/services/profile.server';
+import type { ICustomerResponse } from '~/interfaces/customer';
+import React, { useRef } from 'react';
+import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
+import { capitalize, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
+
+interface LoaderReturn {
+    customerData: ICustomerResponse;
+}
+
+interface TransactionProps {
+    loaderData: LoaderReturn;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+    const customerId = await requireUserSession(request)
+    const customerData = await getCustomerProfile(customerId)
+
+    return { customerData }
+}
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+    const customerId = await requireUserSession(request)
+    const formData = await request.formData();
+    const imageId = formData.get("imageId") as string;
+    const imageName = formData.get("imageName") as string;
+    const newFile = formData.get("newFile") as File;
+
+    if (!imageId || !newFile) {
+        return { success: false, error: true, message: "Invalid credentials data!" };
+    }
+    let image = ""
+    if (request.method === "POST") {
+        try {
+            if (newFile && newFile instanceof File && newFile.size > 0) {
+                const buffer = Buffer.from(await newFile.arrayBuffer());
+                const url = await uploadFileToBunnyServer(buffer, newFile.name, newFile.type);
+                image = url;
+            }
+            const res = await createCustomerImage(customerId, image);
+            if (res.id) {
+                return redirect(`/dashboard/profile?toastMessage=Upload+your+image+successfully!&toastType=success`);
+            }
+        } catch (error: any) {
+            console.error("Error insert images:", error);
+
+            if (error?.payload) {
+                return error.payload;
+            }
+            if (error && typeof error === "object" && !Array.isArray(error)) {
+                const keys = Object.keys(error);
+                if (keys.length > 0) {
+                    const firstKey = keys[0];
+                    const firstMessage = (error as Record<string, any>)[firstKey];
+
+                    return {
+                        success: false,
+                        error: true,
+                        message: `${firstKey}: ${firstMessage}`,
+                    };
+                }
+            }
+
+            return {
+                success: false,
+                error: true,
+                message: error || "Failed to insert user image!",
+            };
+        }
+    }
+
+    if (request.method === "PATCH") {
+        try {
+            if (newFile && newFile instanceof File && newFile.size > 0) {
+                if (imageName) {
+                    await deleteFileFromBunny(extractFilenameFromCDNSafe(imageName as string))
+                }
+                const buffer = Buffer.from(await newFile.arrayBuffer());
+                const url = await uploadFileToBunnyServer(buffer, newFile.name, newFile.type);
+                image = url;
+
+            } else {
+                image = formData.get("imageName") as string;
+            }
+            const res = await updateCustomerImage(imageId, customerId, image);
+            if (res.id) {
+                return redirect("/dashboard/profile");
+            }
+
+        } catch (error: any) {
+            console.error("Error updating images:", error);
+            if (error?.payload) {
+                return error.payload;
+            }
+
+            if (error && typeof error === "object" && !Array.isArray(error)) {
+                const keys = Object.keys(error);
+                if (keys.length > 0) {
+                    const firstKey = keys[0];
+                    const firstMessage = (error as Record<string, any>)[firstKey];
+
+                    return {
+                        success: false,
+                        error: true,
+                        message: `${firstKey}: ${firstMessage}`,
+                    };
+                }
+            }
+
+            return {
+                success: false,
+                error: true,
+                message: error || "Failed to update user images!",
+            };
+        }
+    }
+    return { success: false, error: true, message: "Invalid request method!" };
+};
+
+export default function ProfilePage({ loaderData }: TransactionProps) {
+    const navigate = useNavigate();
+    const navigation = useNavigation();
+    const [searchParams] = useSearchParams();
+    const fetcher = useFetcher();
+    const actionData = useActionData<typeof action>()
+    const { customerData } = loaderData;
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedImageId, setSelectedImageId] = React.useState<string | null>(null);
+    const [selectedImageName, setSelectedImageName] = React.useState<string | null>(null);
+
+    const DEFAULT_IMAGE = "https://coffective.com/wp-content/uploads/2018/06/default-featured-image.png.jpg";
+    const isLoading = navigation.state === "loading";
+    const isUpdating =
+        navigation.state !== "idle" && navigation.formMethod === "PATCH"
+    const isSubmitting =
+        navigation.state !== "idle" && navigation.formMethod === "POST"
+
+    // For toast messages
+    const toastMessage = searchParams.get("toastMessage");
+    const toastType = searchParams.get("toastType");
+    const showToast = (message: string, type: "success" | "error" | "warning" = "success", duration = 3000) => {
+        searchParams.set("toastMessage", message);
+        searchParams.set("toastType", type);
+        searchParams.set("toastDuration", String(duration));
+        navigate({ search: searchParams.toString() }, { replace: true });
+    };
+    React.useEffect(() => {
+        if (toastMessage) {
+            showToast(toastMessage, toastType as any);
+        }
+    }, [toastMessage, toastType]);
+
+    const makeColumn = (images: { id: string; name: string }[]) => {
+        const slots = [...images];
+        while (slots.length < 3) {
+            slots.push({ id: `placeholder-${slots.length}`, name: DEFAULT_IMAGE });
+        }
+        return slots.slice(0, 3);
+    };
+
+    const firstCol = makeColumn(customerData.Images.slice(0, Math.ceil(customerData.Images.length / 2)));
+    const secondCol = makeColumn(customerData.Images.slice(Math.ceil(customerData.Images.length / 2)));
+
+    const handleAddNew = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0] && selectedImageId && selectedImageName) {
+            const file = e.target.files[0];
+
+            const formData = new FormData();
+            formData.append("imageId", selectedImageId);
+            formData.append("imageName", selectedImageName);
+            formData.append("newFile", file);
+
+            // Check if imageId starts with "placeholder"
+            const method = selectedImageId.startsWith("placeholder") ? "post" : "patch";
+
+            fetcher.submit(formData, {
+                method,
+                encType: "multipart/form-data",
+                action: "/dashboard/profile",
+            });
+        }
+    };
+
+    if (isSubmitting || isUpdating) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
+                    {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : ""}
+                    <p className="text-gray-600">Processing....</p>
+                </div>
+            </div>
+        );
+    }
+
+    const renderImage = (image: { id: string; name: string }, index: number, sizePattern: string[]) => {
+        const sizeClass = sizePattern[index % sizePattern.length];
+        return (
+            <div
+                key={image.id}
+                className="relative w-full group cursor-pointer overflow-hidden rounded-lg"
+            >
+                <img
+                    src={image.name}
+                    alt={`Profile ${index + 1}`}
+                    className={`w-full ${sizeClass} object-cover shadow-sm transition-transform duration-300 ease-in-out group-hover:scale-105`}
+                />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition gap-2">
+                    <button
+                        type="button"
+                        className="text-rose-500 bg-rose-100 border border-rose-300 rounded-sm px-2 py-1 text-xs"
+                        onClick={() => {
+                            setSelectedImageId(image.id);
+                            setSelectedImageName(image.name);
+                            handleAddNew();
+                        }}
+                    >
+                        <Plus size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+
+    if (isLoading) {
+        return (
+            <div className="h-11/12 flex justify-center items-center min-h-[200px]">
+                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; Loading...
+            </div>
+        )
+    }
+
+    return (
+        <div className="h-auto sm:min-h-screen bg-white px-0 sm:px-6 py-6 sm:py-2">
+            <div className="w-full flex flex-col sm:flex-row gap-0 sm:gap-2 bg-white h-auto sm:h-full">
+                <div className="w-full sm:w-5/12 p-0 sm:p-2 border-r space-y-2">
+                    <div className="flex items-start justify-between sm:justify-end px-4">
+                        <div className="flex sm:hidden items-center">
+                            {/* <UserPlus className="w-5 h-5 text-gray-500 cursor-pointer" /> */}
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <Forward className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/dashboard/profile-share/userid")} />
+                            <Settings className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/dashboard/setting")} />
+                        </div>
+                    </div>
+                    <div className="rounded-md flex items-center justify-center flex-col space-y-2 sm:space-y-4 px-2 sm:px-4">
+                        <div className="w-[100px] sm:w-[130px] h-[100px] sm:h-[130px] border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
+                            <img
+                                src={customerData.profile}
+                                alt="Profile"
+                                className="w-full h-full rounded-full object-cover cursor-pointer"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2 text-center ml-10">
+                            <div className="flex items-center justify-center gap-2 mb-1 px-4 py-0.5 rounded-full bg-gray-100">
+                                <h2 className="text-md sm:text-lg text-gray-800">{customerData.firstName}&nbsp;{customerData.lastName}</h2>
+                                <BadgeCheck className="w-4 h-4 text-rose-500" />
+                            </div>
+                            <div
+                                className="flex items-center justify-center gap-2 mb-1 px-4 py-2 rounded-full bg-gray-100 cursor-pointer hover:bg-gray-200"
+                                onClick={() => navigate(`/dashboard/profile-edit/${customerData.id}`)}
+                            >
+                                <UserRoundPen className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between w-full">
+                            <div className="w-full text-center border-r">
+                                <div className="text-xl text-black mb-1">{customerData.interactions.passCount}</div>
+                                <div className="text-xs text-rose-600 uppercase font-bold">Pass you</div>
+                            </div>
+                            <div className="w-full text-center border-r">
+                                <div className="text-xl text-black mb-1">{customerData.interactions.likeCount}</div>
+                                <div className="text-xs text-rose-600 uppercase font-bold">Like you</div>
+                            </div>
+                            <div className="w-full text-center">
+                                <div className="text-xl text-black mb-1">2,000</div>
+                                <div className="text-xs text-rose-600 uppercase font-bold">Matches</div>
+                            </div>
+                        </div>
+
+                        {/* Desktop screen  */}
+                        <div className="hidden sm:block">
+                            <Separator />
+                        </div>
+                        <div className="w-full hidden sm:flex items-start justify-start flex-col space-y-2 text-sm">
+                            <h3 className="text-md text-gray-800 font-bold">Personal Information:</h3>
+                            <p><strong>ID:</strong> {customerData.number}</p>
+                            <p><strong>Fullname:</strong> {customerData.firstName}&nbsp;{customerData.lastName}</p>
+                            <p><strong>Age:</strong> {calculateAgeFromDOB(customerData.dob)} years old</p>
+                            <p><strong>Gender:</strong> {customerData.gender}</p>
+                            <p><strong>Whatsapp:</strong> {customerData.whatsapp}</p>
+                            <div><strong>Status:</strong>&nbsp;&nbsp;
+                                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                    {customerData.status}
+                                </Badge>
+                            </div>
+                            <div><strong>Relationship status:</strong>&nbsp;&nbsp;
+                                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                    {customerData.relationshipStatus}
+                                </Badge>
+                            </div>
+                            {customerData.bio && <p><strong>BIO:</strong> {customerData.bio}</p>}
+                            {customerData.career && <p><strong>Career:</strong> {customerData.career}</p>}
+                            {customerData.education && <p><strong>Education:</strong> {customerData.education}</p>}
+                            <p><strong>Be member at:</strong> {customerData.createdAt.toDateString()}</p>
+                        </div>
+
+                        <div className="hidden sm:block">
+                            <Separator />
+                        </div>
+                        <div className="hidden sm:block w-full mb-8">
+                            <h3 className="text-sm font-semibold text-gray-800 mb-3">Interests</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.values(customerData?.interests ?? {}).map((interest, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-purple-100 text-purple-700 border-purple-200 px-3 py-1"
+                                    >
+                                        {interest}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="w-full sm:w-7/12 space-y-4 h-auto sm:h-3/5 p-4 sm:p-2">
+                    <div className="hidden sm:flex space-x-2 rounded-md h-full">
+                        <div>
+                            {actionData?.error && (
+                                <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
+                                    <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                                    <span className="text-red-500 text-sm">
+                                        {capitalize(actionData.message)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="w-full grid grid-cols-2 gap-2 h-fit p-4">
+                            <div className="flex flex-col items-center justify-center space-y-2">
+                                {firstCol.map((image, index) =>
+                                    renderImage(image, index, ["h-48 sm:h-72", "h-48 sm:h-72", "h-48"])
+                                )}
+                            </div>
+
+                            <div className="flex flex-col items-center justify-center space-y-2">
+                                {secondCol.map((image, index) =>
+                                    renderImage(image, index, ["h-48", "h-48 sm:h-72", "h-48 sm:h-72"])
+                                )}
+                            </div>
+
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </div>
+                    </div>
+                    {/* Mobile screen  */}
+                    <div className="block sm:hidden">
+                        <Tabs defaultValue="account" className="w-full">
+                            <TabsList className='w-full'>
+                                <TabsTrigger value="account">Account Info</TabsTrigger>
+                                <TabsTrigger value="interest">Interest</TabsTrigger>
+                                <TabsTrigger value="images">Images</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="account">
+                                <div className="w-full flex items-start justify-start flex-col space-y-2 text-sm p-2">
+                                    <h3 className="text-md text-gray-800 font-bold">Personal Information:</h3>
+                                    <p><strong>ID:</strong> {customerData.number}</p>
+                                    <p><strong>Fullname:</strong> {customerData.firstName}&nbsp;{customerData.lastName}</p>
+                                    <p><strong>Age:</strong> {calculateAgeFromDOB(customerData.dob)} years old</p>
+                                    <p><strong>Gender:</strong> {customerData.gender}</p>
+                                    <p><strong>Whatsapp:</strong> {customerData.whatsapp}</p>
+                                    <div><strong>Status:</strong>&nbsp;&nbsp;
+                                        <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                            {customerData.status}
+                                        </Badge>
+                                    </div>
+                                    <div><strong>Relationship status:</strong>&nbsp;&nbsp;
+                                        <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                            {customerData.relationshipStatus}
+                                        </Badge>
+                                    </div>
+                                    {customerData.bio && <p><strong>BIO:</strong> {customerData.bio}</p>}
+                                    {customerData.career && <p><strong>Career:</strong> {customerData.career}</p>}
+                                    {customerData.education && <p><strong>Education:</strong> {customerData.education}</p>}
+                                    <p><strong>Be member at:</strong> {customerData.createdAt.toDateString()}</p>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="interest">
+                                <div className="w-full mb-8">
+                                    <h3 className="text-sm font-semibold text-gray-800 mb-3">Interests</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {Object.values(customerData?.interests ?? {}).map((interest, index) => (
+                                            <Badge
+                                                key={index}
+                                                variant="outline"
+                                                className="bg-purple-100 text-purple-700 border-purple-200 px-3 py-1"
+                                            >
+                                                {interest}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="images">
+                                <div className="flex space-x-2 rounded-md h-full">
+                                    <div className="w-full grid grid-cols-2 gap-1 sm:gap-2 h-fit p-0 sm:p-4">
+                                        <div className="flex flex-col items-center justify-center space-y-2">
+                                            {firstCol.map((image, index) =>
+                                                renderImage(image, index, ["h-48 sm:h-72", "h-48 sm:h-72", "h-48"])
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-col items-center justify-center space-y-2">
+                                            {secondCol.map((image, index) =>
+                                                renderImage(image, index, ["h-48", "h-48 sm:h-72", "h-48 sm:h-72"])
+                                            )}
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleFileChange}
+                                        />
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+
+                </div >
+            </div >
+        </div >
+    );
+}

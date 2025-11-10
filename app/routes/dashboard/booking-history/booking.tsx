@@ -1,0 +1,254 @@
+import { useNavigate, useNavigation, type LoaderFunction } from "react-router"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search } from "lucide-react"
+
+// components:
+import { Badge } from "~/components/ui/badge"
+import { Button } from "~/components/ui/button"
+import { Card, CardContent, CardHeader } from "~/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
+
+// interface and service
+import { requireUserSession } from "~/services"
+import { capitalize } from "~/utils/functions/textFormat"
+import type { IServiceBooking } from "~/interfaces/service"
+import { getAllMyServiceBookings } from "~/services/booking.server"
+import { calculateAgeFromDOB, formatCurrency, formatDate } from "~/utils"
+
+const statusConfig = {
+   completed: {
+      label: "Confirmed",
+      className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+   },
+   pending: {
+      label: "Pending",
+      className: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+   },
+   confirmed: {
+      label: "Completed",
+      className: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+   },
+   cancelled: {
+      label: "Cancelled",
+      className: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+   },
+   rejected: {
+      label: "Rejected",
+      className: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+   },
+}
+
+interface LoaderReturn {
+   bookInfos: IServiceBooking[];
+}
+
+interface DiscoverPageProps {
+   loaderData: LoaderReturn;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+   const customerId = await requireUserSession(request)
+   const bookInfos = await getAllMyServiceBookings(customerId)
+
+   return { bookInfos };
+}
+
+export default function BookingsList({ loaderData }: DiscoverPageProps) {
+   const navigate = useNavigate()
+   const navigation = useNavigation()
+   const { bookInfos } = loaderData
+   const isLoading = navigation.state === "loading";
+
+   if (isLoading) {
+      return (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-2">
+               <Loader className="w-4 h-4 text-rose-500 animate-spin" />
+               <p className="text-rose-600">Loading....</p>
+            </div>
+         </div>
+      );
+   }
+
+   return (
+      <div className="container space-y-2 pt-8 px-4 sm:px-10">
+         <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
+            <div className="space-y-1">
+               <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">Your Love Plans Ahead:</h1>
+               <p className="text-sm font-normal text-gray-600">
+                  Got some dates lined up? Don not let the moment slip away — great connections start with one meeting.
+               </p>
+            </div>
+         </div>
+
+         {bookInfos && bookInfos.length > 0 ? (
+            <div className="w-full grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+               {bookInfos.map((booking) => (
+                  <Card
+                     key={booking.id}
+                     className="border border-rose-100 hover:shadow-md transition-shadow"
+                  >
+                     <CardHeader>
+                        <div className="flex items-start justify-between gap-4">
+                           <div className="space-y-2 flex-1">
+                              <h3 className="text-md leading-tight text-balance">
+                                 {booking.modelService.service.name}
+                              </h3>
+                              <Badge
+                                 variant="outline"
+                                 className={statusConfig[booking.status].className}
+                              >
+                                 {capitalize(booking.status)}
+                              </Badge>
+                           </div>
+
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                 </Button>
+                              </DropdownMenuTrigger>
+
+                              <DropdownMenuContent align="end">
+                                 <DropdownMenuItem
+                                    onClick={() =>
+                                       navigate(`/dashboard/book-service/detail/${booking.id}`)
+                                    }
+                                    className="cursor-pointer"
+                                 >
+                                    View Details
+                                 </DropdownMenuItem>
+
+                                 {booking.isContact && (
+                                    <DropdownMenuItem
+                                       onClick={() =>
+                                          navigate(`/dashboard/chat?id=${booking.model.firstName}`)
+                                       }
+                                       className="cursor-pointer"
+                                    >
+                                       Start Chatting
+                                    </DropdownMenuItem>
+                                 )}
+
+                                 <DropdownMenuItem
+                                    onClick={() =>
+                                       navigate(`/dashboard/book-service/edit/${booking.id}`)
+                                    }
+                                    className="cursor-pointer"
+                                 >
+                                    Edit Booking
+                                 </DropdownMenuItem>
+
+                                 {booking.status === "pending" && (
+                                    <DropdownMenuItem
+                                       className="text-destructive cursor-pointer"
+                                       onClick={() =>
+                                          navigate(`/dashboard/book-service/cancel/${booking.id}`)
+                                       }
+                                    >
+                                       Cancel Booking
+                                    </DropdownMenuItem>
+                                 )}
+
+                                 {["cancelled", "rejected", "completed"].includes(
+                                    booking.status
+                                 ) && (
+                                       <DropdownMenuItem
+                                          className="text-destructive cursor-pointer"
+                                          onClick={() =>
+                                             navigate(`/dashboard/book-service/delete/${booking.id}`)
+                                          }
+                                       >
+                                          Delete Booking
+                                       </DropdownMenuItem>
+                                    )}
+                              </DropdownMenuContent>
+                           </DropdownMenu>
+                        </div>
+                     </CardHeader>
+
+                     <CardContent className="space-y-2 -mt-3">
+                        <div className="flex items-start gap-3">
+                           <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                           <p className="text-sm text-muted-foreground">
+                              {formatDate(String(booking.startDate))}
+                              {booking.endDate && (
+                                 <>
+                                    <span className="text-rose-600"> To </span>
+                                    {formatDate(String(booking.endDate))}
+                                 </>
+                              )}
+                           </p>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                           <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                           <div className="flex gap-2">
+                              <p className="text-sm font-medium text-muted-foreground">
+                                 Duration:
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                 {booking.dayAmount} day{booking.dayAmount !== 1 ? "s" : ""}
+                              </p>
+                           </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                           <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                           <p className="text-sm text-muted-foreground text-pretty">
+                              {booking.location}
+                           </p>
+                        </div>
+
+                        {booking.preferredAttire && (
+                           <div className="flex items-start gap-3">
+                              <Shirt className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                              <p className="text-sm text-muted-foreground">
+                                 {booking.preferredAttire}
+                              </p>
+                           </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                           <DollarSign className="h-4 w-4 text-muted-foreground" />
+                           <span className="text-sm font-medium text-muted-foreground">
+                              Price:
+                           </span>
+                           <span className="text-sm text-muted-foreground">
+                              {formatCurrency(booking.price)}
+                           </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                           <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
+                           <span className="text-sm text-muted-foreground">
+                              {booking.model.firstName + " " + booking.model.lastName} (
+                              {calculateAgeFromDOB(String(booking.model.dob))} years)
+                           </span>
+                        </div>
+                     </CardContent>
+                  </Card>
+               ))}
+            </div>
+         ) : (
+            <div className="w-full p-8 text-center">
+               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search size={24} className="text-gray-400" />
+               </div>
+               <h4 className="text-gray-900 font-medium mb-2">No date bookings yet!</h4>
+               <p className="text-gray-600 text-sm">
+                  Don’t wait too long — your perfect match might just be one booking away!
+               </p>
+            </div>
+         )}
+
+         <button
+            onClick={() => window.open("https://wa.me/8562078856194", "_blank")}
+            className="flex gap-2 cursor-pointer fixed bottom-16 right-4 sm:bottom-6 sm:right-4 z-50 p-3 rounded-lg bg-rose-500 text-white shadow-lg hover:bg-rose-600 transition"
+         >
+            <Headset size={18} className="animate-bounce" />
+            <span className="hidden sm:block">Support</span>
+         </button>
+      </div>
+   )
+}
