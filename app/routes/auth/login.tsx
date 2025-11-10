@@ -2,6 +2,7 @@ import type { Route } from "./+types/login"
 import { useState, useEffect } from "react"
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router"
 import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 // components
 import { Label } from "~/components/ui/label"
@@ -47,6 +48,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function SignInPage() {
+    const { t } = useTranslation()
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [showPassword, setShowPassword] = useState(false)
@@ -91,15 +93,15 @@ export default function SignInPage() {
 
                 <div className="space-y-2 mb-6">
                     <h1 className="flex items-center justify-start text-md sm:text-lg font-bold text-white uppercase">
-                        <User className="text-rose-500" />&nbsp;Login To Your Account
+                        <User className="text-rose-500" />&nbsp;{t('login.title')}
                     </h1>
-                    <p className="text-white text-sm">Welcome back! Please enter your details.</p>
+                    <p className="text-white text-sm">{t('login.subtitle')}</p>
                 </div>
 
                 <Form method="post" className="space-y-4 sm:space-y-6">
                     <div>
                         <Label htmlFor="whatsapp" className="text-gray-300 text-sm">
-                            Phone number<span className="text-rose-500">*</span>
+                            {t('login.phoneNumber')}<span className="text-rose-500">*</span>
                         </Label>
                         <Input
                             required
@@ -108,14 +110,14 @@ export default function SignInPage() {
                             id="whatsapp"
                             type="number"
                             name="whatsapp"
-                            placeholder="2078856194"
+                            placeholder={t('login.phonePlaceholder')}
                             className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                         />
                     </div>
 
                     <div>
                         <Label htmlFor="password" className="text-gray-300 text-sm">
-                            Password<span className="text-rose-500">*</span>
+                            {t('login.password')}<span className="text-rose-500">*</span>
                         </Label>
                         <div className="relative mt-1">
                             <Input
@@ -123,7 +125,7 @@ export default function SignInPage() {
                                 id="password"
                                 type={showPassword ? "text" : "password"}
                                 name="password"
-                                placeholder="************"
+                                placeholder={t('login.passwordPlaceholder')}
                                 className="border-white text-white placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
                             />
                             <button
@@ -154,12 +156,12 @@ export default function SignInPage() {
                                 className="w-4 h-4 text-pink-500 bg-gray-900 border-gray-600 rounded focus:ring-pink-500"
                             />
                             <Label htmlFor="remember" className="ml-2 text-sm text-gray-300">
-                                Remember Me
+                                {t('login.rememberMe')}
                             </Label>
                         </div>
 
                         <Link to="/forgot-password" className="text-white hover:text-rose-600 text-sm underline">
-                            Forgot Password?
+                            {t('login.forgotPassword')}
                         </Link>
                     </div>
 
@@ -169,14 +171,14 @@ export default function SignInPage() {
                         className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 text-white py-3 font-medium uppercase"
                     >
                         {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
-                        {isSubmitting ? "Logging in..." : "Log in"}
+                        {isSubmitting ? t('login.loggingIn') : t('login.loginButton')}
                     </Button>
 
                     <div className="flex flex-col sm:flex-row text-center justify-center space-y-2">
                         <div className="space-x-4">
-                            <span className="text-white">I don't have an account yet? </span>
+                            <span className="text-white">{t('login.noAccount')} </span>
                             <Link to="/register" className="text-rose-500 hover:text-rose-600 text-md font-medium hover:underline uppercase">
-                                {isMobile ? "Create  new" : "Create one its Free!"}
+                                {isMobile ? t('login.createAccountMobile') : t('login.createAccount')}
                             </Link>
                         </div>
                     </div>

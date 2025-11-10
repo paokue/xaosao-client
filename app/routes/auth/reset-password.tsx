@@ -2,6 +2,7 @@ import { AlertCircle, ArrowLeft, Heart, LoaderCircle } from "lucide-react"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { useState, useEffect } from "react"
 import type { Route } from "./+types/reset-password"
+import { useTranslation } from "react-i18next"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -51,6 +52,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function ResetPasswordPage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const navigation = useNavigation();
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -109,15 +111,15 @@ export default function ResetPasswordPage() {
                 <div className="space-y-6">
                     <div className="text-center">
                         <h1 className="text-lg font-bold text-rose-500 uppercase">
-                            Reset Password?
+                            {t('resetPassword.title')}
                         </h1>
-                        <p className="text-gray-400">No worries, let's get you back on track!</p>
+                        <p className="text-gray-400">{t('resetPassword.subtitle')}</p>
                     </div>
 
                     <Form method="post" className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-gray-300">
-                                New password
+                                {t('resetPassword.newPassword')}
                             </Label>
                             <Input
                                 id="password"
@@ -140,15 +142,15 @@ export default function ResetPasswordPage() {
                             className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300 uppercase"
                         >
                             {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
-                            {isSubmitting ? "Reseting..." : "Reset"}
+                            {isSubmitting ? t('resetPassword.reseting') : t('resetPassword.reset')}
                         </Button>
                     </Form>
 
                     <div className="text-center pt-4">
                         <p className="text-sm text-gray-400">
-                            Remember your password?{" "}&nbsp;&nbsp;
+                            {t('resetPassword.rememberPassword')}{" "}&nbsp;&nbsp;
                             <Link to="/login" className="text-rose-500 hover:text-rose-600 font-medium hover:underline uppercase hover:underline">
-                                Log In
+                                {t('login.loginButton')}
                             </Link>
                         </p>
                     </div>

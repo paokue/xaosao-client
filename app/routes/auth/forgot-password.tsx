@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
 import { AlertCircle, ArrowLeft, Heart, LoaderCircle } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import { Label } from "~/components/ui/label";
@@ -74,6 +75,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function ForgotPasswordPage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const navigation = useNavigation();
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -171,23 +173,23 @@ export default function ForgotPasswordPage() {
                     <div className="space-y-6">
                         <div className="text-center">
                             <h1 className="text-xl font-bold text-rose-500 uppercase">
-                                Forgot Password?
+                                {t('forgotPassword.title')}
                             </h1>
                             <p className="text-gray-400">
-                                No worries, let's get you back on track!
+                                {t('forgotPassword.subtitle')}
                             </p>
                         </div>
 
                         <Form method="post" className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="whatsapp" className="text-gray-300">
-                                    Phone number
+                                    {t('login.phoneNumber')}
                                 </Label>
                                 <Input
                                     id="whatsapp"
                                     type="number"
                                     name="whatsapp"
-                                    placeholder="2078856194"
+                                    placeholder={t('login.phonePlaceholder')}
                                     className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                                     required
                                 />
@@ -205,18 +207,18 @@ export default function ForgotPasswordPage() {
                                 className="w-full border border-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300"
                             >
                                 {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
-                                {isSubmitting ? "Processing..." : " Get OTP Code"}
+                                {isSubmitting ? t('forgotPassword.processing') : t('forgotPassword.getOtpButton')}
                             </Button>
                         </Form>
 
                         <div className="text-center">
                             <p className="text-sm text-gray-400">
-                                Remember your password?{" "}
+                                {t('forgotPassword.rememberPassword')}{" "}
                                 <Link
                                     to="/login"
                                     className="text-rose-500 hover:text-rose-600 font-medium hover:underline ml-2 uppercase hover:underline"
                                 >
-                                    Log In
+                                    {t('login.loginButton')}
                                 </Link>
                             </p>
                         </div>
@@ -225,11 +227,10 @@ export default function ForgotPasswordPage() {
                     <div className="space-y-6">
                         <div className="text-center">
                             <h1 className="text-2xl font-bold text-rose-500 mb-2">
-                                Verify OTP!
+                                {t('forgotPassword.verifyTitle')}
                             </h1>
                             <p className="text-gray-400">
-                                Enter the 6-digit code sent to your phone number to process next
-                                step.
+                                {t('forgotPassword.verifySubtitle')}
                             </p>
                         </div>
 
@@ -265,7 +266,7 @@ export default function ForgotPasswordPage() {
                                 disabled={otp.some((digit) => !digit)}
                             >
                                 {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
-                                {isSubmitting ? "Verifying..." : "Verify"}
+                                {isSubmitting ? t('forgotPassword.verifying') : t('forgotPassword.verify')}
                             </Button>
                         </Form>
 
@@ -294,12 +295,12 @@ export default function ForgotPasswordPage() {
                                     )}
 
                                     <div className="w-full flex items-center justify-center gap-2">
-                                        <p className="text-sm text-gray-400">Don't Receive OTP Code?</p>
+                                        <p className="text-sm text-gray-400">{t('forgotPassword.dontReceive')}</p>
                                         <Button
                                             type="submit"
                                             className="cursor-pointer text-sm text-rose-500 hover:text-rose-600 font-medium"
                                         >
-                                            {isSubmitting ? "Resending..." : "Resend Code"}
+                                            {isSubmitting ? t('forgotPassword.resending') : t('forgotPassword.resendCode')}
                                         </Button>
                                     </div>
                                 </Form>

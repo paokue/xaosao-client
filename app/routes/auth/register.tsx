@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import type { Route } from "./+types/register"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { AlertCircle, ArrowLeft, Eye, EyeOff, Heart, LoaderCircle, User, UserPlus } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -101,6 +102,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function SignUpPage() {
+    const { t } = useTranslation()
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [showPassword, setShowPassword] = useState(false)
@@ -155,15 +157,15 @@ export default function SignUpPage() {
 
                 <div className="space-y-2 mb-6">
                     <h1 className="flex items-center justify-start text-md sm:text-lg font-bold text-white uppercase">
-                        <UserPlus className="text-rose-500" />&nbsp;&nbsp;Create an Account!
+                        <UserPlus className="text-rose-500" />&nbsp;&nbsp;{t('register.title')}
                     </h1>
-                    <p className="text-white text-xs sm:text-sm">It will display on your profile and you can change it later.</p>
+                    <p className="text-white text-xs sm:text-sm">{t('register.subtitle')}</p>
                 </div>
                 <Form method="post" className="space-y-2 sm:space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="firstName" className="text-gray-300 text-sm">
-                                First Name<span className="text-rose-500">*</span>
+                                {t('register.firstName')}<span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 required
@@ -175,7 +177,7 @@ export default function SignUpPage() {
                         </div>
                         <div>
                             <Label htmlFor="lastName" className="text-gray-300 text-sm">
-                                Last Name<span className="text-rose-500">*</span>
+                                {t('register.lastName')}<span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 required
@@ -189,7 +191,7 @@ export default function SignUpPage() {
 
                     <div>
                         <Label htmlFor="username" className="text-gray-300 text-sm">
-                            Username<span className="text-rose-500">*</span>
+                            {t('register.username')}<span className="text-rose-500">*</span>
                         </Label>
                         <div className="relative mt-1">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -205,7 +207,7 @@ export default function SignUpPage() {
 
                     <div>
                         <Label htmlFor="mobile" className="text-gray-300 text-sm">
-                            Mobile Number<span className="text-rose-500">*</span>
+                            {t('register.mobileNumber')}<span className="text-rose-500">*</span>
                         </Label>
                         <div className="flex mt-1 space-x-2">
                             <Select name="telCode" defaultValue="+856">
@@ -240,22 +242,22 @@ export default function SignUpPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="gender" className="text-gray-300 text-sm">
-                                Gender<span className="text-rose-500">*</span>
+                                {t('register.gender')}<span className="text-rose-500">*</span>
                             </Label>
                             <Select name="gender">
                                 <SelectTrigger className="w-full mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm">
-                                    <SelectValue placeholder="Select" />
+                                    <SelectValue placeholder={t('register.selectGender')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="male">Male</SelectItem>
-                                    <SelectItem value="female">Female</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="male">{t('register.male')}</SelectItem>
+                                    <SelectItem value="female">{t('register.female')}</SelectItem>
+                                    <SelectItem value="other">{t('register.other')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
                             <Label htmlFor="dateOfBirth" className="text-gray-300 text-sm">
-                                Date of Birth<span className="text-rose-500">*</span>
+                                {t('register.dateOfBirth')}<span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 required
@@ -270,7 +272,7 @@ export default function SignUpPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="password" className="text-gray-300 text-sm">
-                                Password<span className="text-rose-500">*</span>
+                                {t('login.password')}<span className="text-rose-500">*</span>
                             </Label>
                             <div className="relative mt-1">
                                 <Input
@@ -291,7 +293,7 @@ export default function SignUpPage() {
                         </div>
                         <div>
                             <Label htmlFor="confirmPassword" className="text-gray-300 text-sm">
-                                Confirm Password<span className="text-rose-500">*</span>
+                                {t('register.confirmPassword')}<span className="text-rose-500">*</span>
                             </Label>
                             <div className="relative mt-1">
                                 <Input
@@ -339,12 +341,12 @@ export default function SignUpPage() {
                             className="w-4 h-4 text-rose-500 bg-gray-800 border-gray-600 rounded focus:ring-rose-500"
                         />
                         <Label htmlFor="terms" className="flex items-center justify-start text-gray-300 leading-tight">
-                            I accept <span className="hidden sm:block">all</span>
+                            {t('register.acceptTerms')} <span className="hidden sm:block">{t('register.acceptTermsAll')}</span>
                             <Link to="#" className="text-white hover:text-rose-600 underline">
-                                Terms & conditions
+                                {t('register.termsConditions')}
                             </Link>
                             <Link to="#" className="text-white hover:text-rose-600 underline">
-                                Privacy & policy
+                                {t('register.privacyPolicy')}
                             </Link>
                             <span className="text-rose-500">*</span>
                         </Label>
@@ -356,13 +358,13 @@ export default function SignUpPage() {
                         className={`w-full border border-rose-500 hover:bg-rose-600 text-white py-3 font-medium my-4 uppercase ${isAcceptTerms === false ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                         {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
-                        {isSubmitting ? "Registering...." : "Register"}
+                        {isSubmitting ? t('register.registering') : t('register.registerButton')}
                     </Button>
 
                     <div className="text-center space-x-4">
-                        <span className="text-white">Already have an account? </span>
+                        <span className="text-white">{t('register.alreadyHaveAccount')} </span>
                         <Link to="/login" className="text-rose-500 hover:text-rose-600 font-xs hover:underline uppercase">
-                            Back Login
+                            {t('register.backLogin')}
                         </Link>
                     </div>
                 </Form>

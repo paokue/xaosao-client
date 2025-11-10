@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router"
 // components
 import { Button } from "./ui/button"
 import { ThemeSwitcher } from "./theme-switcher"
+import LanguageSwitcher from "./LanguageSwitcher"
 
 export function Header() {
     const navigate = useNavigate()
@@ -72,6 +73,7 @@ export function Header() {
                     </div>
 
                     <div className="flex items-center space-x-3">
+                        <LanguageSwitcher />
                         <ThemeSwitcher />
                         <Button
                             size="sm"

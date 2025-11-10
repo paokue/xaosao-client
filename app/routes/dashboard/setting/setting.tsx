@@ -9,6 +9,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import LanguageSwitcher from "~/components/LanguageSwitcher";
 
 // service and interface
 import { requireUserSession, validateICustomerSettingInputs, validateReportUpInputs, validateUpdateProfileInputs } from "~/services";
@@ -773,42 +774,21 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                             </span>
                         </div>
                     }
-                    <Form method="patch" className="space-y-4">
-                        <section id="language" className="scroll-mt-6 space-y-2">
-                            <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
-                                <Globe className="text-rose-500" size={20} />
-                                Language Settings
-                            </h3>
-                            <input type="hidden" name="currectAction" defaultValue="defaultLanguage" />
-                            <input type="hidden" name="defaultTheme" defaultValue={customerData.defaultTheme} />
-                            <input type="hidden" name="emailNotification" defaultValue={String(customerData.sendMailNoti)} />
-                            <input type="hidden" name="pushNotification" defaultValue={String(customerData.sendPushNoti)} />
-                            <input type="hidden" name="smsNotification" defaultValue={String(customerData.sendSMSNoti)} />
-                            <input type="hidden" name="twofactorEnabled" value={String(customerData.twofactorEnabled)} />
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
-                                    <select
-                                        defaultValue={customerData.defaultLanguage}
-                                        name="defaultLanguage"
-                                        className="text-sm w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                                    >
-                                        <option value="en">English</option>
-                                        <option value="th">Thai</option>
-                                        <option value="la">Lao</option>
-                                    </select>
-                                </div>
+                    <section id="language" className="scroll-mt-6 space-y-4">
+                        <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
+                            <Globe className="text-rose-500" size={20} />
+                            Language Settings
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
+                                <LanguageSwitcher />
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Changes are saved automatically and applied immediately.
+                                </p>
                             </div>
-                        </section>
-                        <div className="flex items-center justify-end">
-                            <Button
-                                type="submit"
-                                className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
-                            >
-                                Save change
-                            </Button>
                         </div>
-                    </Form>
+                    </section>
 
                     {/* Theme Mode */}
                     {actionData?.error && actionData.showError === "defaultTheme" &&
