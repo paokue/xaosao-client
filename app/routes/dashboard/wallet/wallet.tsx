@@ -13,6 +13,7 @@ import {
     MoreVertical,
 } from 'lucide-react';
 import { Link, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 // Services and Utils
 import { formatCurrency } from '~/utils';
@@ -50,6 +51,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 }
 
 export default function WalletPage({ loaderData }: TransactionProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [searchParams] = useSearchParams();
@@ -78,7 +80,12 @@ export default function WalletPage({ loaderData }: TransactionProps) {
     const [isBalanceVisible, setIsBalanceVisible] = useState(false);
     const [activeTab, setActiveTab] = useState('All');
 
-    const tabs = ['All', 'Approved', 'Pending', 'Failed'];
+    const tabs = [
+        { key: 'All', label: t('wallet.tabs.all') },
+        { key: 'Approved', label: t('wallet.tabs.approved') },
+        { key: 'Pending', label: t('wallet.tabs.pending') },
+        { key: 'Failed', label: t('wallet.tabs.failed') }
+    ];
     const filteredTransactions = transactions.filter(transaction => {
         const matchesTab = activeTab === 'All' ||
             (activeTab === 'Approved' && transaction.status === 'approved') ||
@@ -109,7 +116,7 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Wallet size={24} />
-                                    <span className="font-medium">Total Balance</span>
+                                    <span className="font-medium">{t('wallet.totalBalance')}</span>
                                 </div>
                                 <button
                                     onClick={() => setIsBalanceVisible(!isBalanceVisible)}
@@ -124,12 +131,12 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                                     <h2 className="text-lg">
                                         {isBalanceVisible ? formatCurrency(wallet.totalBalance) : '******'}
                                     </h2>
-                                    <p className="text-white/80 text-sm">Available Balance</p>
+                                    <p className="text-white/80 text-sm">{t('wallet.availableBalance')}</p>
                                 </div>
 
                                 <div className="">
                                     <p className="text-lg">{isBalanceVisible ? formatCurrency(wallet.totalRecharge) : "******"}</p>
-                                    <p className="text-white/80 text-sm">Total Recharge</p>
+                                    <p className="text-white/80 text-sm">{t('wallet.totalRecharge')}</p>
                                 </div>
                             </div>
                         </div>
@@ -139,34 +146,34 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                         className="hidden sm:flex text-gray-500 rounded-lg p-6 items-center justify-center cursor-pointer space-x-2 border-2 border-dotted hover:border-rose-500 hover:text-black"
                     >
                         <PlusIcon className="h-5 w-5" />
-                        <p className="text-md">Top Up</p>
+                        <p className="text-md">{t('wallet.topUpWallet')}</p>
                     </button>
                     <button
                         onClick={() => navigate("/dashboard/wallet-topup")}
                         className="sm:hidden fixed bottom-18 right-4 bg-rose-500 hover:bg-rose-600 text-white rounded-lg py-2 px-4 shadow-lg flex items-center justify-center z-9999"
                     >
-                        <PlusIcon className="h-4 w-4" /> Add fund
+                        <PlusIcon className="h-4 w-4" /> {t('wallet.topUpWallet')}
                     </button>
                 </div>
 
                 <div className="bg-white rounded-md overflow-hidden">
                     <div className="p-4 border-b border-gray-100">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-md sm:text-md font-normal text-gray-600">Transaction histories:</h3>
+                            <h3 className="text-md sm:text-md font-normal text-gray-600">{t('wallet.transactionHistory')}</h3>
                         </div>
 
                         <div className="space-y-4 flex flex-col sm:flex-row items-start justify-between">
                             <div className="flex gap-2 overflow-x-auto">
                                 {tabs.map((tab) => (
                                     <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`cursor-pointer px-4 py-1 rounded-full whitespace-nowrap font-medium text-sm transition-colors ${activeTab === tab
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        className={`cursor-pointer px-4 py-1 rounded-full whitespace-nowrap font-medium text-sm transition-colors ${activeTab === tab.key
                                             ? 'bg-rose-100 text-rose-600 border border-rose-300'
                                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                                             }`}
                                     >
-                                        {tab}
+                                        {tab.label}
                                     </button>
                                 ))}
                             </div>
@@ -225,14 +232,14 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                                                 <DropdownMenuItem className="text-gray-500 text-sm">
                                                     <Link to={`detail/${transaction.id}`} className="flex space-x-2 w-full">
                                                         <EyeIcon className="mr-2 h-3 w-3" />
-                                                        <span>View details</span>
+                                                        <span>{t('wallet.menu.viewDetails')}</span>
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 {transaction.status === "pending" &&
                                                     <DropdownMenuItem className="text-sm">
                                                         <Link to={`edit/${transaction.id}`} className="text-gray-500 flex space-x-2 w-full">
                                                             <FilePenLine className="mr-2 h-3 w-3" />
-                                                            <span>Edit </span>
+                                                            <span>{t('wallet.menu.edit')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                 }
@@ -240,7 +247,7 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                                                     <DropdownMenuItem className="text-sm">
                                                         <Link to={`delete/${transaction.id}`} className="text-gray-500 flex space-x-2 w-full">
                                                             <Trash className="mr-2 h-3 w-3" />
-                                                            <span>Delete</span>
+                                                            <span>{t('wallet.menu.delete')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                 }
@@ -254,8 +261,8 @@ export default function WalletPage({ loaderData }: TransactionProps) {
                                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Search size={24} className="text-gray-400" />
                                 </div>
-                                <h4 className="text-gray-900 font-medium mb-2">No transactions founded!</h4>
-                                <p className="text-gray-600 text-sm">Try adjusting your search or filter criteria</p>
+                                <h4 className="text-gray-900 font-medium mb-2">{t('wallet.emptyTitle')}</h4>
+                                <p className="text-gray-600 text-sm">{t('wallet.emptyMessage')}</p>
                             </div>
                         }
                         {pagination.totalPages > 1 &&

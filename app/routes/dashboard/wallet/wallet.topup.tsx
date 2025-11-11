@@ -2,6 +2,7 @@ import React from "react";
 import type { Route } from "./+types/wallet.topup";
 import { Form, redirect, useActionData, useNavigate, useNavigation } from "react-router";
 import { AlertCircle, ArrowLeft, Building2, Check, CheckCircle, Clock, Copy, Download, LoaderCircle, QrCode, Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -64,6 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function WalletTopUpPage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const navigation = useNavigation();
     const actionData = useActionData<typeof action>()
@@ -89,15 +91,15 @@ export default function WalletTopUpPage() {
     const paymentMethods = [
         {
             id: "qr",
-            name: "QR Code Payment",
+            name: t('wallet.topup.qrCode'),
             icon: QrCode,
-            description: "Scan QR code with your banking app",
+            description: t('wallet.topup.qrCodeDescription'),
         },
         {
             id: "bank",
-            name: "Bank Transfer",
+            name: t('wallet.topup.bankTransfer'),
             icon: Building2,
-            description: "Transfer to our bank account",
+            description: t('wallet.topup.bankTransferDescription'),
         },
     ];
 
@@ -186,7 +188,7 @@ export default function WalletTopUpPage() {
                     <div className="p-0 sm:p-6 space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Amount <span className="text-rose-500">*</span>
+                                {t('wallet.topup.amount')} <span className="text-rose-500">*</span>
                             </label>
                             <div className="relative">
                                 <input
@@ -204,7 +206,7 @@ export default function WalletTopUpPage() {
                                             }
                                         }
                                     }}
-                                    placeholder="0.00"
+                                    placeholder={t('wallet.topup.amountPlaceholder')}
                                     className="block w-full p-4 py-2 border border-gray-300 rounded-md text-md font-semibold focus:ring-1 focus:ring-rose-200 focus:border-rose-500 outline-none transition-colors"
                                 />
                             </div>
@@ -212,7 +214,7 @@ export default function WalletTopUpPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Quick Amount
+                                {t('wallet.topup.quickAmount')}
                             </label>
                             <div className="grid grid-cols-5 gap-2">
                                 {quickAmounts.map((quickAmount) => (
@@ -235,7 +237,7 @@ export default function WalletTopUpPage() {
                     <div className="p-0 sm:p-4 space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Choose Payment Method
+                                {t('wallet.topup.choosePaymentMethod')}
                             </label>
                             <div className="flex items-center justify-between gap-2">
                                 {paymentMethods.map((method) => (
@@ -272,35 +274,35 @@ export default function WalletTopUpPage() {
                                     className="inline-flex items-center space-x-2 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors"
                                 >
                                     <Download className="h-4 w-4" />
-                                    <span className="text-sm">Download QR Code</span>
+                                    <span className="text-sm">{t('wallet.topup.downloadQRCode')}</span>
                                 </button>
                                 <p className="text-sm text-gray-500 mt-2">
-                                    Scan this QR code with your banking app to make payment
+                                    {t('wallet.topup.scanQRInstruction')}
                                 </p>
                             </div>
                         )}
 
                         {paymentMethod === "bank" && (
                             <div className="bg-white border border-gray-200 rounded-xl p-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-4">Bank Transfer Details</h4>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-4">{t('wallet.topup.bankTransferDetails')}</h4>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
-                                            <div className="text-sm text-gray-600">Bank Name</div>
+                                            <div className="text-sm text-gray-600">{t('wallet.topup.bankName')}</div>
                                             <div className="text-sm font-medium">{bankName}</div>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
-                                            <div className="text-sm text-gray-600">Account Name</div>
+                                            <div className="text-sm text-gray-600">{t('wallet.topup.accountName')}</div>
                                             <div className="text-sm font-medium">{accountName}</div>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
-                                            <div className="text-sm text-gray-600">Account Number</div>
+                                            <div className="text-sm text-gray-600">{t('wallet.topup.accountNumber')}</div>
                                             <div className="text-sm font-mono font-medium">{bankAccount}</div>
                                         </div>
                                         <button
@@ -322,7 +324,7 @@ export default function WalletTopUpPage() {
                     <div className="p-0 sm:p-6 space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Payment Voucher <span className="text-rose-500">*</span>
+                                {t('wallet.topup.paymentVoucher')} <span className="text-rose-500">*</span>
                             </label>
                             <input type="text" name="amount" value={amount ?? 0} className="hidden" readOnly />
                             <div
@@ -356,21 +358,21 @@ export default function WalletTopUpPage() {
                                             onClick={removeFile}
                                             className="border border-gray-500 text-sm text-gray-500 hover:text-gray-700 py-1 px-3 rounded-md cursor-pointer"
                                         >
-                                            Remove file
+                                            {t('wallet.topup.removeFile')}
                                         </button>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
                                         <Upload className="h-6 w-6 text-gray-400 mx-auto" />
                                         <div>
-                                            <div className="font-medium text-gray-700">Drop your payment voucher here</div>
-                                            <div className="text-sm text-gray-500 mt-1">or click to browse files</div>
+                                            <div className="font-medium text-gray-700">{t('wallet.topup.dropVoucherHere')}</div>
+                                            <div className="text-sm text-gray-500 mt-1">{t('wallet.topup.orClickToBrowse')}</div>
                                         </div>
                                         <label
                                             htmlFor="file-upload"
                                             className="text-sm inline-block px-4 py-2 bg-rose-500 text-white rounded-lg cursor-pointer hover:bg-rose-600 transition-colors"
                                         >
-                                            Choose File
+                                            {t('wallet.topup.chooseFile')}
                                         </label>
                                     </div>
                                 )}
@@ -387,7 +389,7 @@ export default function WalletTopUpPage() {
                             </div>
 
                             <p className="text-xs text-gray-500 mt-2">
-                                Supported formats: JPG, PNG, PDF (Max 10MB)
+                                {t('wallet.topup.supportedFormats')}
                             </p>
                         </div>
 
@@ -395,8 +397,7 @@ export default function WalletTopUpPage() {
                             <div className="flex items-start space-x-2">
                                 <Clock className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                                 <div className="text-sm text-amber-700">
-                                    <strong>Processing Time:</strong> Your deposit will be processed within 1-2 business
-                                    hours after voucher verification.
+                                    <strong>{t('wallet.topup.processingTime')}</strong> {t('wallet.topup.processingTimeDescription')}
                                 </div>
                             </div>
                         </div>
@@ -409,10 +410,9 @@ export default function WalletTopUpPage() {
                         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                             <CheckCircle className="h-6 w-6 text-green-500" />
                         </div>
-                        <h3 className="text-md font-semibold text-gray-900 mb-2">Top-up Request Submitted!</h3>
+                        <h3 className="text-md font-semibold text-gray-900 mb-2">{t('wallet.topup.requestSubmitted')}</h3>
                         <p className="text-sm text-gray-600">
-                            Your payment voucher has been submitted successfully. We'll process your deposit within 1-2
-                            business hours.
+                            {t('wallet.topup.requestSubmittedDescription')}
                         </p>
                     </div>
                 );
@@ -427,14 +427,14 @@ export default function WalletTopUpPage() {
             <Form method="post" encType="multipart/form-data" className="space-y-4">
                 <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
                     <ArrowLeft className="text-gray-500" size={20} />
-                    <span>Back To Wallet</span>
+                    <span>{t('wallet.topup.backToWallet')}</span>
                 </div>
                 <div className="space-y-1">
                     <h1 className="text-lg text-gray-800">
-                        {step === 1 && "Top-up your wallet balance"}
-                        {step === 2 && "Choose payment method"}
-                        {step === 3 && "Upload payment voucher"}
-                        {step === 4 && "Top-up submitted"}
+                        {step === 1 && t('wallet.topup.steps.amount')}
+                        {step === 2 && t('wallet.topup.steps.payment')}
+                        {step === 3 && t('wallet.topup.steps.upload')}
+                        {step === 4 && t('wallet.topup.steps.confirmation')}
                     </h1>
                 </div>
 
@@ -469,14 +469,14 @@ export default function WalletTopUpPage() {
                                 onClick={() => navigate("/dashboard/wallets")}
                                 className="cursor-pointer px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                             >
-                                Close
+                                {t('wallet.topup.close')}
                             </button>}
                         {step > 1 && step < 4 && (
                             <button
                                 onClick={() => setStep(step - 1)}
                                 className="cursor-pointer px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                             >
-                                Back
+                                {t('wallet.topup.back')}
                             </button>
                         )}
 
@@ -488,7 +488,7 @@ export default function WalletTopUpPage() {
                                 className="flex items-center justify-center text-sm cursor-pointer px-6 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                             >
                                 {step === 3 && isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />}
-                                {step === 3 ? isSubmitting ? "Submiting...." : "Submit" : "Continue"}
+                                {step === 3 ? isSubmitting ? t('wallet.topup.submitting') : t('wallet.topup.submit') : t('wallet.topup.continue')}
                             </button>
                         ) : (
                             <button
@@ -496,7 +496,7 @@ export default function WalletTopUpPage() {
                                 onClick={closeHandler}
                                 className="text-sm cursor-pointer px-6 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition-colors"
                             >
-                                Done
+                                {t('wallet.topup.done')}
                             </button>
                         )}
                     </div>

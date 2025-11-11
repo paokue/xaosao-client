@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import type { Route } from "./+types/wallet.edit"
 import { AlertCircle, ArrowLeft, FileText, LoaderCircle, Upload } from "lucide-react"
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router"
+import { useTranslation } from "react-i18next"
 
 // components
 import Modal from "~/components/ui/model"
@@ -83,6 +84,7 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function TransactionEdit() {
+   const { t } = useTranslation();
    const navigate = useNavigate();
    const navigation = useNavigation();
    const actionData = useActionData<typeof action>()
@@ -133,12 +135,12 @@ export default function TransactionEdit() {
          <Form method="patch" className="space-y-4" encType="multipart/form-data">
             <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
                <ArrowLeft className="block sm:hidden text-gray-500" size={20} />
-               <span>Back To Wallet</span>
+               <span>{t('wallet.edit.backToWallet')}</span>
             </div>
 
             <div>
-               <h3 className="flex items-center text-black text-md font-bold">Transaction Edit</h3>
-               <p className="text-gray-500 text-sm ml-2">You can only edit transaction details while it's pending!</p>
+               <h3 className="flex items-center text-black text-md font-bold">{t('wallet.edit.title')}</h3>
+               <p className="text-gray-500 text-sm ml-2">{t('wallet.edit.subtitle')}</p>
             </div>
 
             <div className="space-y-2 px-2 sm:px-4">
@@ -147,11 +149,11 @@ export default function TransactionEdit() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      <div>
-                        <label className="text-sm font-medium text-gray-500">Transaction ID</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.edit.transactionId')}</label>
                         <p className="mt-1 text-sm font-mono">{transaction?.id}</p>
                      </div>
                      <div>
-                        <label className="text-sm font-medium text-gray-500">Identifier</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.edit.identifier')}</label>
                         <p className="mt-1 text-sm font-mono">{transaction?.identifier}</p>
                      </div>
                   </div>
@@ -160,7 +162,7 @@ export default function TransactionEdit() {
                   <div className="space-y-4">
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                           Amount <span className="text-rose-500">*</span>
+                           {t('wallet.edit.amount')} <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                            <input
@@ -185,7 +187,7 @@ export default function TransactionEdit() {
                      </div>
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
-                           Quick Amount
+                           {t('wallet.edit.quickAmount')}
                         </label>
                         <div className="grid grid-cols-5 gap-2">
                            {quickAmounts.map((quickAmount) => (
@@ -205,16 +207,16 @@ export default function TransactionEdit() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between sm:space-x-3 space-y-2 sm:space-y-0">
                      <div className="flex items-center space-x-3">
                         <div>
-                           <p className="text-sm font-medium">Payment Slip</p>
+                           <p className="text-sm font-medium">{t('wallet.edit.paymentSlip')}</p>
                            {previewSlip ? (
                               <div>
                                  <img src={previewSlip} alt="New slip preview" className="mt-2 h-28 rounded-md border" />
-                                 <p className="text-xs text-green-600 mt-1">New file: {selectedFile?.name}</p>
+                                 <p className="text-xs text-green-600 mt-1">{t('wallet.edit.newFile')}: {selectedFile?.name}</p>
                               </div>
                            ) : transaction?.paymentSlip ? (
                               <img src={transaction.paymentSlip} alt="Existing slip" className="mt-2 h-28 rounded-md border" />
                            ) : (
-                              <p className="text-sm text-gray-500">No slip uploaded</p>
+                              <p className="text-sm text-gray-500">{t('wallet.edit.noSlipUploaded')}</p>
                            )}
                         </div>
                      </div>
@@ -222,12 +224,12 @@ export default function TransactionEdit() {
                         {transaction?.paymentSlip && !previewSlip && (
                            <Button variant="outline" size="sm" onClick={handleDownloadSlip}>
                               <FileText className="h-3 w-3 mr-1" />
-                              Download
+                              {t('wallet.edit.download')}
                            </Button>
                         )}
                         <Button type="button" variant="outline" size="sm" onClick={triggerFileSelect}>
                            <Upload className="h-3 w-3 mr-1" />
-                           Upload New
+                           {t('wallet.edit.uploadNew')}
                         </Button>
                      </div>
                   </div>
@@ -262,7 +264,7 @@ export default function TransactionEdit() {
                   onClick={closeHandler}
                   className="bg-gray-500 text-white hover:bg-gray-600 hover:text-white"
                >
-                  Close
+                  {t('wallet.edit.close')}
                </Button>
                <Button
                   type="submit"
@@ -270,7 +272,7 @@ export default function TransactionEdit() {
                   className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                >
                   {isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />}
-                  {isSubmitting ? "Saving...." : "Save Change"}
+                  {isSubmitting ? t('wallet.edit.saving') : t('wallet.edit.saveChange')}
                </Button>
             </div>
          </Form>

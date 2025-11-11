@@ -1,5 +1,6 @@
 import { Clock, FileText, Check, X, Download, Calendar, ArrowLeft } from "lucide-react"
 import { useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router"
+import { useTranslation } from "react-i18next"
 
 // components
 import Modal from "~/components/ui/model"
@@ -19,6 +20,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function TransactionDetails() {
+   const { t } = useTranslation();
    const navigate = useNavigate();
    const transaction = useLoaderData<ITransactionResponse>();
 
@@ -38,35 +40,35 @@ export default function TransactionDetails() {
          <div className="space-y-4">
             <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
                <ArrowLeft className="block sm:hidden text-gray-500" size={20} />
-               <span>Back To Wallet</span>
+               <span>{t('wallet.detail.backToWallet')}</span>
             </div>
 
             <div className="mt-4 sm:mt-0">
-               <h3 className="flex items-center text-black text-md font-bold">Transaction Details</h3>
-               <p className="text-gray-500 text-sm ml-2">Complete transaction information and processing history</p>
+               <h3 className="flex items-center text-black text-md font-bold">{t('wallet.detail.title')}</h3>
+               <p className="text-gray-500 text-sm ml-2">{t('wallet.detail.subtitle')}</p>
             </div>
             <div className="space-y-2 px-4">
                <div className="space-y-4">
                   <hr />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Transaction ID:</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.detail.transactionId')}:</label>
                         <p className="mt-0 sm:mt-1 text-sm font-mono">{transaction?.id}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Identifier:</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.detail.identifier')}:</label>
                         <p className="mt-0 sm:mt-1 text-sm font-mono">{transaction?.identifier}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Amount:</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.detail.amount')}:</label>
                         <p className="mt-0 sm:mt-1 text-lg font-semibold text-green-600">+ {formatCurrency(transaction?.amount)}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Created At:</label>
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.detail.createdAt')}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{transaction?.createdAt.toDateString()}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Status:</label><br />
+                        <label className="text-sm font-medium text-gray-500">{t('wallet.detail.status')}:</label><br />
                         <button className={`text-center text-xs px-2 py-1 rounded-sm ${transaction.status === 'approved'
                            ? 'bg-green-100 text-green-600'
                            : transaction.status === 'rejected' ? "bg-red-100 text-red-600"
@@ -78,7 +80,7 @@ export default function TransactionDetails() {
                      </div>
                      {transaction?.rejectReason &&
                         <div>
-                           <label className="text-sm font-medium text-gray-500">Reject Reason:</label>
+                           <label className="text-sm font-medium text-gray-500">{t('wallet.detail.rejectReason')}:</label>
                            <p className="mt-1 text-sm">{transaction?.rejectReason}</p>
                         </div>
                      }
@@ -90,7 +92,7 @@ export default function TransactionDetails() {
                            <Calendar className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
-                           <p className="font-medium text-sm">Transaction Created</p>
+                           <p className="font-medium text-sm">{t('wallet.detail.timeline.created')}</p>
                            <p className="text-xs text-gray-500">
                               {transaction?.createdAt.toDateString()}
                            </p>
@@ -103,7 +105,7 @@ export default function TransactionDetails() {
                               <Check className="h-4 w-4 text-green-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Transaction Approved</p>
+                              <p className="font-medium text-sm">{t('wallet.detail.timeline.approved')}</p>
                               <p className="text-xs text-gray-500">
                                  {transaction?.updatedAt.toDateString()}
                               </p>
@@ -117,7 +119,7 @@ export default function TransactionDetails() {
                               <X className="h-4 w-4 text-red-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Transaction Rejected</p>
+                              <p className="font-medium text-sm">{t('wallet.detail.timeline.rejected')}</p>
                               <p className="text-xs text-gray-500">
                                  {transaction?.updatedAt.toDateString()}
                               </p>
@@ -131,8 +133,8 @@ export default function TransactionDetails() {
                               <Clock className="h-4 w-4 text-yellow-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Awaiting Review</p>
-                              <p className="text-xs text-gray-500">Transaction is pending admin approval</p>
+                              <p className="font-medium text-sm">{t('wallet.detail.timeline.pending')}</p>
+                              <p className="text-xs text-gray-500">{t('wallet.detail.timeline.pendingMessage')}</p>
                            </div>
                         </div>
                      )}
@@ -142,13 +144,13 @@ export default function TransactionDetails() {
                      <div className="flex items-center space-x-3">
                         <FileText className="h-8 w-8 text-blue-600" />
                         <div>
-                           <p className="text-sm font-medium">Payment Slip Available</p>
-                           <p className="text-sm text-gray-500">Uploaded with transaction</p>
+                           <p className="text-sm font-medium">{t('wallet.detail.paymentSlip.available')}</p>
+                           <p className="text-sm text-gray-500">{t('wallet.detail.paymentSlip.uploaded')}</p>
                         </div>
                      </div>
                      <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleDownloadSlip}>
                         <Download className="h-4 w-4" />
-                        Download
+                        {t('wallet.detail.download')}
                      </Button>
                   </div>
                </div>
@@ -156,7 +158,7 @@ export default function TransactionDetails() {
 
             <div className="flex justify-end space-x-2 pt-4">
                <Button variant="outline" onClick={closeHandler} className="bg-rose-500 text-white hover:bg-rose-600 hover:text-white">
-                  Close
+                  {t('wallet.detail.close')}
                </Button>
             </div>
          </div >
