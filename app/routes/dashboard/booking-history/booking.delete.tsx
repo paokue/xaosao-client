@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useParams, type ActionFunctionArgs } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -38,6 +39,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 }
 
 export default function DeleteBookingService() {
+   const { t } = useTranslation()
    const { id } = useParams();
    const navigate = useNavigate();
    const navigation = useNavigation();
@@ -50,15 +52,15 @@ export default function DeleteBookingService() {
 
    return (
       <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
-         <h1 className="text-md font-bold">Delete Dating Booking!</h1>
-         <p className="hidden sm:block text-sm text-gray-500 my-2">This action cannot be undone. This will permanently delete:&nbsp; <span className="font-bold text-primary">" {id} "</span></p>
+         <h1 className="text-md font-bold">{t('booking.delete.title')}</h1>
+         <p className="hidden sm:block text-sm text-gray-500 my-2">{t('booking.delete.description')}&nbsp; <span className="font-bold text-primary">" {id} "</span></p>
          <Form method="delete" className="space-y-4 mt-4">
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                <div className="flex items-start space-x-2">
                   <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
                   <div className="text-sm text-red-800">
-                     <p className="font-medium">This action is irreversible!</p>
-                     <p>The date booking records will be permanently deleted.</p>
+                     <p className="font-medium">{t('booking.delete.warningTitle')}</p>
+                     <p>{t('booking.delete.warningMessage')}</p>
                   </div>
                </div>
             </div>
@@ -74,11 +76,11 @@ export default function DeleteBookingService() {
             </div>
             <div className="flex justify-end space-x-2 pt-4">
                <Button type="button" variant="outline" onClick={closeHandler}>
-                  Cancel
+                  {t('booking.delete.cancel')}
                </Button>
                <Button type="submit" variant="destructive" disabled={isSubmitting} className="text-white bg-rose-500">
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Delete
+                  {t('booking.delete.delete')}
                </Button>
             </div>
          </Form>

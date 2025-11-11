@@ -1,5 +1,6 @@
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, type ActionFunctionArgs } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -39,6 +40,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
 
 export default function CancelBookingService() {
+   const { t } = useTranslation()
    const navigate = useNavigate();
    const navigation = useNavigation();
    const actionData = useActionData<typeof action>()
@@ -50,8 +52,8 @@ export default function CancelBookingService() {
 
    return (
       <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
-         <h1 className="text-md font-bold">Cancel Dating Booking!</h1>
-         <p className="hidden sm:block text-md text-gray-500 my-2">Once you cancel this booking, you will not be able to undo it.</p>
+         <h1 className="text-md font-bold">{t('booking.cancel.title')}</h1>
+         <p className="hidden sm:block text-md text-gray-500 my-2">{t('booking.cancel.description')}</p>
          <Form method="patch" className="space-y-4 mt-4">
             <div>
                {actionData?.error && (
@@ -65,11 +67,11 @@ export default function CancelBookingService() {
             </div>
             <div className="flex justify-end space-x-2 pt-4">
                <Button type="button" variant="outline" onClick={closeHandler}>
-                  Close
+                  {t('booking.cancel.close')}
                </Button>
                <Button type="submit" variant="destructive" disabled={isSubmitting} className="text-white bg-rose-500">
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Confirm
+                  {t('booking.cancel.confirm')}
                </Button>
             </div>
          </Form>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Route } from "./+types/discover";
 import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // swiper
 import "swiper/css";
@@ -122,6 +123,7 @@ export async function action({
 }
 
 export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const navigation = useNavigation()
     const [searchParams] = useSearchParams();
@@ -199,9 +201,9 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <Heart className="h-16 w-16 text-pink-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
+                    <h2 className="text-2xl font-bold mb-2">{t('discover.noMoreProfiles')}</h2>
                     <p className="text-muted-foreground">
-                        Check back later for new matches!
+                        {t('discover.checkBackLater')}
                     </p>
                 </div>
             </div>
@@ -254,7 +256,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
                     {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
-                    <p className="text-rose-600">Processing....</p>
+                    <p className="text-rose-600">{t('discover.processing')}</p>
                 </div>
             </div>
         );
@@ -265,7 +267,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
             <div>
                 <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
                     <div className="space-y-1">
-                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">Online matchers:</h1>
+                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">{t('discover.onlineMatchers')}</h1>
                     </div>
                 </div>
                 <div
@@ -331,8 +333,8 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
 
                                         <div className="block sm:hidden absolute bottom-8 left-4 text-white gap-4">
                                             <h3 className="flex items-center justify-start text-md mb-1 text-shadow-lg"><User size={16} />&nbsp;{selectedProfile.firstName}&nbsp;{selectedProfile.lastName}</h3>
-                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><Calendar size={16} />&nbsp;Age: {calculateAgeFromDOB(selectedProfile.dob)} years old</h3>
-                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><MapPin size={16} />&nbsp;Location: {calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} km</h3>
+                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><Calendar size={16} />&nbsp;{t('discover.age')} {calculateAgeFromDOB(selectedProfile.dob)} {t('discover.yearsOld')}</h3>
+                                            <h3 className="flex items-center justify-start text-sm mb-1 text-shadow-lg"><MapPin size={16} />&nbsp;{t('discover.location')} {calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} km</h3>
                                         </div>
                                         <Form method="post">
                                             <input type="hidden" name="like" value={selectedProfile.customerAction === "LIKE" ? "true" : "flase"} id="likeInput" />
@@ -441,54 +443,54 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                         <div className="hidden sm:block w-1/2 rounded-2xl p-6 bg-rose-50 space-y-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-md font-bold text-gray-700 uppercase">
-                                    About - {selectedProfile.firstName}&nbsp;{selectedProfile.lastName}
+                                    {t('discover.about')} - {selectedProfile.firstName}&nbsp;{selectedProfile.lastName}
                                 </h2>
                             </div>
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-sm mb-1">Full Name:</h3>
+                                    <h3 className="text-sm mb-1">{t('discover.fullName')}</h3>
                                     <strong className="font-medium">{selectedProfile.firstName}&nbsp;{selectedProfile.lastName}</strong>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm mb-1">Gender:</h3>
+                                    <h3 className="text-sm mb-1">{t('register.gender')}:</h3>
                                     <strong className="font-medium">{selectedProfile.gender}</strong>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm mb-1">Available Status:</h3>
+                                    <h3 className="text-sm mb-1">{t('discover.availableStatus')}</h3>
                                     <strong className="font-medium">{selectedProfile.available_status}</strong>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm mb-1">Age:</h3>
-                                    <strong className="font-medium">{calculateAgeFromDOB(selectedProfile.dob.toLocaleDateString())} Years old</strong>
+                                    <h3 className="text-sm mb-1">{t('discover.age')}</h3>
+                                    <strong className="font-medium">{calculateAgeFromDOB(selectedProfile.dob.toLocaleDateString())} {t('discover.yearsOld')}</strong>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm mb-1">Rating:</h3>
+                                    <h3 className="text-sm mb-1">{t('discover.rating')}</h3>
                                     <div className="flex items-center">
                                         {selectedProfile.rating === 0 ?
                                             <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 px-3 py-1">
-                                                {capitalize("No Rating")}
+                                                {capitalize(t('discover.noRating'))}
                                             </Badge> : <Rating value={selectedProfile.rating} />}
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm mb-1">Address:</h3>
+                                    <h3 className="text-sm mb-1">{t('discover.address')}</h3>
                                     <strong className="font-medium">{selectedProfile.address}</strong>
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-sm mb-1">Bio:</h3>
+                                <h3 className="text-sm mb-1">{t('discover.bio')}</h3>
                                 <strong className="font-medium">{selectedProfile.bio}</strong>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <p className="text-gray-400 text-lg">Click on a profile above to see details</p>
+                        <p className="text-gray-400 text-lg">{t('discover.clickProfile')}</p>
                     </div>
                 )}
             </div>
@@ -497,12 +499,10 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                 <div className="flex items-start justify-between w-full mb-2 sm:mb-4">
                     <div className="space-y-1">
                         <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">
-                            Daily Picks For Today:
+                            {t('discover.dailyPicks')}
                         </h1>
                         <p className="text-sm font-normal text-gray-600">
-                            Anyone your type here? Don't hesitate to praise! You might not
-                            have another chance to meet them again if you miss this
-                            opportunity.
+                            {t('discover.dailyPicksDescription')}
                         </p>
                     </div>
                 </div>
@@ -579,7 +579,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                                             textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
                                                         }}
                                                     >
-                                                        Age: {calculateAgeFromDOB(model.dob.toLocaleDateString())} Years
+                                                        {t('discover.age')} {calculateAgeFromDOB(model.dob.toLocaleDateString())} {t('discover.yearsOld')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -601,9 +601,9 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
 
             <div className="flex flex-col items-start justify-start p-4 w-full space-y-4">
                 <div className="space-y-2">
-                    <h1 className="text-md font-bold text-gray-700 uppercase text-shadow-md">Nearby you:</h1>
+                    <h1 className="text-md font-bold text-gray-700 uppercase text-shadow-md">{t('discover.nearbyYou')}</h1>
                     <p className="text-sm font-normal text-gray-600">
-                        Discover people in your area who share similar interests and values. These profiles are from users near your location.
+                        {t('discover.nearbyDescription')}
                     </p>
                 </div>
 
@@ -662,7 +662,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                                 className="text-sm text-white"
                                                 style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
                                             >
-                                                Age: {calculateAgeFromDOB(model.dob)} Years old
+                                                {t('discover.age')} {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')}
                                             </p>
                                         </div>
                                         <div className="flex items-center text-sm opacity-90 mb-3">
@@ -696,7 +696,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                         <p
                                             className="text-sm text-gray-700"
                                         >
-                                            Age: {calculateAgeFromDOB(model.dob)} Years old,
+                                            {t('discover.age')} {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')},
                                         </p>
                                         <div className="flex items-center text-sm opacity-90">
                                             <MapPin className="h-3 w-3 mr-1 text-rose-500" />

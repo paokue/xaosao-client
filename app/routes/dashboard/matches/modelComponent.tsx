@@ -1,5 +1,6 @@
 import { Form, useNavigate, type FetcherWithComponents } from "react-router";
 import { MapPin, MessageSquareText, Heart, X, UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // swiper imports
 import "swiper/css";
@@ -17,6 +18,7 @@ interface ModelCardProps {
 }
 
 export default function ModelCard({ model }: ModelCardProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     return (
@@ -108,12 +110,12 @@ export default function ModelCard({ model }: ModelCardProps) {
             <div className="absolute bottom-4 left-0 right-0 p-4 text-white z-10">
                 <div className="flex items-center gap-1 mb-1">
                     <MapPin size={14} className="text-rose-500" />
-                    <span className="text-sm font-medium">52 km</span>
+                    <span className="text-sm font-medium">52 {t('matches.km')}</span>
                 </div>
 
                 <h3 className="text-lg mb-1">
                     {model.firstName} {model.lastName},{" "}
-                    <span className="text-sm">{calculateAgeFromDOB(model.dob)} years old.</span>
+                    <span className="text-sm">{calculateAgeFromDOB(model.dob)} {t('matches.yearsOld')}</span>
                 </h3>
                 <p className="text-sm text-white/90 leading-tight">{model.bio}</p>
             </div>

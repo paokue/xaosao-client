@@ -1,5 +1,6 @@
 import { useNavigate, useNavigation, type LoaderFunction } from "react-router"
 import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 // components:
 import { Badge } from "~/components/ui/badge"
@@ -53,6 +54,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 }
 
 export default function BookingsList({ loaderData }: DiscoverPageProps) {
+   const { t } = useTranslation()
    const navigate = useNavigate()
    const navigation = useNavigation()
    const { bookInfos } = loaderData
@@ -63,7 +65,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
             <div className="flex items-center justify-center gap-2">
                <Loader className="w-4 h-4 text-rose-500 animate-spin" />
-               <p className="text-rose-600">Loading....</p>
+               <p className="text-rose-600">{t('booking.loading')}</p>
             </div>
          </div>
       );
@@ -73,9 +75,9 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
       <div className="container space-y-2 pt-8 px-4 sm:px-10">
          <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
             <div className="space-y-1">
-               <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">Your Love Plans Ahead:</h1>
+               <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">{t('booking.title')}</h1>
                <p className="text-sm font-normal text-gray-600">
-                  Got some dates lined up? Don not let the moment slip away — great connections start with one meeting.
+                  {t('booking.subtitle')}
                </p>
             </div>
          </div>
@@ -116,7 +118,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                     }
                                     className="cursor-pointer"
                                  >
-                                    View Details
+                                    {t('booking.viewDetails')}
                                  </DropdownMenuItem>
 
                                  {booking.isContact && (
@@ -126,7 +128,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                        }
                                        className="cursor-pointer"
                                     >
-                                       Start Chatting
+                                       {t('booking.startChatting')}
                                     </DropdownMenuItem>
                                  )}
 
@@ -136,7 +138,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                     }
                                     className="cursor-pointer"
                                  >
-                                    Edit Booking
+                                    {t('booking.editBooking')}
                                  </DropdownMenuItem>
 
                                  {booking.status === "pending" && (
@@ -146,7 +148,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                           navigate(`/dashboard/book-service/cancel/${booking.id}`)
                                        }
                                     >
-                                       Cancel Booking
+                                       {t('booking.cancelBooking')}
                                     </DropdownMenuItem>
                                  )}
 
@@ -159,7 +161,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                              navigate(`/dashboard/book-service/delete/${booking.id}`)
                                           }
                                        >
-                                          Delete Booking
+                                          {t('booking.deleteBooking')}
                                        </DropdownMenuItem>
                                     )}
                               </DropdownMenuContent>
@@ -174,7 +176,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                               {formatDate(String(booking.startDate))}
                               {booking.endDate && (
                                  <>
-                                    <span className="text-rose-600"> To </span>
+                                    <span className="text-rose-600"> {t('booking.to')} </span>
                                     {formatDate(String(booking.endDate))}
                                  </>
                               )}
@@ -185,10 +187,10 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                            <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                            <div className="flex gap-2">
                               <p className="text-sm font-medium text-muted-foreground">
-                                 Duration:
+                                 {t('booking.duration')}:
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                 {booking.dayAmount} day{booking.dayAmount !== 1 ? "s" : ""}
+                                 {booking.dayAmount} {booking.dayAmount !== 1 ? t('booking.days') : t('booking.day')}
                               </p>
                            </div>
                         </div>
@@ -212,7 +214,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                         <div className="flex items-center gap-2">
                            <DollarSign className="h-4 w-4 text-muted-foreground" />
                            <span className="text-sm font-medium text-muted-foreground">
-                              Price:
+                              {t('booking.price')}:
                            </span>
                            <span className="text-sm text-muted-foreground">
                               {formatCurrency(booking.price)}
@@ -223,7 +225,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                            <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
                            <span className="text-sm text-muted-foreground">
                               {booking.model.firstName + " " + booking.model.lastName} (
-                              {calculateAgeFromDOB(String(booking.model.dob))} years)
+                              {calculateAgeFromDOB(String(booking.model.dob))} {t('booking.years')})
                            </span>
                         </div>
                      </CardContent>
@@ -235,9 +237,9 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search size={24} className="text-gray-400" />
                </div>
-               <h4 className="text-gray-900 font-medium mb-2">No date bookings yet!</h4>
+               <h4 className="text-gray-900 font-medium mb-2">{t('booking.emptyTitle')}</h4>
                <p className="text-gray-600 text-sm">
-                  Don’t wait too long — your perfect match might just be one booking away!
+                  {t('booking.emptyMessage')}
                </p>
             </div>
          )}
@@ -247,7 +249,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
             className="flex gap-2 cursor-pointer fixed bottom-16 right-4 sm:bottom-6 sm:right-4 z-50 p-3 rounded-lg bg-rose-500 text-white shadow-lg hover:bg-rose-600 transition"
          >
             <Headset size={18} className="animate-bounce" />
-            <span className="hidden sm:block">Support</span>
+            <span className="hidden sm:block">{t('booking.support')}</span>
          </button>
       </div>
    )

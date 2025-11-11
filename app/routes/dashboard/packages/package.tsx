@@ -6,6 +6,7 @@ import { Navigation, Pagination } from "swiper/modules";
 
 import { Check, ArrowLeft, History } from "lucide-react"
 import { Link, useNavigate, type LoaderFunction } from "react-router"
+import { useTranslation } from "react-i18next";
 
 // components:
 import { Button } from "~/components/ui/button"
@@ -34,6 +35,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function PricingPage({ loaderData }: TransactionProps) {
    const { plans } = loaderData
    // console.log("Plans:::", plans);
+   const { t } = useTranslation();
 
    const navigate = useNavigate()
 
@@ -44,7 +46,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                <Link to="/dashboard/packages" className="flex items-center space-x-2 group">
                   <ArrowLeft className="h-5 w-5 text-rose-500 group-hover:-translate-x-1 transition-transform" />
                   <span className="text-sm font-light text-gray-600 group-hover:text-rose-500 transition-colors">
-                     Back
+                     {t('packages.list.back')}
                   </span>
                </Link>
                <Link
@@ -52,7 +54,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                   className="flex items-center space-x-2 px-4 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition-colors"
                >
                   <History className="h-4 w-4" />
-                  <span className="text-sm font-medium">View History</span>
+                  <span className="text-sm font-medium">{t('packages.list.viewHistory')}</span>
                </Link>
             </div>
          </nav>
@@ -61,11 +63,11 @@ export default function PricingPage({ loaderData }: TransactionProps) {
             <div className="text-center mb-4 sm:mb-12">
                <div className="inline-flex items-center justify-center p-1 bg-gradient-to-r from-rose-100 to-pink-100 rounded-full mb-3">
                   <span className="text-sm font-light text-rose-600 px-4 py-1 bg-white rounded-full shadow-sm">
-                     💕 Choose Your Plan
+                     {t('packages.list.chooseYourPlan')}
                   </span>
                </div>
                <p className="hidden sm:block text-md font-light text-gray-600 max-w-3xl mx-auto mb-8">
-                  Choose the perfect plan for your love journey. Upgrade or downgrade anytime.
+                  {t('packages.list.subtitle')}
                </p>
             </div>
 
@@ -79,13 +81,13 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                      {plan.current ? (
                         <div className="absolute -top-3 right-1/2 -translate-x-1/2">
                            <span className="bg-rose-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                              Current Plan
+                              {t('packages.list.currentPlan')}
                            </span>
                         </div>
                      ) : !plans.some((p) => p.current) && plan.isPopular ? (
                         <div className="absolute -top-3 right-1/2 -translate-x-1/2">
                            <span className="bg-rose-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                              Most Popular
+                              {t('packages.list.mostPopular')}
                            </span>
                         </div>
                      ) : null}
@@ -97,7 +99,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                            <div className="mb-6">
                               <p className="text-xl font-light text-gray-900">
                                  {formatCurrency(plan.price)}
-                                 <span className="text-sm ml-2 text-rose-500">(Save {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)</span>
+                                 <span className="text-sm ml-2 text-rose-500">({t('packages.list.save')} {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)</span>
                               </p>
                            </div>
                         </div>
@@ -121,7 +123,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                            onClick={() => !plan.current && navigate(`/dashboard/payment/${plan.id}`)}
                            disabled={plan.current}
                         >
-                           {plan.current ? "Current Plan" : "Select Plan"}
+                           {plan.current ? t('packages.list.currentPlan') : t('packages.list.selectPlan')}
                         </Button>
                      </CardContent>
                   </Card>
@@ -133,11 +135,11 @@ export default function PricingPage({ loaderData }: TransactionProps) {
             <div className="text-center">
                <div className="inline-flex items-center justify-center p-1 bg-gradient-to-r from-rose-100 to-pink-100 rounded-full mb-3">
                   <span className="text-sm font-light text-rose-600 px-4 py-1 bg-white rounded-full shadow-sm">
-                     💕 Choose Your Plan
+                     {t('packages.list.chooseYourPlan')}
                   </span>
                </div>
                <p className="text-sm font-light text-gray-600 max-w-3xl mx-auto mb-4">
-                  Choose the perfect plan for your love journey. Upgrade or downgrade anytime.
+                  {t('packages.list.subtitle')}
                </p>
             </div>
             <div className="flex items-start justify-start w-full">
@@ -166,7 +168,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                                  <p className="text-md font-light">
                                     {formatCurrency(plan.price)}
                                  </p>
-                                 <span className="text-sm ml-2 text-rose-500">(Save {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)</span>
+                                 <span className="text-sm ml-2 text-rose-500">({t('packages.list.save')} {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)</span>
                               </div>
                            </CardContent>
                         </Card>
@@ -189,7 +191,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                   className={`w-full py-3 rounded-md transition-all duration-300 bg-rose-500 text-white hover:shadow-lg hover:bg-rose-600 hover:text-white`}
                   variant={"outline"}
                >
-                  Countinue
+                  {t('packages.list.continue')}
                </Button>
             </div>
          </div>

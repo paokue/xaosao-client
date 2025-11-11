@@ -2,6 +2,7 @@ import React from "react";
 import type { Route } from "./+types/package";
 import { AlertCircle, CheckCircle, LoaderCircle, Wallet, ArrowRight, Check } from "lucide-react";
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -132,6 +133,7 @@ export default function SubscriptionPaymentPage() {
    const navigation = useNavigation();
    const actionData = useActionData<typeof action>();
    const { plan, wallet, currentSubscription, remainingDays } = useLoaderData<LoaderData>();
+   const { t } = useTranslation();
 
    const [showConfirmation, setShowConfirmation] = React.useState<boolean>(false);
 
@@ -159,33 +161,33 @@ export default function SubscriptionPaymentPage() {
          {!showConfirmation ? (
             <>
                <div className="space-y-4">
-                  <h1 className="text-md text-gray-900">Subscription Payment</h1>
+                  <h1 className="text-md text-gray-900">{t('packages.payment.title')}</h1>
                   {isUpgrade && (
                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
                         <h2 className="text-sm font-semibold text-orange-700 flex items-center space-x-2">
                            <AlertCircle className="h-4 w-4" />
-                           <span>Subscription Upgrade</span>
+                           <span>{t('packages.payment.upgradeTitle')}</span>
                         </h2>
                         <div className="text-sm text-orange-600 space-y-1">
-                           <p>Current Plan: <span className="font-medium text-black">{currentSubscription?.planName}</span></p>
-                           <p>Remaining Days: <span className="font-medium text-black">{remainingDays} days</span></p>
+                           <p>{t('packages.payment.currentPlan')}: <span className="font-medium text-black">{currentSubscription?.planName}</span></p>
+                           <p>{t('packages.payment.remainingDays')}: <span className="font-medium text-black">{remainingDays} days</span></p>
                            <p className="text-xs pt-1">
-                              Your current subscription will be canceled and {remainingDays} remaining day{remainingDays !== 1 ? 's' : ''} will be transferred to the new subscription.
+                              {t('packages.payment.upgradeNote', { days: remainingDays, plural: remainingDays !== 1 ? 's' : '' })}
                            </p>
                         </div>
                      </div>
                   )}
 
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-                     <h2 className="text-sm text-gray-700">New Package Details</h2>
+                     <h2 className="text-sm text-gray-700">{t('packages.payment.newPackageDetails')}</h2>
                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>Name: <span className="text-black font-medium">{plan.name}</span></p>
-                        <p>Price: <span className="text-black font-medium">{formatCurrency(plan.price)}</span></p>
-                        <p>Base Duration: <span className="text-black font-medium">{plan.durationDays} Days</span></p>
+                        <p>{t('packages.payment.name')}: <span className="text-black font-medium">{plan.name}</span></p>
+                        <p>{t('packages.payment.price')}: <span className="text-black font-medium">{formatCurrency(plan.price)}</span></p>
+                        <p>{t('packages.payment.baseDuration')}: <span className="text-black font-medium">{plan.durationDays} {t('packages.payment.days')}</span></p>
                         {isUpgrade && (
                            <>
-                              <p>+ Carried Over: <span className="text-black font-medium">{remainingDays} Days</span></p>
-                              <p className="pt-2 border-t">Total Duration: <span className="text-black font-bold text-base">{totalDays} Days</span></p>
+                              <p>{t('packages.payment.carriedOver')}: <span className="text-black font-medium">{remainingDays} {t('packages.payment.days')}</span></p>
+                              <p className="pt-2 border-t">{t('packages.payment.totalDuration')}: <span className="text-black font-bold text-base">{totalDays} {t('packages.payment.days')}</span></p>
                            </>
                         )}
                      </div>
@@ -195,19 +197,19 @@ export default function SubscriptionPaymentPage() {
                      }`}>
                      <div className="flex items-center space-x-2">
                         <Wallet className={`h-5 w-5 ${hasInsufficientBalance ? 'text-red-500' : 'text-green-500'}`} />
-                        <h2 className="text-sm font-semibold text-gray-700">Wallet Balance</h2>
+                        <h2 className="text-sm font-semibold text-gray-700">{t('packages.payment.walletBalance')}</h2>
                      </div>
                      <div className="text-xl font-bold">
                         {wallet ? formatCurrency(wallet.totalBalance) : 'N/A'}
                      </div>
                      {hasInsufficientBalance && (
                         <p className="text-sm text-red-600">
-                           Insufficient balance. You need {formatCurrency(plan.price - wallet.totalBalance)} more.
+                           {t('packages.payment.insufficientBalance', { amount: formatCurrency(plan.price - wallet.totalBalance) })}
                         </p>
                      )}
                      {hasSufficientBalance && (
                         <p className="text-sm text-green-600">
-                           You have enough balance to subscribe to this package.
+                           {t('packages.payment.sufficientBalance')}
                         </p>
                      )}
                   </div>
@@ -223,7 +225,7 @@ export default function SubscriptionPaymentPage() {
 
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                      <p className="text-sm text-blue-700">
-                        <strong>Payment Method:</strong> The subscription fee will be automatically deducted from your wallet balance. The subscription will be activated immediately upon successful payment.
+                        {t('packages.payment.paymentMethodNote')}
                      </p>
                   </div>
                </div>
@@ -235,7 +237,7 @@ export default function SubscriptionPaymentPage() {
                      disabled={isSubmitting}
                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                     Cancel
+                     {t('packages.payment.cancel')}
                   </button>
 
                   {hasInsufficientBalance ? (
@@ -245,7 +247,7 @@ export default function SubscriptionPaymentPage() {
                         className="text-sm cursor-pointer flex items-center space-x-2 px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                      >
                         <Wallet className="h-4 w-4" />
-                        <span>Top-up Wallet</span>
+                        <span>{t('packages.payment.topUpWallet')}</span>
                         <ArrowRight className="h-4 w-4" />
                      </button>
                   ) : (
@@ -255,7 +257,7 @@ export default function SubscriptionPaymentPage() {
                         disabled={!wallet || isSubmitting}
                         className="text-sm cursor-pointer flex items-center space-x-2 px-6 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                      >
-                        <span>Proceed to Payment</span>
+                        <span>{t('packages.payment.proceedToPayment')}</span>
                      </button>
                   )}
                </div>
@@ -267,49 +269,49 @@ export default function SubscriptionPaymentPage() {
                      <Check className="h-6 w-6 text-white" />
                   </div>
 
-                  <h2 className="text-lg text-gray-900">Confirm Payment</h2>
+                  <h2 className="text-lg text-gray-900">{t('packages.payment.confirmPayment')}</h2>
 
                   <div className="text-left bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
                      {isUpgrade ? (
                         <>
                            <p className="text-sm text-gray-600">
-                              You are about to <span className="font-semibold text-orange-600">upgrade</span> to <span className="font-semibold text-black">{plan.name}</span>
+                              {t('packages.payment.upgradeMessage', { planName: plan.name })}
                            </p>
                            <p className="text-sm text-gray-600">
-                              Current plan: <span className="font-semibold text-black">{currentSubscription?.planName}</span> ({remainingDays} days remaining)
+                              {t('packages.payment.currentPlanInfo', { planName: currentSubscription?.planName, days: remainingDays })}
                            </p>
                            <div className="border-t pt-2 mt-2">
                               <p className="text-sm text-gray-600">
-                                 New plan duration: <span className="font-semibold text-black">{plan.durationDays} days</span>
+                                 {t('packages.payment.newPlanDuration', { days: plan.durationDays })}
                               </p>
                               <p className="text-sm text-gray-600">
-                                 Carried over: <span className="font-semibold text-black">+ {remainingDays} days</span>
+                                 Carried over: <span className="font-semibold text-black">+ {remainingDays} {t('packages.payment.days')}</span>
                               </p>
                               <p className="text-sm text-gray-600 font-semibold">
-                                 Total duration: <span className="text-black text-base">{totalDays} days</span>
+                                 Total duration: <span className="text-black text-base">{totalDays} {t('packages.payment.days')}</span>
                               </p>
                            </div>
                         </>
                      ) : (
                         <p className="text-sm text-gray-600">
-                           You are about to subscribe to <span className="font-semibold text-black">{plan.name}</span>
+                           {t('packages.payment.subscribeMessage', { planName: plan.name })}
                         </p>
                      )}
                      <div className="border-t pt-2 mt-2 space-y-2">
                         <p className="text-sm text-gray-600">
-                           Amount to be deducted: <span className="font-semibold text-black">{formatCurrency(plan.price)}</span>
+                           {t('packages.payment.amountDeducted')}: <span className="font-semibold text-black">{formatCurrency(plan.price)}</span>
                         </p>
                         <p className="text-sm text-gray-600">
-                           Current balance: <span className="font-semibold text-black">{wallet && formatCurrency(wallet.totalBalance)}</span>
+                           {t('packages.payment.currentBalance')}: <span className="font-semibold text-black">{wallet && formatCurrency(wallet.totalBalance)}</span>
                         </p>
                         <p className="text-sm text-gray-600">
-                           Balance after payment: <span className="font-semibold text-black">{wallet && formatCurrency(wallet.totalBalance - plan.price)}</span>
+                           {t('packages.payment.balanceAfter')}: <span className="font-semibold text-black">{wallet && formatCurrency(wallet.totalBalance - plan.price)}</span>
                         </p>
                      </div>
                   </div>
 
                   <p className="text-sm text-gray-600">
-                     Are you sure you want to proceed with this payment?
+                     {t('packages.payment.confirmQuestion')}
                   </p>
                </div>
 
@@ -331,7 +333,7 @@ export default function SubscriptionPaymentPage() {
                      disabled={isSubmitting}
                      className="text-sm cursor-pointer px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                     Back
+                     {t('packages.payment.back')}
                   </button>
 
                   <button
@@ -341,7 +343,7 @@ export default function SubscriptionPaymentPage() {
                   >
                      {isSubmitting && <LoaderCircle className="w-4 h-4 animate-spin" />}
                      {!isSubmitting && <CheckCircle className="h-4 w-4" />}
-                     <span>{isSubmitting ? "Processing..." : "Confirm Payment"}</span>
+                     <span>{isSubmitting ? t('packages.payment.processing') : t('packages.payment.confirmPayment')}</span>
                   </button>
                </div>
             </Form>

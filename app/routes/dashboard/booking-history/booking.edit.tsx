@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
+import { useTranslation } from "react-i18next"
 import { AlertCircle, Calendar1, CalendarIcon, LoaderCircle } from "lucide-react"
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router"
 
@@ -86,6 +87,7 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function EditServiceBooking({ loaderData }: TransactionProps) {
+   const { t } = useTranslation()
    const navigate = useNavigate()
    const navigation = useNavigation()
 
@@ -128,7 +130,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                         />
                         <div className="space-y-2">
                            <Label htmlFor="start-date" className="text-sm font-medium">
-                              Start Date <span className="text-destructive">*</span>
+                              {t('booking.edit.startDate')} <span className="text-destructive">*</span>
                            </Label>
                            <Popover>
                               <PopoverTrigger asChild>
@@ -141,7 +143,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                                     )}
                                  >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? format(startDate, "PPP p") : "Pick date & time"}
+                                    {startDate ? format(startDate, "PPP p") : t('booking.edit.pickDateTime')}
                                  </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 space-y-3" align="start">
@@ -183,7 +185,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
 
                         <div className="space-y-2">
                            <Label htmlFor="end-date" className="text-sm font-medium">
-                              End Date
+                              {t('booking.edit.endDate')}
                            </Label>
                            <Popover>
                               <PopoverTrigger asChild>
@@ -196,7 +198,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                                     )}
                                  >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate ? format(endDate, "PPP p") : "Pick date & time"}
+                                    {endDate ? format(endDate, "PPP p") : t('booking.edit.pickDateTime')}
                                  </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 space-y-3" align="start">
@@ -244,12 +246,12 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                <div className="space-y-4">
                   <div className="space-y-2">
                      <Label htmlFor="meeting-location" className="text-sm font-medium">
-                        Meeting Location <span className="text-destructive">*</span>
+                        {t('booking.edit.location')} <span className="text-destructive">*</span>
                      </Label>
                      <Input
                         name="location"
                         id="meeting-location"
-                        placeholder="Enter the address or location where we'll meet"
+                        placeholder={t('booking.edit.locationPlaceholder')}
                         className="h-11 text-sm"
                         defaultValue={dateBooking.location}
                      />
@@ -259,35 +261,35 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                <div className="space-y-4">
                   <div className="space-y-2">
                      <Label htmlFor="dress-code" className="text-sm font-medium">
-                        Preferred Attire
+                        {t('booking.edit.preferredAttire')}
                      </Label>
                      <Textarea
                         name="preferred"
                         id="dress-code"
                         defaultValue={dateBooking.preferredAttire}
-                        placeholder="Let your partner know if there are any specific dress code requirements for the service...."
+                        placeholder={t('booking.edit.attirePlaceholder')}
                         className="min-h-[100px] resize-none text-sm"
                      />
                   </div>
                </div>
 
                <div className="space-y-2 ">
-                  <h3 className="text-sm font-bold">Booking Summary:</h3>
+                  <h3 className="text-sm font-bold">{t('booking.edit.summary.title')}</h3>
 
                   <div className="space-y-3 bg-secondary/30 p-2 rounded-lg">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Price per day</span>
+                        <span className="text-muted-foreground">{t('booking.edit.summary.pricePerDay')}</span>
                         <span className="font-medium">{formatCurrency(service.customRate ? service.customRate : service.service.baseRate)}</span>
                      </div>
 
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Number of days</span>
-                        <span className="font-medium">{calculateDayAmount(String(startDate), endDate ? String(endDate) : "")} Days</span>
+                        <span className="text-muted-foreground">{t('booking.edit.summary.numberOfDays')}</span>
+                        <span className="font-medium">{calculateDayAmount(String(startDate), endDate ? String(endDate) : "")} {t('booking.days')}</span>
                      </div>
 
                      <div className="border-t pt-3 mt-3">
                         <div className="flex justify-between items-center">
-                           <span className="text-sm font-bold">Total Price</span>
+                           <span className="text-sm font-bold">{t('booking.edit.summary.totalPrice')}</span>
                            <span className="text-md font-bold text-primary">
                               {
                                  formatCurrency((service.customRate ? service.customRate : service.service.baseRate)
@@ -318,7 +320,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                      onClick={closeHandler}
                      className="bg-gray-500 text-white hover:bg-gray-600 hover:text-white"
                   >
-                     Close
+                     {t('booking.edit.close')}
                   </Button>
                   <Button
                      type="submit"
@@ -326,7 +328,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                      className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                   >
                      {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Calendar1 />}
-                     {isSubmitting ? "Saving...." : "Save Change"}
+                     {isSubmitting ? t('booking.edit.saving') : t('booking.edit.saveChange')}
                   </Button>
                </div>
             </Form>

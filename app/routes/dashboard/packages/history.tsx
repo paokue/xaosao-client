@@ -1,6 +1,7 @@
 import React from "react";
 import { Clock, Filter, Calendar, X } from "lucide-react";
 import { useNavigate, useSearchParams, type LoaderFunction } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // Services and Utils
 import { formatCurrency } from "~/utils";
@@ -72,6 +73,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
+   const { t } = useTranslation();
    const navigate = useNavigate();
    const [searchParams, setSearchParams] = useSearchParams();
    const { history, pagination, filters } = loaderData;
@@ -94,12 +96,12 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
    const [localEndDate, setLocalEndDate] = React.useState(filters.endDate);
 
    const statusOptions = [
-      { value: "all", label: "All Status" },
-      { value: "active", label: "Active" },
-      { value: "upgraded", label: "Upgraded" },
-      { value: "canceled", label: "Canceled" },
-      { value: "expired", label: "Expired" },
-      { value: "pending", label: "Pending" },
+      { value: "all", label: t('packages.history.statusOptions.all') },
+      { value: "active", label: t('packages.history.statusOptions.active') },
+      { value: "upgraded", label: t('packages.history.statusOptions.upgraded') },
+      { value: "canceled", label: t('packages.history.statusOptions.canceled') },
+      { value: "expired", label: t('packages.history.statusOptions.expired') },
+      { value: "pending", label: t('packages.history.statusOptions.pending') },
    ];
 
    const applyFilters = () => {
@@ -150,9 +152,9 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
          <div className="mx-auto space-y-4">
             <div className="flex items-center justify-between">
                <div>
-                  <h1 className="text-lg text-gray-900">Subscription History:</h1>
+                  <h1 className="text-lg text-gray-900">{t('packages.history.title')}</h1>
                   <p className="text-sm text-gray-600 mt-1">
-                     Track all your subscription activities
+                     {t('packages.history.subtitle')}
                   </p>
                </div>
                <Button
@@ -161,7 +163,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                   className="cursor-pointer flex items-center gap-2"
                >
                   <Filter className="h-4 w-4" />
-                  Filters
+                  {t('packages.history.filters')}
                </Button>
             </div>
 
@@ -169,7 +171,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                <div className="bg-white py-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Status</label>
+                        <label className="text-sm font-medium text-gray-700">{t('packages.history.status')}</label>
                         <select
                            value={localStatus}
                            onChange={(e) => setLocalStatus(e.target.value)}
@@ -184,7 +186,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Start Date</label>
+                        <label className="text-sm font-medium text-gray-700">{t('packages.history.startDate')}</label>
                         <input
                            type="date"
                            value={localStartDate}
@@ -194,7 +196,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">End Date</label>
+                        <label className="text-sm font-medium text-gray-700">{t('packages.history.endDate')}</label>
                         <input
                            type="date"
                            value={localEndDate}
@@ -205,10 +207,10 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
 
                      <div className="flex items-center gap-2 justify-end mt-4">
                         <Button onClick={clearFilters} variant="outline">
-                           Clear Filters
+                           {t('packages.history.clearFilters')}
                         </Button>
                         <Button onClick={applyFilters} className="bg-rose-500 hover:bg-rose-600">
-                           Apply Filters
+                           {t('packages.history.applyFilters')}
                         </Button>
                      </div>
                   </div>
@@ -217,20 +219,20 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
 
             {(filters.status !== "all" || filters.startDate || filters.endDate) && (
                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-gray-600">Active filters:</span>
+                  <span className="text-sm text-gray-600">{t('packages.history.activeFilters')}</span>
                   {filters.status !== "all" && (
                      <span className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm">
-                        Status: {capitalize(filters.status)}
+                        {t('packages.history.status')}: {capitalize(filters.status)}
                      </span>
                   )}
                   {filters.startDate && (
                      <span className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm">
-                        From: {formatDate(new Date(filters.startDate))}
+                        {t('packages.history.from')}: {formatDate(new Date(filters.startDate))}
                      </span>
                   )}
                   {filters.endDate && (
                      <span className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm">
-                        To: {formatDate(new Date(filters.endDate))}
+                        {t('packages.history.to')}: {formatDate(new Date(filters.endDate))}
                      </span>
                   )}
                </div>
@@ -241,16 +243,16 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                   <div className="p-12 text-center">
                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        No subscription history
+                        {t('packages.history.emptyTitle')}
                      </h3>
                      <p className="text-gray-600 mb-4">
-                        You don't have any subscription history yet.
+                        {t('packages.history.emptyMessage')}
                      </p>
                      <Button
                         onClick={() => navigate("/dashboard/packages")}
                         className="bg-rose-500 hover:bg-rose-600"
                      >
-                        Browse Packages
+                        {t('packages.history.browsePackages')}
                      </Button>
                   </div>
                ) : (
@@ -259,22 +261,22 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                         <thead className="bg-gray-50 border-b border-gray-200">
                            <tr>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Plan
+                                 {t('packages.history.plan')}
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Price
+                                 {t('packages.history.price')}
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Duration
+                                 {t('packages.history.duration')}
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Period
+                                 {t('packages.history.period')}
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Payment
+                                 {t('packages.history.payment')}
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 Status
+                                 {t('packages.history.status')}
                               </th>
                            </tr>
                         </thead>
@@ -294,7 +296,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                                  <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-900 flex items-center gap-1">
                                        <Clock className="h-4 w-4 text-gray-400" />
-                                       {item.durationDays} days
+                                       {item.durationDays} {t('packages.history.days')}
                                     </div>
                                  </td>
                                  <td className="px-6 py-4 whitespace-nowrap">

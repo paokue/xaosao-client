@@ -16,6 +16,7 @@ import {
     useSearchParams,
     type LoaderFunction,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import {
@@ -299,6 +300,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 // Page
 export default function MatchesPage({ loaderData }: ForyouModelsProps) {
+    const { t } = useTranslation();
     const navigation = useNavigation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -387,7 +389,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
                     <Loader className="w-4 h-4 text-rose-500 animate-spin" />
-                    <p className="text-rose-600">Processing....</p>
+                    <p className="text-rose-600">{t('matches.processing')}</p>
                 </div>
             </div>
         );
@@ -427,16 +429,16 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                 >
                     <TabsList className="w-full">
                         <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs">
-                            For you
+                            {t('matches.forYou')}
                         </TabsTrigger>
                         <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs">
-                            Like Me
+                            {t('matches.likeMe')}
                         </TabsTrigger>
                         <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs">
-                            Favourite
+                            {t('matches.favourite')}
                         </TabsTrigger>
                         <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs">
-                            Passed
+                            {t('matches.passed')}
                         </TabsTrigger>
                     </TabsList>
 
@@ -444,7 +446,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     {actionData && showAlert && actionData?.success && (
                         <Alert variant="default" className="border-green-300 text-green-500 bg-green-50">
                             <BadgeCheck className="text-green-600" />
-                            <AlertTitle className="text-md">Success!</AlertTitle>
+                            <AlertTitle className="text-md">{t('matches.success')}</AlertTitle>
                             <AlertDescription className="text-green-500">
                                 {actionData.message}
                             </AlertDescription>
@@ -454,7 +456,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     {actionData && showAlert && actionData?.error && (
                         <Alert variant="destructive">
                             <X size={22} />
-                            <AlertTitle className="text-md">Error!</AlertTitle>
+                            <AlertTitle className="text-md">{t('matches.error')}</AlertTitle>
                             <AlertDescription>
                                 {capitalize(actionData.message)}
                             </AlertDescription>
@@ -463,7 +465,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                     <TabsContent value="foryou">
                         <div className="flex items-center justify-between mb-4 px-4">
-                            <p className="text-sm sm:text-md font-bold text-gray-700">Filter:</p>
+                            <p className="text-sm sm:text-md font-bold text-gray-700">{t('matches.filter')}</p>
                             <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
                                 <DrawerTrigger className="flex items-center justify-start gap-2 p-2 rounded-md cursor-pointer bg-rose-100 text-rose-500">
                                     <SlidersHorizontal className="w-4 h-4" />
@@ -475,7 +477,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                         onSubmit={() => setDrawerOpen(false)}
                                     >
                                         <div className="hidden sm:flex items-center justify-between px-6 py-2 border-b">
-                                            <h2 className="text-lg font-bold text-rose-500">Filter Options:</h2>
+                                            <h2 className="text-lg font-bold text-rose-500">{t('matches.filterOptions')}</h2>
                                             <DrawerClose>
                                                 <button
                                                     type="button"
@@ -488,7 +490,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Maximum distance (km)</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.maxDistance')}</label>
                                                 <input
                                                     type="number"
                                                     name="distance"
@@ -499,7 +501,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             </div>
 
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Age range</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.ageRange')}</label>
                                                 <div className="flex gap-2 mt-2">
                                                     <input type="number" name="ageMin" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
                                                     <input type="number" name="ageMax" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
@@ -507,9 +509,9 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             </div>
 
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Minimum Rating</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.minRating')}</label>
                                                 <select name="rating" className="w-full mt-2 p-2 border rounded-md" defaultValue="">
-                                                    <option value="">Select rating</option>
+                                                    <option value="">{t('matches.selectRating')}</option>
                                                     {[1, 2, 3, 4, 5].map((r) => (
                                                         <option key={r} value={r}>{r}+</option>
                                                     ))}
@@ -517,19 +519,19 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             </div>
 
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Gender</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.gender')}</label>
                                                 <select name="gender" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
-                                                    <option value="">All</option>
-                                                    <option value="female">Female</option>
-                                                    <option value="male">Male</option>
-                                                    <option value="other">Other</option>
+                                                    <option value="">{t('matches.all')}</option>
+                                                    <option value="female">{t('matches.female')}</option>
+                                                    <option value="male">{t('matches.male')}</option>
+                                                    <option value="other">{t('matches.other')}</option>
                                                 </select>
                                             </div>
 
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Location</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.location')}</label>
                                                 <select name="location" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
-                                                    <option value="">Any Location</option>
+                                                    <option value="">{t('matches.anyLocation')}</option>
                                                     <option value="Turkey">Turkey</option>
                                                     <option value="Spain">Spain</option>
                                                     <option value="France">France</option>
@@ -539,25 +541,35 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             </div>
 
                                             <div>
-                                                <label className="block text-gray-700 font-medium">Relationship Status</label>
+                                                <label className="block text-gray-700 font-medium">{t('matches.relationshipStatus')}</label>
                                                 <div className="space-y-1 mt-2">
-                                                    {["Single", "Divorced", "Widowed", "Separated"].map((status) => (
-                                                        <label key={status} className="flex items-center text-sm">
-                                                            <input type="radio" name="relationshipStatus" value={status} className="mr-2 cursor-pointer text-rose-500" />
-                                                            {status}
-                                                        </label>
-                                                    ))}
+                                                    <label className="flex items-center text-sm">
+                                                        <input type="radio" name="relationshipStatus" value="Single" className="mr-2 cursor-pointer text-rose-500" />
+                                                        {t('matches.single')}
+                                                    </label>
+                                                    <label className="flex items-center text-sm">
+                                                        <input type="radio" name="relationshipStatus" value="Divorced" className="mr-2 cursor-pointer text-rose-500" />
+                                                        {t('matches.divorced')}
+                                                    </label>
+                                                    <label className="flex items-center text-sm">
+                                                        <input type="radio" name="relationshipStatus" value="Widowed" className="mr-2 cursor-pointer text-rose-500" />
+                                                        {t('matches.widowed')}
+                                                    </label>
+                                                    <label className="flex items-center text-sm">
+                                                        <input type="radio" name="relationshipStatus" value="Separated" className="mr-2 cursor-pointer text-rose-500" />
+                                                        {t('matches.separated')}
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center justify-between p-6 space-x-3 border-t">
                                             <button type="reset" onClick={() => setDrawerOpen(false)} className="w-full bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium">
-                                                Reset Filters
+                                                {t('matches.resetFilters')}
                                             </button>
 
                                             <button type="submit" className="w-full bg-rose-500 text-white py-2 rounded-md hover:bg-rose-600 transition-colors font-medium">
-                                                Apply Filters
+                                                {t('matches.applyFilters')}
                                             </button>
                                         </div>
                                     </Form>
@@ -568,7 +580,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
                                 <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
-                                &nbsp; Loading...
+                                &nbsp; {t('matches.loading')}
                             </div>
                         ) : foryouModels.length > 0 ? (
                             <div className="space-y-4">
@@ -592,8 +604,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             </div>
                         ) : (
                             <EmptyPage
-                                title="Not found"
-                                description="No results found. Adjust your filters to discover models."
+                                title={t('matches.notFound')}
+                                description={t('matches.noResults')}
                             />
                         )}
                     </TabsContent>
@@ -602,7 +614,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
                                 <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
-                                &nbsp; Loading...
+                                &nbsp; {t('matches.loading')}
                             </div>
                         ) : likeMeModels.length > 0 ? (
                             <div className="space-y-4">
@@ -627,8 +639,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             </div>
                         ) : (
                             <EmptyPage
-                                title="Not found"
-                                description="No results found. Adjust your filters to discover models."
+                                title={t('matches.notFound')}
+                                description={t('matches.noResults')}
                             />
                         )}
                     </TabsContent>
@@ -637,7 +649,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
                                 <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
-                                &nbsp; Loading...
+                                &nbsp; {t('matches.loading')}
                             </div>
                         ) : myFavouriteModels.length > 0 ? (
                             <div className="space-y-4">
@@ -662,8 +674,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             </div>
                         ) : (
                             <EmptyPage
-                                title="Not found"
-                                description="No results found. Adjust your filters to discover models."
+                                title={t('matches.notFound')}
+                                description={t('matches.noResults')}
                             />
                         )}
                     </TabsContent>
@@ -672,7 +684,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
                                 <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
-                                &nbsp; Loading...
+                                &nbsp; {t('matches.loading')}
                             </div>
                         ) : myPassModels.length > 0 ? (
                             <div className="space-y-4">
@@ -697,8 +709,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             </div>
                         ) : (
                             <EmptyPage
-                                title="Not found"
-                                description="No results found."
+                                title={t('matches.notFound')}
+                                description={t('matches.noResultsFound')}
                             />
                         )}
                     </TabsContent>
