@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
 import type { Route } from "./+types/register"
-import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
-import { AlertCircle, ArrowLeft, Eye, EyeOff, Heart, LoaderCircle, User, UserPlus } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
+import { AlertCircle, ArrowLeft, Eye, EyeOff, LoaderCircle, User, UserPlus } from "lucide-react"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -18,9 +18,11 @@ import type { ICustomerSignupCredentials } from "~/interfaces"
 import { FieldValidationError, getCurrentIP } from "~/services/base.server"
 
 const backgroundImages = [
-    "https://images.pexels.com/photos/8272148/pexels-photo-8272148.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/15597164/pexels-photo-15597164.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/7265057/pexels-photo-7265057.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.pexels.com/photos/12810667/pexels-photo-12810667.jpeg",
+    "https://images.pexels.com/photos/5762507/pexels-photo-5762507.jpeg",
+    "https://images.pexels.com/photos/1577025/pexels-photo-1577025.jpeg",
+    "https://images.pexels.com/photos/825904/pexels-photo-825904.jpeg",
+    "https://images.pexels.com/photos/16838518/pexels-photo-16838518.jpeg",
 ]
 
 export async function action({ request }: Route.ActionArgs) {
@@ -125,7 +127,7 @@ export default function SignUpPage() {
             {backgroundImages.map((image, index) => (
                 <div
                     key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
+                    className={`absolute inset-0 transition-opacity duration-3000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
                         }`}
                     style={{
                         backgroundImage: `url(${image})`,
@@ -135,24 +137,16 @@ export default function SignUpPage() {
                 />
             ))}
 
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
-
-            <div className="hidden sm:block absolute bottom-8 left-8 z-10">
-                <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center">
-                        <Heart className="w-6 h-6 text-white fill-white" />
-                    </div>
-                    <span className="text-4xl font-bold text-white drop-shadow-lg">XaoSao</span>
-                </div>
-            </div>
-
             <div
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-auto
-                            bg-black/50 backdrop-blur-md shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start rounded-lg z-20
+                            bg-black/50 backdrop-blur-lg shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start rounded-lg z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-6 cursor-pointer" onClick={() => navigate("..")}>
-                    <ArrowLeft className="text-xl text-gray-300" />
+                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    <p className="flex items-center space-x-2">
+                        <ArrowLeft className="text-xl text-gray-300" />
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p>
                 </div>
 
                 <div className="space-y-2 mb-6">
@@ -172,6 +166,7 @@ export default function SignUpPage() {
                                 type="text"
                                 id="firstName"
                                 name="firstName"
+                                placeholder={t('register.firstName') + "..."}
                                 className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                             />
                         </div>
@@ -184,6 +179,7 @@ export default function SignUpPage() {
                                 type="text"
                                 id="lastName"
                                 name="lastName"
+                                placeholder={t('register.lastName') + "..."}
                                 className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                             />
                         </div>
@@ -200,6 +196,7 @@ export default function SignUpPage() {
                                 type="text"
                                 id="username"
                                 name="username"
+                                placeholder={t('register.username') + "..."}
                                 className="pl-9 mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                             />
                         </div>
@@ -264,7 +261,7 @@ export default function SignUpPage() {
                                 name="dob"
                                 type="date"
                                 id="dateOfBirth"
-                                className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
+                                className="w-full mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                             />
                         </div>
                     </div>
@@ -280,6 +277,7 @@ export default function SignUpPage() {
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     name="password"
+                                    placeholder="Pa$$w0rd!"
                                     className="border-white text-white placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
                                 />
                                 <button
@@ -301,6 +299,7 @@ export default function SignUpPage() {
                                     type={showConPassword ? "text" : "password"}
                                     id="confirmPassword"
                                     name="confirmPassword"
+                                    placeholder="Pa$$w0rd!"
                                     className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
                                 />
                                 <button
@@ -363,7 +362,7 @@ export default function SignUpPage() {
 
                     <div className="text-center space-x-4">
                         <span className="text-white">{t('register.alreadyHaveAccount')} </span>
-                        <Link to="/login" className="text-rose-500 hover:text-rose-600 font-xs hover:underline uppercase">
+                        <Link to="/login" className="text-rose-500 hover:text-rose-600 font-xs underline">
                             {t('register.backLogin')}
                         </Link>
                     </div>

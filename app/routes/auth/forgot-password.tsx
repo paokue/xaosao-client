@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
-import { AlertCircle, ArrowLeft, Heart, LoaderCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, LoaderCircle } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -8,14 +8,18 @@ import { useTranslation } from "react-i18next";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { validateForgotInputs, validateVerifyOTPInputs } from "~/services";
-import { FieldValidationError } from "~/services/base.server";
+
+// functions
 import Countdown from "~/lib/count-down";
+import { FieldValidationError } from "~/services/base.server";
+import { validateForgotInputs, validateVerifyOTPInputs } from "~/services";
 
 const backgroundImages = [
-    "https://images.pexels.com/photos/8272148/pexels-photo-8272148.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/15597164/pexels-photo-15597164.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/7265057/pexels-photo-7265057.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.pexels.com/photos/17441715/pexels-photo-17441715.jpeg",
+    "https://images.pexels.com/photos/5910995/pexels-photo-5910995.jpeg",
+    "https://images.pexels.com/photos/2055224/pexels-photo-2055224.jpeg",
+    "https://images.pexels.com/photos/3089876/pexels-photo-3089876.jpeg",
+    "https://images.pexels.com/photos/5910832/pexels-photo-5910832.jpeg"
 ];
 
 export async function action({ request }: Route.ActionArgs) {
@@ -146,16 +150,7 @@ export default function ForgotPasswordPage() {
                         }}
                     />
                 ))}
-                <div className="absolute inset-0 bg-black/10" />
-            </div>
-
-            <div className="hidden sm:block absolute bottom-8 left-8 z-10">
-                <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Heart className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-white">XaoSao</span>
-                </div>
+                {/* <div className="absolute inset-0 bg-black/10" /> */}
             </div>
 
             <div
@@ -163,12 +158,14 @@ export default function ForgotPasswordPage() {
                             bg-black/50 backdrop-blur-md shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-center rounded-lg z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none"
             >
-                <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center mb-6 cursor-pointer"
-                    onClick={() => navigate("/")}
-                >
-                    <ArrowLeft className="text-xl text-gray-300" />
+
+                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    <p className="flex items-center space-x-2">
+                        <ArrowLeft className="text-xl text-gray-300" />
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p>
                 </div>
+
                 {!showOtpForm ? (
                     <div className="space-y-6">
                         <div className="text-center">

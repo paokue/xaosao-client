@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, Heart, LoaderCircle } from "lucide-react"
+import { AlertCircle, ArrowLeft, LoaderCircle } from "lucide-react"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { useState, useEffect } from "react"
 import type { Route } from "./+types/reset-password"
@@ -12,9 +12,9 @@ import { validateResetPasswordInputs } from "~/services"
 import { FieldValidationError } from "~/services/base.server"
 
 const backgroundImages = [
-    "https://images.pexels.com/photos/8272148/pexels-photo-8272148.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/15597164/pexels-photo-15597164.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/7265057/pexels-photo-7265057.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.pexels.com/photos/6324113/pexels-photo-6324113.jpeg",
+    "https://images.pexels.com/photos/7351022/pexels-photo-7351022.jpeg",
+    "https://images.pexels.com/photos/5910832/pexels-photo-5910832.jpeg",
 ]
 
 export async function action({ request }: Route.ActionArgs) {
@@ -37,8 +37,6 @@ export async function action({ request }: Route.ActionArgs) {
         return { success: res.success, error: res.error, message: res.message }
     } catch (error: any) {
         console.log("Error::", error)
-        // return { success: false, error: true, message: "" }
-        // console.error("Forgot password error:", error);
         if (error instanceof FieldValidationError) {
             return {
                 success: error.payload.message === "Please wait 60 seconds before resending OTP!" ? true : error.payload.success,
@@ -58,8 +56,6 @@ export default function ResetPasswordPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const actionData = useActionData<typeof action>();
     const isSubmitting = navigation.state !== 'idle' && navigation.formMethod === "POST";
-
-    console.log("Final DATA from Backend:::", actionData);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -84,16 +80,7 @@ export default function ResetPasswordPage() {
                         }}
                     />
                 ))}
-                <div className="absolute inset-0 bg-black/10" />
-            </div>
-
-            <div className="hidden sm:block absolute bottom-8 left-8 z-10">
-                <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Heart className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-white">XaoSao</span>
-                </div>
+                {/* <div className="absolute inset-0 bg-black/10" /> */}
             </div>
 
             <div
@@ -101,11 +88,12 @@ export default function ResetPasswordPage() {
                             bg-black/50 backdrop-blur-md shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-center rounded-lg z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center mb-6 cursor-pointer"
-                    onClick={() => navigate("/login")}
-                >
-                    <ArrowLeft className="text-xl text-gray-300" />
+
+                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    <p className="flex items-center space-x-2">
+                        <ArrowLeft className="text-xl text-gray-300" />
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p>
                 </div>
 
                 <div className="space-y-6">

@@ -1,4 +1,18 @@
 {
+  "navigation": {
+    "discover": "Discover",
+    "match": "Match",
+    "chat": "Chat",
+    "datingHistory": "Dating history",
+    "dating": "Dating",
+    "packages": "Packages",
+    "wallet": "Wallet",
+    "myProfile": "My profile",
+    "profile": "Profile",
+    "setting": "Setting",
+    "notification": "Notification",
+    "tagline": "Find your perfect match"
+  },
   "login": {
     "title": "Login To Your Account",
     "subtitle": "Welcome back! Please enter your details.",
@@ -12,7 +26,7 @@
     "loggingIn": "Logging in...",
     "noAccount": "I don't have an account yet?",
     "createAccount": "Create one its Free!",
-    "createAccountMobile": "Create new",
+    "createAccountMobile": "Create New",
     "invalidCredentials": "Invalid phone number or password!",
     "incorrectCredentials": "Phone number or password incorrect!"
   },
@@ -422,6 +436,133 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "deleting": "Deleting..."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "menu": {
+      "basic": "Basic Information",
+      "password": "Password",
+      "twofa": "2FA",
+      "notification": "Notifications",
+      "language": "Language Switcher",
+      "mode": "Theme Mode",
+      "report": "Report",
+      "delete": "Delete Account"
+    },
+    "basic": {
+      "title": "Basic Information",
+      "subtitle": "Manage your personal details and profile information",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "dateOfBirth": "Date of Birth",
+      "dateOfBirthPlaceholder": "Pick date",
+      "gender": "Gender",
+      "genderPlaceholder": "Select gender",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "relationshipStatus": "Relationship Status",
+      "relationshipPlaceholder": "Select relationship status",
+      "single": "Single",
+      "divorced": "Divorced",
+      "widowed": "Widowed",
+      "separated": "Separated",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "Enter your WhatsApp number",
+      "bio": "Bio",
+      "bioPlaceholder": "Tell us about yourself...",
+      "career": "Career",
+      "careerPlaceholder": "Enter your career",
+      "education": "Education",
+      "educationPlaceholder": "Enter your education",
+      "saveChange": "Save Change",
+      "saving": "Saving...."
+    },
+    "password": {
+      "title": "Password",
+      "subtitle": "Update your password to keep your account secure",
+      "oldPassword": "Old Password",
+      "oldPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmNewPassword": "Confirm New Password",
+      "confirmNewPasswordPlaceholder": "Re-enter your new password",
+      "saveChange": "Save Change",
+      "saving": "Saving...."
+    },
+    "twofa": {
+      "title": "Two-Factor Authentication",
+      "subtitle": "Add an extra layer of security to your account",
+      "description": "Two-factor authentication adds an additional layer of security to your account by requiring more than just a password to sign in.",
+      "enabled": "2FA is currently enabled",
+      "disabled": "2FA is currently disabled",
+      "enable": "Enable 2FA",
+      "disable": "Disable 2FA",
+      "processing": "Processing...."
+    },
+    "notification": {
+      "title": "Notifications",
+      "subtitle": "Manage how you receive notifications",
+      "email": "Email Notifications",
+      "emailDescription": "Receive notifications via email",
+      "push": "Push Notifications",
+      "pushDescription": "Receive push notifications on your device",
+      "sms": "SMS Notifications",
+      "smsDescription": "Receive notifications via SMS",
+      "saveChange": "Save Change",
+      "saving": "Saving...."
+    },
+    "language": {
+      "title": "Language Switcher",
+      "subtitle": "Choose your preferred language",
+      "selectLanguage": "Select Language",
+      "languagePlaceholder": "Choose a language",
+      "saveChange": "Save Change",
+      "saving": "Saving...."
+    },
+    "theme": {
+      "title": "Theme Mode",
+      "subtitle": "Customize your viewing experience",
+      "light": "Light Mode",
+      "lightDescription": "Use light theme for better visibility during the day",
+      "dark": "Dark Mode",
+      "darkDescription": "Use dark theme to reduce eye strain at night",
+      "saveChange": "Save Change",
+      "saving": "Saving...."
+    },
+    "report": {
+      "title": "Report an Issue",
+      "subtitle": "Help us improve by reporting any problems you encounter",
+      "issueType": "Issue Type",
+      "issueTypePlaceholder": "Select issue type",
+      "bug": "Bug",
+      "feature": "Feature Request",
+      "other": "Other",
+      "reportTitle": "Title",
+      "reportTitlePlaceholder": "Brief description of the issue",
+      "description": "Description",
+      "descriptionPlaceholder": "Please provide detailed information about the issue...",
+      "submit": "Submit Report",
+      "submitting": "Submitting...."
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "subtitle": "Permanently remove your account and all associated data",
+      "warning": "Warning: This action cannot be undone!",
+      "warningMessage": "Deleting your account will permanently remove all your data, including your profile, messages, and subscription history. This action is irreversible.",
+      "confirmation": "Type DELETE to confirm",
+      "confirmationPlaceholder": "Type DELETE",
+      "delete": "Delete My Account",
+      "deleting": "Deleting...."
+    },
+    "common": {
+      "back": "Back",
+      "logout": "Log out",
+      "loggingOut": "Logging out...",
+      "processing": "Processing...."
     }
   }
 }

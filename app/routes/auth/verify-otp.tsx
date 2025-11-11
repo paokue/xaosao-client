@@ -11,9 +11,8 @@ export default function VerifyOTPPage() {
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
     const backgroundImages = [
-        "https://images.pexels.com/photos/8272148/pexels-photo-8272148.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-        "https://images.pexels.com/photos/15597164/pexels-photo-15597164.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-        "https://images.pexels.com/photos/7265057/pexels-photo-7265057.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+        "https://images.pexels.com/photos/7534073/pexels-photo-7534073.jpeg",
+        "https://images.pexels.com/photos/4241304/pexels-photo-4241304.jpeg",
     ]
 
     useEffect(() => {
@@ -75,17 +74,9 @@ export default function VerifyOTPPage() {
                     />
                 ))}
                 {/* Light overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/10" />
+                {/* <div className="absolute inset-0 bg-black/10" /> */}
             </div>
 
-            <div className="hidden sm:block absolute bottom-8 left-8 z-10">
-                <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Heart className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-white">XaoSao</span>
-                </div>
-            </div>
 
             <div
                 className="border-l border-rose-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-11/12

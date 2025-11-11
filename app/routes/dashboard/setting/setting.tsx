@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Route } from "./+types/setting";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
 import { User, Lock, Shield, Bell, Globe, Moon, Sun, Flag, Trash2, LogOut, Eye, EyeOff, ChevronLeft, ChevronRight, LoaderCircle, AlertCircle } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 // components
 import { Label } from "~/components/ui/label";
@@ -230,6 +231,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function SettingPage({ loaderData }: TransactionProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [searchParams] = useSearchParams();
@@ -270,14 +272,14 @@ export default function SettingPage({ loaderData }: TransactionProps) {
     const [deleteAccount, setDeleteAccount] = useState("");
 
     const menuItems = [
-        { id: 'basic', label: 'Basic Information', icon: User },
-        { id: 'password', label: 'Password', icon: Lock },
-        { id: 'twofa', label: '2FA', icon: Shield },
-        { id: 'notification', label: 'Notifications', icon: Bell },
-        { id: 'language', label: 'Language Switcher', icon: Globe },
-        { id: 'mode', label: 'Theme Mode', icon: darkMode ? Moon : Sun },
-        { id: 'report', label: 'Report', icon: Flag },
-        { id: 'delete', label: 'Delete Account', icon: Trash2 },
+        { id: 'basic', label: t('settings.menu.basic'), icon: User },
+        { id: 'password', label: t('settings.menu.password'), icon: Lock },
+        { id: 'twofa', label: t('settings.menu.twofa'), icon: Shield },
+        { id: 'notification', label: t('settings.menu.notification'), icon: Bell },
+        { id: 'language', label: t('settings.menu.language'), icon: Globe },
+        { id: 'mode', label: t('settings.menu.mode'), icon: darkMode ? Moon : Sun },
+        { id: 'report', label: t('settings.menu.report'), icon: Flag },
+        { id: 'delete', label: t('settings.menu.delete'), icon: Trash2 },
     ];
 
     const scrollToSection = (sectionId: any) => {
@@ -306,7 +308,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                 <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
                     {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : ""}
-                    <p className="text-gray-600">Processing....</p>
+                    <p className="text-gray-600">{t('settings.common.processing')}</p>
                 </div>
             </div>
         );
@@ -317,7 +319,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
             <div className="w-full sm:w-1/4 sm:border sm:border-gray-200 rounded-lg p-0 sm:p-4 h-full overflow-y-auto space-y-4">
                 <div className="flex items-center justify-start gap-2">
                     <ChevronLeft onClick={() => navigate("/dashboard/profile")} className="block sm:hidden" />
-                    <h2 className="text-lg font-semibold text-gray-800 ">Settings</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 ">{t('settings.title')}</h2>
                 </div>
                 <nav className="space-y-2 px-2">
                     {menuItems.map((item) => {
@@ -346,7 +348,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 className={`w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 text-rose-500 border border-rose-300 cursor-pointer hover:bg-rose-100 mt-4`}
                             >
                                 <LogOut size={16} />
-                                <span className="text-sm font-medium">Log out</span>
+                                <span className="text-sm font-medium">{t('settings.common.logout')}</span>
                             </button>
                         </Form>
                     </div>
@@ -373,7 +375,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="basic" className="scroll-mt-6 space-y-2">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                                 <User className="text-rose-500" size={20} />
-                                Basic Information
+                                {t('settings.basic.title')}
                             </h3>
                             <input type="text" name="profile" defaultValue={customerData.profile} className="hidden" />
                             <input type="hidden" name="currectAction" defaultValue={"isbasic"} />
@@ -389,7 +391,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                             <div className="space-y-4">
                                 <div>
                                     <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                        First name <span className="text-rose-500">*</span>
+                                        {t('settings.basic.firstName')} <span className="text-rose-500">*</span>
                                     </Label>
                                     <Input
                                         required
@@ -397,13 +399,13 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="text"
                                         name="firstName"
                                         defaultValue={customerData.firstName}
-                                        placeholder="Enter your first name...."
+                                        placeholder={t('settings.basic.firstNamePlaceholder')}
                                         className="text-sm mt-1 border-gray-200 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div>
                                     <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                        Last name <span className="text-rose-500">*</span>
+                                        {t('settings.basic.lastName')} <span className="text-rose-500">*</span>
                                     </Label>
                                     <Input
                                         required
@@ -411,13 +413,13 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="text"
                                         name="lastName"
                                         defaultValue={customerData.lastName}
-                                        placeholder="Enter your last name...."
+                                        placeholder={t('settings.basic.lastNamePlaceholder')}
                                         className="text-sm mt-1 border-gray-200 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="dob" className="text-gray-500 text-sm">
-                                        Date of birth<span className="text-rose-500">*</span>
+                                        {t('settings.basic.dob')}<span className="text-rose-500">*</span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -433,40 +435,40 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="dob" className="text-gray-500 text-sm mb-1">
-                                        Gender<span className="text-rose-500">*</span>
+                                        {t('settings.basic.gender')}<span className="text-rose-500">*</span>
                                     </Label>
                                     <Select name="gender" required defaultValue={customerData.gender}>
                                         <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                            <SelectValue placeholder="Select gender" />
+                                            <SelectValue placeholder={t('settings.basic.genderPlaceholder')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="male">Men</SelectItem>
-                                            <SelectItem value="female">Women</SelectItem>
-                                            <SelectItem value="nonbinary">Non-binary</SelectItem>
-                                            <SelectItem value="all">All</SelectItem>
+                                            <SelectItem value="male">{t('settings.basic.male')}</SelectItem>
+                                            <SelectItem value="female">{t('settings.basic.female')}</SelectItem>
+                                            <SelectItem value="nonbinary">{t('settings.basic.nonbinary')}</SelectItem>
+                                            <SelectItem value="all">{t('settings.basic.all')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="dob" className="text-gray-500 text-sm mb-1">
-                                        Relationship Status<span className="text-rose-500">*</span>
+                                        {t('settings.basic.relationshipStatus')}<span className="text-rose-500">*</span>
                                     </Label>
                                     <Select name="relationship_status" required defaultValue={customerData.relationshipStatus ?? "single"}>
                                         <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                            <SelectValue placeholder="Select gender" />
+                                            <SelectValue placeholder={t('settings.basic.relationshipStatusPlaceholder')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Single">Single</SelectItem>
-                                            <SelectItem value="Married">Married</SelectItem>
-                                            <SelectItem value="Relationship">In a Relationship</SelectItem>
-                                            <SelectItem value="Divorced">Divorced</SelectItem>
-                                            <SelectItem value="Widowed">Widowed</SelectItem>
+                                            <SelectItem value="Single">{t('settings.basic.single')}</SelectItem>
+                                            <SelectItem value="Married">{t('settings.basic.married')}</SelectItem>
+                                            <SelectItem value="Relationship">{t('settings.basic.relationship')}</SelectItem>
+                                            <SelectItem value="Divorced">{t('settings.basic.divorced')}</SelectItem>
+                                            <SelectItem value="Widowed">{t('settings.basic.widowed')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                        Whatsapp<span className="text-rose-500">*</span>
+                                        {t('settings.basic.whatsapp')}<span className="text-rose-500">*</span>
                                     </Label>
                                     <Input
                                         required
@@ -474,46 +476,46 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="number"
                                         name="whatsapp"
                                         defaultValue={customerData.whatsapp}
-                                        placeholder="Enter your whatsapp number...."
+                                        placeholder={t('settings.basic.whatsappPlaceholder')}
                                         className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="bio" className="text-gray-500 text-sm">
-                                        BIO
+                                        {t('settings.basic.bio')}
                                     </Label>
                                     <Input
                                         id="bio"
                                         type="text"
                                         name="bio"
                                         defaultValue={customerData.bio || ""}
-                                        placeholder="Enter your bio...."
+                                        placeholder={t('settings.basic.bioPlaceholder')}
                                         className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="career" className="text-gray-500 text-sm">
-                                        Career
+                                        {t('settings.basic.career')}
                                     </Label>
                                     <Input
                                         id="career"
                                         type="text"
                                         name="career"
                                         defaultValue={customerData.career || ""}
-                                        placeholder="Enter your career...."
+                                        placeholder={t('settings.basic.careerPlaceholder')}
                                         className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div className="gap-2 sm:gap-4">
                                     <Label htmlFor="education" className="text-gray-500 text-sm">
-                                        Education
+                                        {t('settings.basic.education')}
                                     </Label>
                                     <Input
                                         id="education"
                                         type="text"
                                         name="education"
                                         defaultValue={customerData.education || ""}
-                                        placeholder="Enter your education...."
+                                        placeholder={t('settings.basic.educationPlaceholder')}
                                         className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
@@ -522,7 +524,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="submit"
                                         className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                                     >
-                                        Save change
+                                        {t('settings.basic.saveChange')}
                                     </Button>
                                 </div>
                             </div>
@@ -544,13 +546,13 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="password" className="scroll-mt-6 space-y-2">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                                 <Lock className="text-rose-500" size={20} />
-                                Change Password
+                                {t('settings.password.title')}
                             </h3>
                             <input type="text" name="currectAction" defaultValue={"ispassword"} className="hidden" />
                             <div className="space-y-4 mt-4">
                                 <div>
                                     <Label htmlFor="password" className="text-gray-500 text-sm">
-                                        Old Password <span className="text-rose-500">*</span>
+                                        {t('settings.password.oldPassword')} <span className="text-rose-500">*</span>
                                     </Label>
                                     <div className="relative mt-1">
                                         <Input
@@ -558,7 +560,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                             id="old_password"
                                             type={showPassword ? "text" : "password"}
                                             name="old_password"
-                                            placeholder="************"
+                                            placeholder={t('settings.password.passwordPlaceholder')}
                                             className="border-gray-300 text-gray-500 placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
                                         />
                                         <button
@@ -573,7 +575,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
 
                                 <div>
                                     <Label htmlFor="password" className="text-gray-500 text-sm">
-                                        New Password <span className="text-rose-500">*</span>
+                                        {t('settings.password.newPassword')} <span className="text-rose-500">*</span>
                                     </Label>
                                     <div className="relative mt-1">
                                         <Input
@@ -581,7 +583,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                             id="new_password"
                                             type={showNewPassword ? "text" : "password"}
                                             name="new_password"
-                                            placeholder="************"
+                                            placeholder={t('settings.password.passwordPlaceholder')}
                                             className="border-gray-300 text-gray-500 placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
                                         />
                                         <button
@@ -596,7 +598,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
 
                                 <div>
                                     <Label htmlFor="password" className="text-gray-500 text-sm">
-                                        Confirm New Password <span className="text-rose-500">*</span>
+                                        {t('settings.password.confirmPassword')} <span className="text-rose-500">*</span>
                                     </Label>
                                     <div className="relative mt-1">
                                         <Input
@@ -604,7 +606,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                             id="con_new_password"
                                             type={showConNewPassword ? "text" : "password"}
                                             name="con_new_password"
-                                            placeholder="************"
+                                            placeholder={t('settings.password.passwordPlaceholder')}
                                             className="border-gray-300 text-gray-500 placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
                                         />
                                         <button
@@ -621,7 +623,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="submit"
                                         className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                                     >
-                                        Save change
+                                        {t('settings.password.saveChange')}
                                     </Button>
                                 </div>
                             </div>
@@ -643,7 +645,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="twofa" className="scroll-mt-6 space-y-3">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                                 <Shield className="text-rose-500" size={20} />
-                                Two-Factor Authentication
+                                {t('settings.twofa.title')}
                             </h3>
 
                             <input
@@ -661,22 +663,18 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                             <div className="space-y-4">
                                 <div className="p-4 border border-gray-200 rounded-lg">
                                     <h4 className="text-sm font-medium text-gray-800 mb-2">
-                                        Two-Factor Authentication (2FA) Setup
+                                        {t('settings.twofa.subtitle')}
                                     </h4>
                                     <ol className="ml-2 space-y-2 text-sm text-gray-700">
                                         <li>
-                                            - Once enabled, Two-Factor Authentication (2FA) will require you to
-                                            enter a One-Time Password (OTP) every time you log in for added
-                                            security.
+                                            - {t('settings.twofa.description1')}
                                         </li>
-                                        <li>- The OTP will be sent to your registered phone number when you login.</li>
+                                        <li>- {t('settings.twofa.description2')}</li>
                                         <li>
-                                            - Keep your phone accessible to ensure you can always complete the
-                                            login process.
+                                            - {t('settings.twofa.description3')}
                                         </li>
                                         <li>
-                                            - You can disable 2FA anytime in your account settings, but it is
-                                            strongly recommended to keep it enabled.
+                                            - {t('settings.twofa.description4')}
                                         </li>
                                     </ol>
                                 </div>
@@ -687,7 +685,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                     type="submit"
                                     className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                                 >
-                                    {customerData.twofactorEnabled ? "Disable" : "Enable"}
+                                    {customerData.twofactorEnabled ? t('settings.twofa.disable') : t('settings.twofa.enable')}
                                 </Button>
                             </div>
                         </section>
@@ -706,7 +704,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="notification" className="scroll-mt-6 space-y-2">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                                 <Bell className="text-rose-500" size={20} />
-                                Notifications
+                                {t('settings.notification.title')}
                             </h3>
                             <input
                                 type="hidden"
@@ -733,11 +731,10 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                     >
                                         <div>
                                             <h4 className="text-sm font-medium text-gray-800 capitalize">
-                                                {type} Notifications
+                                                {t(`settings.notification.${type}Title`)}
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                Receive notifications via{" "}
-                                                {type === "push" ? "push notifications" : type}
+                                                {t(`settings.notification.${type}Description`)}
                                             </p>
                                         </div>
                                         <button
@@ -760,7 +757,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 type="submit"
                                 className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                             >
-                                Save change
+                                {t('settings.notification.saveChange')}
                             </Button>
                         </div>
                     </Form>
@@ -777,14 +774,14 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                     <section id="language" className="scroll-mt-6 space-y-4">
                         <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                             <Globe className="text-rose-500" size={20} />
-                            Language Settings
+                            {t('settings.language.title')}
                         </h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language.selectLanguage')}</label>
                                 <LanguageSwitcher />
                                 <p className="text-xs text-gray-500 mt-2">
-                                    Changes are saved automatically and applied immediately.
+                                    {t('settings.language.autoSave')}
                                 </p>
                             </div>
                         </div>
@@ -807,7 +804,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 ) : (
                                     <Sun className="text-rose-500" size={20} />
                                 )}
-                                Theme Mode
+                                {t('settings.theme.title')}
                             </h3>
 
                             <input
@@ -824,9 +821,9 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                     <div>
-                                        <h4 className="font-medium text-gray-800">Dark Mode</h4>
+                                        <h4 className="font-medium text-gray-800">{t('settings.theme.darkMode')}</h4>
                                         <p className="text-sm text-gray-600">
-                                            Switch between light and dark theme
+                                            {t('settings.theme.darkModeDescription')}
                                         </p>
                                     </div>
                                 </div>
@@ -834,21 +831,21 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 <div className="grid grid-cols-2 gap-4">
 
                                     <div
-                                        className={`${!darkMode ? "border-2 border-rose-500" : "border-2 border-gray-300"} 
+                                        className={`${!darkMode ? "border-2 border-rose-500" : "border-2 border-gray-300"}
                                                         p-4 bg-white rounded-lg cursor-pointer hover:border-rose-500 transition-colors`}
                                         onClick={() => setDarkMode(false)}
                                     >
                                         <div className="w-full h-16 bg-gray-100 rounded mb-2"></div>
-                                        <p className="text-sm font-medium text-center">Light Theme</p>
+                                        <p className="text-sm font-medium text-center">{t('settings.theme.light')}</p>
                                     </div>
 
                                     <div
-                                        className={`${darkMode ? "border-2 border-rose-500" : "border-2 border-gray-300"} 
+                                        className={`${darkMode ? "border-2 border-rose-500" : "border-2 border-gray-300"}
                                                         p-4 bg-gray-800 rounded-lg cursor-pointer hover:border-rose-500 transition-colors`}
                                         onClick={() => setDarkMode(true)}
                                     >
                                         <div className="w-full h-16 bg-gray-700 rounded mb-2"></div>
-                                        <p className="text-sm font-medium text-center text-white">Dark Theme</p>
+                                        <p className="text-sm font-medium text-center text-white">{t('settings.theme.dark')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -858,7 +855,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 type="submit"
                                 className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                             >
-                                Save change
+                                {t('settings.theme.saveChange')}
                             </Button>
                         </div>
                     </Form>
@@ -878,40 +875,40 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="report" className="scroll-mt-6 space-y-2">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
                                 <Flag className="text-rose-500" size={18} />
-                                Report an issue
+                                {t('settings.report.title')}
                             </h3>
                             <input type="text" name="currectAction" defaultValue="report" className="hidden" />
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Issue Type</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.report.issueType')}</label>
                                     <select name="type" className="text-sm w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent">
-                                        <option>Bug Report</option>
-                                        <option>Feature Request</option>
-                                        <option>Account Issue</option>
-                                        <option>Payment Issue</option>
-                                        <option>Other</option>
+                                        <option>{t('settings.report.bug')}</option>
+                                        <option>{t('settings.report.feature')}</option>
+                                        <option>{t('settings.report.account')}</option>
+                                        <option>{t('settings.report.payment')}</option>
+                                        <option>{t('settings.report.other')}</option>
                                     </select>
                                 </div>
                                 <div>
                                     <Label htmlFor="title" className="text-gray-500 text-sm">
-                                        Title
+                                        {t('settings.report.titleLabel')}
                                     </Label>
                                     <Input
                                         required
                                         id="title"
                                         type="text"
                                         name="title"
-                                        placeholder="Brief description of the issue"
+                                        placeholder={t('settings.report.titlePlaceholder')}
                                         className="text-sm mt-1 border-gray-200 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">{t('settings.report.description')}</label>
                                     <textarea
                                         rows={5}
                                         name="description"
                                         className="text-sm w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                                        placeholder="Please provide detailed information about the issue..."
+                                        placeholder={t('settings.report.descriptionPlaceholder')}
                                     />
                                 </div>
                                 <div className="flex items-center justify-end">
@@ -919,7 +916,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         type="submit"
                                         className="flex cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
                                     >
-                                        Submit Report
+                                        {t('settings.report.submit')}
                                     </Button>
                                 </div>
                             </div>
@@ -941,20 +938,19 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         <section id="delete" className="scroll-mt-6">
                             <h3 className="text-md font-semibold mb-6 text-gray-800 flex items-center gap-2">
                                 <Trash2 className="text-rose-500" size={20} />
-                                Delete Account
+                                {t('settings.deleteAccount.title')}
                             </h3>
                             <input type="text" name="currectAction" defaultValue="deleteAccount" className="hidden" />
                             <div className="space-y-4">
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                                    <h4 className="font-medium text-red-800 mb-2">⚠️ Warning</h4>
+                                    <h4 className="font-medium text-red-800 mb-2">{t('settings.deleteAccount.warning')}</h4>
                                     <p className="text-sm text-red-700">
-                                        Deleting your account is permanent and cannot be undone. All your data, including profile information,
-                                        settings, and history will be permanently removed.
+                                        {t('settings.deleteAccount.warningMessage')}
                                     </p>
                                 </div>
                                 <div>
                                     <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                        Type "DELETE" to confirm
+                                        {t('settings.deleteAccount.confirmLabel')}
                                     </Label>
                                     <Input
                                         required
@@ -963,7 +959,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         name="delete"
                                         value={deleteAccount}
                                         onChange={(e) => setDeleteAccount(e.target.value)}
-                                        placeholder="Type DELETE to confirm"
+                                        placeholder={t('settings.deleteAccount.confirmPlaceholder')}
                                         className="mt-1 border-gray-200 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                     />
                                 </div>
@@ -973,7 +969,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                         disabled={deleteAccount === "DELETE" ? false : true}
                                         className="flex cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 font-medium"
                                     >
-                                        Delete My Account
+                                        {t('settings.deleteAccount.button')}
                                     </Button>
                                 </div>
                             </div>

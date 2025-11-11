@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
 import {
     Bell,
@@ -14,29 +15,30 @@ import {
     Wallet2,
 } from "lucide-react";
 
-const navigationItems = [
-    { title: "Discover", url: "/dashboard", icon: Search },
-    { title: "Match", url: "/dashboard/matches", icon: Heart },
-    { title: "Chat", url: "/dashboard/realtime-chat", icon: MessageCircle },
-    { title: "Dating history", url: "/dashboard/dates-history", icon: HandHeart },
-    { title: "Packages", url: "/dashboard/packages", icon: Boxes },
-    { title: "Wallet", url: "/dashboard/wallets", icon: Wallet },
-    { title: "My profile", url: "/dashboard/profile", icon: User },
-    { title: "Setting", url: "/dashboard/setting", icon: Settings },
-];
-
-const mobileNavigationItems = [
-    { title: "Discover", url: "/dashboard", icon: Search },
-    { title: "Match", url: "/dashboard/matches", icon: Heart },
-    { title: "Chat", url: "/dashboard/realtime-chat", icon: MessageCircle },
-    { title: "Dating", url: "/dashboard/dates-history", icon: HandHeart },
-    { title: "Wallet", url: "/dashboard/wallets", icon: Wallet2 },
-    // { title: "Notification", url: "/dashboard/notification", icon: Bell },
-    { title: "Profile", url: "/dashboard/profile", icon: User2Icon },
-];
-
 export default function Dashboard() {
     const location = useLocation();
+    const { t } = useTranslation();
+
+    const navigationItems = [
+        { title: t('navigation.discover'), url: "/dashboard", icon: Search },
+        { title: t('navigation.match'), url: "/dashboard/matches", icon: Heart },
+        { title: t('navigation.chat'), url: "/dashboard/realtime-chat", icon: MessageCircle },
+        { title: t('navigation.datingHistory'), url: "/dashboard/dates-history", icon: HandHeart },
+        { title: t('navigation.packages'), url: "/dashboard/packages", icon: Boxes },
+        { title: t('navigation.wallet'), url: "/dashboard/wallets", icon: Wallet },
+        { title: t('navigation.myProfile'), url: "/dashboard/profile", icon: User },
+        { title: t('navigation.setting'), url: "/dashboard/setting", icon: Settings },
+    ];
+
+    const mobileNavigationItems = [
+        { title: t('navigation.discover'), url: "/dashboard", icon: Search },
+        { title: t('navigation.match'), url: "/dashboard/matches", icon: Heart },
+        { title: t('navigation.chat'), url: "/dashboard/realtime-chat", icon: MessageCircle },
+        { title: t('navigation.dating'), url: "/dashboard/dates-history", icon: HandHeart },
+        { title: t('navigation.wallet'), url: "/dashboard/wallets", icon: Wallet2 },
+        // { title: t('navigation.notification'), url: "/dashboard/notification", icon: Bell },
+        { title: t('navigation.profile'), url: "/dashboard/profile", icon: User2Icon },
+    ];
 
     const isActiveRoute = (url: string) => {
         if (url === "/dashboard" && location.pathname === "/dashboard") return true;

@@ -1,4 +1,18 @@
 {
+  "navigation": {
+    "discover": "发现",
+    "match": "匹配",
+    "chat": "聊天",
+    "datingHistory": "约会历史",
+    "dating": "约会",
+    "packages": "套餐",
+    "wallet": "钱包",
+    "myProfile": "我的资料",
+    "profile": "资料",
+    "setting": "设置",
+    "notification": "通知",
+    "tagline": "找到你的完美伴侣"
+  },
   "login": {
     "title": "登录您的账户",
     "subtitle": "欢迎回来！请输入您的详细信息。",
@@ -422,6 +436,133 @@
       "cancel": "取消",
       "delete": "删除",
       "deleting": "删除中..."
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "menu": {
+      "basic": "基本信息",
+      "password": "密码",
+      "twofa": "双重认证",
+      "notification": "通知",
+      "language": "语言切换",
+      "mode": "主题模式",
+      "report": "报告",
+      "delete": "删除账户"
+    },
+    "basic": {
+      "title": "基本信息",
+      "subtitle": "管理您的个人详细信息和个人资料信息",
+      "firstName": "名字",
+      "firstNamePlaceholder": "输入您的名字",
+      "lastName": "姓氏",
+      "lastNamePlaceholder": "输入您的姓氏",
+      "dateOfBirth": "出生日期",
+      "dateOfBirthPlaceholder": "选择日期",
+      "gender": "性别",
+      "genderPlaceholder": "选择性别",
+      "male": "男",
+      "female": "女",
+      "other": "其他",
+      "relationshipStatus": "关系状态",
+      "relationshipPlaceholder": "选择关系状态",
+      "single": "单身",
+      "divorced": "离异",
+      "widowed": "丧偶",
+      "separated": "分居",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "输入您的 WhatsApp 号码",
+      "bio": "个人简介",
+      "bioPlaceholder": "介绍一下您自己...",
+      "career": "职业",
+      "careerPlaceholder": "输入您的职业",
+      "education": "教育背景",
+      "educationPlaceholder": "输入您的教育背景",
+      "saveChange": "保存更改",
+      "saving": "保存中...."
+    },
+    "password": {
+      "title": "密码",
+      "subtitle": "更新您的密码以保护账户安全",
+      "oldPassword": "旧密码",
+      "oldPasswordPlaceholder": "输入您的当前密码",
+      "newPassword": "新密码",
+      "newPasswordPlaceholder": "输入您的新密码",
+      "confirmNewPassword": "确认新密码",
+      "confirmNewPasswordPlaceholder": "重新输入您的新密码",
+      "saveChange": "保存更改",
+      "saving": "保存中...."
+    },
+    "twofa": {
+      "title": "双重认证",
+      "subtitle": "为您的账户增加额外的安全保护",
+      "description": "双重认证通过要求除密码之外的更多信息来为您的账户增加额外的安全层。",
+      "enabled": "双重认证当前已启用",
+      "disabled": "双重认证当前已禁用",
+      "enable": "启用双重认证",
+      "disable": "禁用双重认证",
+      "processing": "处理中...."
+    },
+    "notification": {
+      "title": "通知",
+      "subtitle": "管理您接收通知的方式",
+      "email": "电子邮件通知",
+      "emailDescription": "通过电子邮件接收通知",
+      "push": "推送通知",
+      "pushDescription": "在您的设备上接收推送通知",
+      "sms": "短信通知",
+      "smsDescription": "通过短信接收通知",
+      "saveChange": "保存更改",
+      "saving": "保存中...."
+    },
+    "language": {
+      "title": "语言切换",
+      "subtitle": "选择您的首选语言",
+      "selectLanguage": "选择语言",
+      "languagePlaceholder": "选择一种语言",
+      "saveChange": "保存更改",
+      "saving": "保存中...."
+    },
+    "theme": {
+      "title": "主题模式",
+      "subtitle": "自定义您的浏览体验",
+      "light": "浅色模式",
+      "lightDescription": "使用浅色主题以便白天更好地查看",
+      "dark": "深色模式",
+      "darkDescription": "使用深色主题以减少夜间眼睛疲劳",
+      "saveChange": "保存更改",
+      "saving": "保存中...."
+    },
+    "report": {
+      "title": "报告问题",
+      "subtitle": "通过报告您遇到的问题来帮助我们改进",
+      "issueType": "问题类型",
+      "issueTypePlaceholder": "选择问题类型",
+      "bug": "错误",
+      "feature": "功能请求",
+      "other": "其他",
+      "reportTitle": "标题",
+      "reportTitlePlaceholder": "问题的简要描述",
+      "description": "详细说明",
+      "descriptionPlaceholder": "请提供有关问题的详细信息...",
+      "submit": "提交报告",
+      "submitting": "提交中...."
+    },
+    "deleteAccount": {
+      "title": "删除账户",
+      "subtitle": "永久删除您的账户和所有相关数据",
+      "warning": "警告：此操作无法撤消！",
+      "warningMessage": "删除您的账户将永久删除您的所有数据，包括您的个人资料、消息和订阅历史。此操作不可逆转。",
+      "confirmation": "输入 DELETE 以确认",
+      "confirmationPlaceholder": "输入 DELETE",
+      "delete": "删除我的账户",
+      "deleting": "删除中...."
+    },
+    "common": {
+      "back": "返回",
+      "logout": "退出登录",
+      "loggingOut": "正在退出...",
+      "processing": "处理中...."
     }
   }
 }

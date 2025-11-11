@@ -1,4 +1,18 @@
 {
+  "navigation": {
+    "discover": "Khám phá",
+    "match": "Kết nối",
+    "chat": "Trò chuyện",
+    "datingHistory": "Lịch sử hẹn hò",
+    "dating": "Hẹn hò",
+    "packages": "Gói dịch vụ",
+    "wallet": "Ví",
+    "myProfile": "Hồ sơ của tôi",
+    "profile": "Hồ sơ",
+    "setting": "Cài đặt",
+    "notification": "Thông báo",
+    "tagline": "Tìm người hoàn hảo dành cho bạn"
+  },
   "login": {
     "title": "Đăng nhập vào tài khoản của bạn",
     "subtitle": "Chào mừng trở lại! Vui lòng nhập thông tin của bạn.",
@@ -422,6 +436,133 @@
       "cancel": "Hủy",
       "delete": "Xóa",
       "deleting": "Đang xóa..."
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "menu": {
+      "basic": "Thông tin cơ bản",
+      "password": "Mật khẩu",
+      "twofa": "Xác thực 2 yếu tố",
+      "notification": "Thông báo",
+      "language": "Chuyển đổi ngôn ngữ",
+      "mode": "Chế độ giao diện",
+      "report": "Báo cáo",
+      "delete": "Xóa tài khoản"
+    },
+    "basic": {
+      "title": "Thông tin cơ bản",
+      "subtitle": "Quản lý thông tin cá nhân và hồ sơ của bạn",
+      "firstName": "Tên",
+      "firstNamePlaceholder": "Nhập tên của bạn",
+      "lastName": "Họ",
+      "lastNamePlaceholder": "Nhập họ của bạn",
+      "dateOfBirth": "Ngày sinh",
+      "dateOfBirthPlaceholder": "Chọn ngày",
+      "gender": "Giới tính",
+      "genderPlaceholder": "Chọn giới tính",
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác",
+      "relationshipStatus": "Tình trạng quan hệ",
+      "relationshipPlaceholder": "Chọn tình trạng quan hệ",
+      "single": "Độc thân",
+      "divorced": "Đã ly hôn",
+      "widowed": "Góa",
+      "separated": "Ly thân",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "Nhập số WhatsApp của bạn",
+      "bio": "Tiểu sử",
+      "bioPlaceholder": "Hãy kể cho chúng tôi về bản thân bạn...",
+      "career": "Nghề nghiệp",
+      "careerPlaceholder": "Nhập nghề nghiệp của bạn",
+      "education": "Học vấn",
+      "educationPlaceholder": "Nhập trình độ học vấn của bạn",
+      "saveChange": "Lưu thay đổi",
+      "saving": "Đang lưu...."
+    },
+    "password": {
+      "title": "Mật khẩu",
+      "subtitle": "Cập nhật mật khẩu để giữ tài khoản an toàn",
+      "oldPassword": "Mật khẩu cũ",
+      "oldPasswordPlaceholder": "Nhập mật khẩu hiện tại của bạn",
+      "newPassword": "Mật khẩu mới",
+      "newPasswordPlaceholder": "Nhập mật khẩu mới của bạn",
+      "confirmNewPassword": "Xác nhận mật khẩu mới",
+      "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới của bạn",
+      "saveChange": "Lưu thay đổi",
+      "saving": "Đang lưu...."
+    },
+    "twofa": {
+      "title": "Xác thực hai yếu tố",
+      "subtitle": "Thêm một lớp bảo mật bổ sung cho tài khoản của bạn",
+      "description": "Xác thực hai yếu tố thêm một lớp bảo mật bổ sung cho tài khoản của bạn bằng cách yêu cầu nhiều hơn chỉ mật khẩu để đăng nhập.",
+      "enabled": "2FA hiện đang được bật",
+      "disabled": "2FA hiện đang bị tắt",
+      "enable": "Bật 2FA",
+      "disable": "Tắt 2FA",
+      "processing": "Đang xử lý...."
+    },
+    "notification": {
+      "title": "Thông báo",
+      "subtitle": "Quản lý cách bạn nhận thông báo",
+      "email": "Thông báo qua Email",
+      "emailDescription": "Nhận thông báo qua email",
+      "push": "Thông báo đẩy",
+      "pushDescription": "Nhận thông báo đẩy trên thiết bị của bạn",
+      "sms": "Thông báo SMS",
+      "smsDescription": "Nhận thông báo qua SMS",
+      "saveChange": "Lưu thay đổi",
+      "saving": "Đang lưu...."
+    },
+    "language": {
+      "title": "Chuyển đổi ngôn ngữ",
+      "subtitle": "Chọn ngôn ngữ ưa thích của bạn",
+      "selectLanguage": "Chọn ngôn ngữ",
+      "languagePlaceholder": "Chọn một ngôn ngữ",
+      "saveChange": "Lưu thay đổi",
+      "saving": "Đang lưu...."
+    },
+    "theme": {
+      "title": "Chế độ giao diện",
+      "subtitle": "Tùy chỉnh trải nghiệm xem của bạn",
+      "light": "Chế độ sáng",
+      "lightDescription": "Sử dụng giao diện sáng để dễ nhìn hơn vào ban ngày",
+      "dark": "Chế độ tối",
+      "darkDescription": "Sử dụng giao diện tối để giảm mỏi mắt vào ban đêm",
+      "saveChange": "Lưu thay đổi",
+      "saving": "Đang lưu...."
+    },
+    "report": {
+      "title": "Báo cáo sự cố",
+      "subtitle": "Giúp chúng tôi cải thiện bằng cách báo cáo các vấn đề bạn gặp phải",
+      "issueType": "Loại sự cố",
+      "issueTypePlaceholder": "Chọn loại sự cố",
+      "bug": "Lỗi",
+      "feature": "Yêu cầu tính năng",
+      "other": "Khác",
+      "reportTitle": "Tiêu đề",
+      "reportTitlePlaceholder": "Mô tả ngắn gọn về sự cố",
+      "description": "Mô tả chi tiết",
+      "descriptionPlaceholder": "Vui lòng cung cấp thông tin chi tiết về sự cố...",
+      "submit": "Gửi báo cáo",
+      "submitting": "Đang gửi...."
+    },
+    "deleteAccount": {
+      "title": "Xóa tài khoản",
+      "subtitle": "Xóa vĩnh viễn tài khoản và tất cả dữ liệu liên quan của bạn",
+      "warning": "Cảnh báo: Hành động này không thể hoàn tác!",
+      "warningMessage": "Xóa tài khoản của bạn sẽ xóa vĩnh viễn tất cả dữ liệu của bạn, bao gồm hồ sơ, tin nhắn và lịch sử đăng ký. Hành động này không thể đảo ngược.",
+      "confirmation": "Nhập DELETE để xác nhận",
+      "confirmationPlaceholder": "Nhập DELETE",
+      "delete": "Xóa tài khoản của tôi",
+      "deleting": "Đang xóa...."
+    },
+    "common": {
+      "back": "Quay lại",
+      "logout": "Đăng xuất",
+      "loggingOut": "Đang đăng xuất...",
+      "processing": "Đang xử lý...."
     }
   }
 }

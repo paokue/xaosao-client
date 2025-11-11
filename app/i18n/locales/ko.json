@@ -1,4 +1,18 @@
 {
+  "navigation": {
+    "discover": "발견",
+    "match": "매칭",
+    "chat": "채팅",
+    "datingHistory": "데이트 기록",
+    "dating": "데이트",
+    "packages": "패키지",
+    "wallet": "지갑",
+    "myProfile": "내 프로필",
+    "profile": "프로필",
+    "setting": "설정",
+    "notification": "알림",
+    "tagline": "완벽한 짝을 찾아보세요"
+  },
   "login": {
     "title": "계정에 로그인",
     "subtitle": "환영합니다! 정보를 입력해주세요.",
@@ -422,6 +436,133 @@
       "cancel": "취소",
       "delete": "삭제",
       "deleting": "삭제 중..."
+    }
+  },
+  "settings": {
+    "title": "설정",
+    "menu": {
+      "basic": "기본 정보",
+      "password": "비밀번호",
+      "twofa": "2단계 인증",
+      "notification": "알림",
+      "language": "언어 전환",
+      "mode": "테마 모드",
+      "report": "신고",
+      "delete": "계정 삭제"
+    },
+    "basic": {
+      "title": "기본 정보",
+      "subtitle": "개인 정보 및 프로필 정보를 관리하세요",
+      "firstName": "이름",
+      "firstNamePlaceholder": "이름을 입력하세요",
+      "lastName": "성",
+      "lastNamePlaceholder": "성을 입력하세요",
+      "dateOfBirth": "생년월일",
+      "dateOfBirthPlaceholder": "날짜 선택",
+      "gender": "성별",
+      "genderPlaceholder": "성별 선택",
+      "male": "남성",
+      "female": "여성",
+      "other": "기타",
+      "relationshipStatus": "관계 상태",
+      "relationshipPlaceholder": "관계 상태 선택",
+      "single": "미혼",
+      "divorced": "이혼",
+      "widowed": "사별",
+      "separated": "별거",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "WhatsApp 번호를 입력하세요",
+      "bio": "자기소개",
+      "bioPlaceholder": "자신에 대해 소개해주세요...",
+      "career": "직업",
+      "careerPlaceholder": "직업을 입력하세요",
+      "education": "학력",
+      "educationPlaceholder": "학력을 입력하세요",
+      "saveChange": "변경 사항 저장",
+      "saving": "저장 중...."
+    },
+    "password": {
+      "title": "비밀번호",
+      "subtitle": "계정을 안전하게 유지하기 위해 비밀번호를 업데이트하세요",
+      "oldPassword": "이전 비밀번호",
+      "oldPasswordPlaceholder": "현재 비밀번호를 입력하세요",
+      "newPassword": "새 비밀번호",
+      "newPasswordPlaceholder": "새 비밀번호를 입력하세요",
+      "confirmNewPassword": "새 비밀번호 확인",
+      "confirmNewPasswordPlaceholder": "새 비밀번호를 다시 입력하세요",
+      "saveChange": "변경 사항 저장",
+      "saving": "저장 중...."
+    },
+    "twofa": {
+      "title": "2단계 인증",
+      "subtitle": "계정에 추가 보안 계층을 추가하세요",
+      "description": "2단계 인증은 로그인 시 비밀번호 외에 추가 정보를 요구하여 계정에 추가 보안 계층을 추가합니다.",
+      "enabled": "2FA가 현재 활성화되어 있습니다",
+      "disabled": "2FA가 현재 비활성화되어 있습니다",
+      "enable": "2FA 활성화",
+      "disable": "2FA 비활성화",
+      "processing": "처리 중...."
+    },
+    "notification": {
+      "title": "알림",
+      "subtitle": "알림을 받는 방식을 관리하세요",
+      "email": "이메일 알림",
+      "emailDescription": "이메일로 알림 받기",
+      "push": "푸시 알림",
+      "pushDescription": "기기에서 푸시 알림 받기",
+      "sms": "SMS 알림",
+      "smsDescription": "SMS로 알림 받기",
+      "saveChange": "변경 사항 저장",
+      "saving": "저장 중...."
+    },
+    "language": {
+      "title": "언어 전환",
+      "subtitle": "선호하는 언어를 선택하세요",
+      "selectLanguage": "언어 선택",
+      "languagePlaceholder": "언어를 선택하세요",
+      "saveChange": "변경 사항 저장",
+      "saving": "저장 중...."
+    },
+    "theme": {
+      "title": "테마 모드",
+      "subtitle": "보기 환경을 맞춤 설정하세요",
+      "light": "라이트 모드",
+      "lightDescription": "낮 동안 더 나은 가시성을 위해 라이트 테마 사용",
+      "dark": "다크 모드",
+      "darkDescription": "밤에 눈의 피로를 줄이기 위해 다크 테마 사용",
+      "saveChange": "변경 사항 저장",
+      "saving": "저장 중...."
+    },
+    "report": {
+      "title": "문제 신고",
+      "subtitle": "발생한 문제를 신고하여 개선에 도움을 주세요",
+      "issueType": "문제 유형",
+      "issueTypePlaceholder": "문제 유형 선택",
+      "bug": "버그",
+      "feature": "기능 요청",
+      "other": "기타",
+      "reportTitle": "제목",
+      "reportTitlePlaceholder": "문제에 대한 간단한 설명",
+      "description": "상세 설명",
+      "descriptionPlaceholder": "문제에 대한 자세한 정보를 제공해주세요...",
+      "submit": "신고 제출",
+      "submitting": "제출 중...."
+    },
+    "deleteAccount": {
+      "title": "계정 삭제",
+      "subtitle": "계정 및 관련된 모든 데이터를 영구적으로 삭제합니다",
+      "warning": "경고: 이 작업은 취소할 수 없습니다!",
+      "warningMessage": "계정을 삭제하면 프로필, 메시지 및 구독 기록을 포함한 모든 데이터가 영구적으로 제거됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "confirmation": "DELETE를 입력하여 확인",
+      "confirmationPlaceholder": "DELETE 입력",
+      "delete": "내 계정 삭제",
+      "deleting": "삭제 중...."
+    },
+    "common": {
+      "back": "뒤로",
+      "logout": "로그아웃",
+      "loggingOut": "로그아웃 중...",
+      "processing": "처리 중...."
     }
   }
 }

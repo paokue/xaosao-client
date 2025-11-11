@@ -1,8 +1,8 @@
 import type { Route } from "./+types/login"
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router"
 import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react"
-import { useTranslation } from "react-i18next"
 
 // components
 import { Label } from "~/components/ui/label"
@@ -13,10 +13,13 @@ import { Button } from "~/components/ui/button"
 import { validateSignInInputs } from "~/services"
 import type { ICustomerSigninCredentials } from "~/interfaces"
 
-const backgroundImages = [
-    "https://images.pexels.com/photos/9883888/pexels-photo-9883888.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.pexels.com/photos/14541930/pexels-photo-14541930.jpeg?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-]
+const mobileBackgroundImages = [
+    "https://images.pexels.com/photos/17441715/pexels-photo-17441715.jpeg",
+    "https://images.pexels.com/photos/5910995/pexels-photo-5910995.jpeg",
+    "https://images.pexels.com/photos/2055224/pexels-photo-2055224.jpeg",
+    "https://images.pexels.com/photos/3089876/pexels-photo-3089876.jpeg",
+    "https://images.pexels.com/photos/5910832/pexels-photo-5910832.jpeg"
+];
 
 export async function action({ request }: Route.ActionArgs) {
     const { customerLogin } = await import("~/services")
@@ -58,7 +61,7 @@ export default function SignInPage() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % mobileBackgroundImages.length)
         }, 5000)
         return () => clearInterval(interval)
     }, [])
@@ -67,10 +70,10 @@ export default function SignInPage() {
 
     return (
         <div className="fullscreen safe-area relative overflow-hidden">
-            {backgroundImages.map((image, index) => (
+            {mobileBackgroundImages.map((image, index) => (
                 <div
                     key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
+                    className={`absolute inset-0 transition-opacity duration-3000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
                         }`}
                     style={{
                         backgroundImage: `url(${image})`,
@@ -78,17 +81,19 @@ export default function SignInPage() {
                         backgroundPosition: "center",
                     }}
                 />
-            ))}
 
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+            ))}
 
             <div
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-auto
                             bg-black/50 backdrop-blur-md shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start rounded-sm z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-6 cursor-pointer" onClick={() => navigate("/")}>
-                    <ArrowLeft className="text-xl text-gray-300" />
+                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    <p className="flex items-center space-x-2">
+                        <ArrowLeft className="text-xl text-gray-300" />
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p>
                 </div>
 
                 <div className="space-y-2 mb-6">
@@ -175,9 +180,9 @@ export default function SignInPage() {
                     </Button>
 
                     <div className="flex flex-col sm:flex-row text-center justify-center space-y-2">
-                        <div className="space-x-4">
+                        <div className="space-x-2">
                             <span className="text-white">{t('login.noAccount')} </span>
-                            <Link to="/register" className="text-rose-500 hover:text-rose-600 text-md font-medium hover:underline uppercase">
+                            <Link to="/register" className="text-white text-md underline font-bold">
                                 {isMobile ? t('login.createAccountMobile') : t('login.createAccount')}
                             </Link>
                         </div>
