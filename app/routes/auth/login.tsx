@@ -1,76 +1,177 @@
-import type { Route } from "./+types/login"
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router"
-import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react"
+import type { Route } from "./+types/login";
+import { useTranslation } from "react-i18next";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
+import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react";
 
-// components
-import { Label } from "~/components/ui/label"
-import { Input } from "~/components/ui/input"
-import { Button } from "~/components/ui/button"
+// Components
+import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 
-// interface and services
-import { validateSignInInputs } from "~/services"
-import type { ICustomerSigninCredentials } from "~/interfaces"
+// Services & Types
+import { validateSignInInputs } from "~/services";
+import type { ICustomerSigninCredentials } from "~/interfaces";
 
-const mobileBackgroundImages = [
+// Constants
+const BACKGROUND_IMAGES = [
     "https://images.pexels.com/photos/17441715/pexels-photo-17441715.jpeg",
     "https://images.pexels.com/photos/5910995/pexels-photo-5910995.jpeg",
     "https://images.pexels.com/photos/2055224/pexels-photo-2055224.jpeg",
     "https://images.pexels.com/photos/3089876/pexels-photo-3089876.jpeg",
     "https://images.pexels.com/photos/5910832/pexels-photo-5910832.jpeg"
-];
+] as const;
 
-export async function action({ request }: Route.ActionArgs) {
-    const { customerLogin } = await import("~/services")
-    const formData = await request.formData()
+const CAROUSEL_INTERVAL_MS = 5000;
+const PHONE_NUMBER_LENGTH = { MIN: 10, MAX: 10 };
 
-    const signInData: ICustomerSigninCredentials = {
-        rememberMe: formData.get("rememberMe") === "on" ? true : false,
-        whatsapp: Number(formData.get("whatsapp")),
-        password: formData.get("password") as string,
-    };
-
-    if (!signInData.whatsapp || !signInData.password) {
-        return { error: "Invalid phone number or password!" }
-    }
-
-    if (request.method === "POST") {
-        try {
-            validateSignInInputs(signInData);
-            return await customerLogin(signInData);
-        } catch (error: any) {
-            if (error.status === 401) {
-                return { success: false, error: true, message: error.message || "Phone number or password incorrect!" };
-            }
-            const value = Object.values(error)[0];
-            return { success: false, error: true, message: value };
-        }
-    }
-    return { success: false, error: true, message: "Invalid request method!" };
+// Types
+interface ActionResponse {
+    success?: boolean;
+    error?: boolean;
+    message?: string;
 }
 
-export default function SignInPage() {
-    const { t } = useTranslation()
-    const navigate = useNavigate()
-    const navigation = useNavigation()
-    const [showPassword, setShowPassword] = useState(false)
-    const [currentImageIndex, setCurrentImageIndex] = useState(0)
-    const isSubmitting = navigation.state !== 'idle' && navigation.formMethod === "POST";
-    const actionData = useActionData<typeof action>()
+/**
+ * Server action handler for login form submission
+ * Validates credentials and authenticates user
+ */
+export async function action({ request }: Route.ActionArgs): Promise<ActionResponse> {
+    // Only allow POST requests
+    if (request.method !== "POST") {
+        return {
+            success: false,
+            error: true,
+            message: "Invalid request method"
+        };
+    }
 
+    try {
+        // Dynamic import for code splitting
+        const { customerLogin } = await import("~/services");
+        const formData = await request.formData();
+
+        // Extract and sanitize form data
+        const whatsappRaw = formData.get("whatsapp");
+        const passwordRaw = formData.get("password");
+        const rememberMeRaw = formData.get("rememberMe");
+
+        // Validate required fields
+        if (!whatsappRaw || !passwordRaw) {
+            return {
+                success: false,
+                error: true,
+                message: "Phone number and password are required"
+            };
+        }
+
+        // Parse and validate phone number
+        const whatsapp = Number(whatsappRaw);
+        if (isNaN(whatsapp) || whatsapp <= 0) {
+            return {
+                success: false,
+                error: true,
+                message: "Invalid phone number format"
+            };
+        }
+
+        // Construct credentials object
+        const signInData: ICustomerSigninCredentials = {
+            whatsapp,
+            password: String(passwordRaw),
+            rememberMe: rememberMeRaw === "on",
+        };
+
+        // Validate and attempt login
+        validateSignInInputs(signInData);
+        const result = await customerLogin(signInData);
+
+        // Ensure we always return a proper ActionResponse
+        if (!result) {
+            return {
+                success: false,
+                error: true,
+                message: "Login failed. Please try again."
+            };
+        }
+
+        return result as ActionResponse;
+
+    } catch (error: unknown) {
+        // Handle authentication errors
+        if (error && typeof error === "object" && "status" in error) {
+            const httpError = error as { status: number; message?: string };
+            if (httpError.status === 401) {
+                return {
+                    success: false,
+                    error: true,
+                    message: httpError.message || "Invalid phone number or password"
+                };
+            }
+        }
+
+        // Handle validation errors
+        if (error && typeof error === "object") {
+            const validationError = Object.values(error)[0];
+            return {
+                success: false,
+                error: true,
+                message: String(validationError)
+            };
+        }
+
+        // Handle unexpected errors
+        return {
+            success: false,
+            error: true,
+            message: "An unexpected error occurred. Please try again."
+        };
+    }
+}
+
+/**
+ * Login page component
+ * Handles user authentication with phone number and password
+ */
+export default function SignInPage() {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const navigation = useNavigation();
+    const actionData = useActionData<typeof action>();
+
+    // Local state
+    const [showPassword, setShowPassword] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Computed values
+    const isSubmitting = navigation.state !== "idle" && navigation.formMethod === "POST";
+    const isMobile = useMemo(
+        () => typeof window !== "undefined" && window.innerWidth < 768,
+        []
+    );
+
+    // Background image carousel effect
     useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % mobileBackgroundImages.length)
-        }, 5000)
-        return () => clearInterval(interval)
-    }, [])
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % BACKGROUND_IMAGES.length);
+        }, CAROUSEL_INTERVAL_MS);
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+        return () => clearInterval(interval);
+    }, []);
+
+    // Toggle password visibility handler
+    const togglePasswordVisibility = useCallback(() => {
+        setShowPassword((prev) => !prev);
+    }, []);
+
+    // Navigation handlers
+    const handleBackClick = useCallback(() => {
+        navigate("/");
+    }, [navigate]);
 
     return (
         <div className="fullscreen safe-area relative overflow-hidden">
-            {mobileBackgroundImages.map((image, index) => (
+            {BACKGROUND_IMAGES.map((image, index) => (
                 <div
                     key={index}
                     className={`absolute inset-0 transition-opacity duration-3000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
@@ -89,12 +190,17 @@ export default function SignInPage() {
                             bg-black/50 backdrop-blur-md shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start rounded-sm z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                <button
+                    type="button"
+                    onClick={handleBackClick}
+                    className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer"
+                    aria-label="Go back to home"
+                >
                     <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
                         <span className="text-white text-xl">XAOSAO</span>
                     </p>
-                </div>
+                </button>
 
                 <div className="space-y-2 mb-6">
                     <h1 className="flex items-center justify-start text-md sm:text-lg font-bold text-white uppercase">
@@ -103,26 +209,32 @@ export default function SignInPage() {
                     <p className="text-white text-sm">{t('login.subtitle')}</p>
                 </div>
 
-                <Form method="post" className="space-y-4 sm:space-y-6">
+                <Form method="post" className="space-y-4 sm:space-y-6" noValidate>
                     <div>
                         <Label htmlFor="whatsapp" className="text-gray-300 text-sm">
-                            {t('login.phoneNumber')}<span className="text-rose-500">*</span>
+                            {t('login.phoneNumber')}
+                            <span className="text-rose-500" aria-label="required">*</span>
                         </Label>
                         <Input
                             required
-                            minLength={10}
-                            maxLength={10}
+                            minLength={PHONE_NUMBER_LENGTH.MIN}
+                            maxLength={PHONE_NUMBER_LENGTH.MAX}
                             id="whatsapp"
-                            type="number"
+                            type="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]{10}"
                             name="whatsapp"
                             placeholder={t('login.phonePlaceholder')}
+                            autoComplete="tel"
                             className="mt-1 border-white text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
+                            aria-describedby="whatsapp-error"
                         />
                     </div>
 
                     <div>
                         <Label htmlFor="password" className="text-gray-300 text-sm">
-                            {t('login.password')}<span className="text-rose-500">*</span>
+                            {t('login.password')}
+                            <span className="text-rose-500" aria-label="required">*</span>
                         </Label>
                         <div className="relative mt-1">
                             <Input
@@ -131,21 +243,28 @@ export default function SignInPage() {
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 placeholder={t('login.passwordPlaceholder')}
+                                autoComplete="current-password"
                                 className="border-white text-white placeholder-gray-400 focus:border-rose-500 pr-10 backdrop-blur-sm"
+                                aria-describedby="password-error"
                             />
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                onClick={togglePasswordVisibility}
+                                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
                     </div>
 
-                    {actionData?.error && (
-                        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
-                            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    {actionData?.error && actionData.message && (
+                        <div
+                            role="alert"
+                            aria-live="polite"
+                            className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm"
+                        >
+                            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" aria-hidden="true" />
                             <span className="text-red-200 text-sm">
                                 {actionData.message}
                             </span>
@@ -158,14 +277,18 @@ export default function SignInPage() {
                                 id="remember"
                                 type="checkbox"
                                 name="rememberMe"
-                                className="w-4 h-4 text-pink-500 bg-gray-900 border-gray-600 rounded focus:ring-pink-500"
+                                className="w-4 h-4 text-pink-500 bg-gray-900 border-gray-600 rounded focus:ring-pink-500 focus:ring-offset-0"
+                                aria-label="Remember me"
                             />
-                            <Label htmlFor="remember" className="ml-2 text-sm text-gray-300">
+                            <Label htmlFor="remember" className="ml-2 text-sm text-gray-300 cursor-pointer">
                                 {t('login.rememberMe')}
                             </Label>
                         </div>
 
-                        <Link to="/forgot-password" className="text-white hover:text-rose-600 text-sm underline">
+                        <Link
+                            to="/forgot-password"
+                            className="text-white hover:text-rose-600 text-sm underline transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 rounded"
+                        >
                             {t('login.forgotPassword')}
                         </Link>
                     </div>
@@ -173,16 +296,20 @@ export default function SignInPage() {
                     <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 text-white py-3 font-medium uppercase"
+                        className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 disabled:cursor-not-allowed text-white py-3 font-medium uppercase transition-colors"
+                        aria-busy={isSubmitting}
                     >
-                        {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                        {isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
                         {isSubmitting ? t('login.loggingIn') : t('login.loginButton')}
                     </Button>
 
                     <div className="flex flex-col sm:flex-row text-center justify-center space-y-2">
                         <div className="space-x-2">
-                            <span className="text-white">{t('login.noAccount')} </span>
-                            <Link to="/register" className="text-white text-md underline font-bold">
+                            <span className="text-white">{t('login.noAccount')}</span>
+                            <Link
+                                to="/register"
+                                className="text-white text-md underline font-bold hover:text-rose-500 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 rounded"
+                            >
                                 {isMobile ? t('login.createAccountMobile') : t('login.createAccount')}
                             </Link>
                         </div>
@@ -190,5 +317,5 @@ export default function SignInPage() {
                 </Form>
             </div>
         </div>
-    )
+    );
 }
