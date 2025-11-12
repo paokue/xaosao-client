@@ -76,7 +76,7 @@ async function createContact(
   userData: ChatInputCredentials,
   token: string
 ): Promise<SuccessResponse> {
-  const url = "http://localhost:3000/api/add-contact-name";
+  const url = "http://66.42.50.59:9090/api/add-contact-name";
 
   try {
     const response = await fetch(url, {
@@ -99,7 +99,7 @@ async function createContact(
       message: data.message,
     };
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Add contact from RRV7 to React failed::", error);
     throw error;
   }
 }

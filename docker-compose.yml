@@ -17,4 +17,4 @@ services:
       - ./public:/app/public
 networks:
   xaosao-share-network:
-    external: false
+    external: true

@@ -190,7 +190,10 @@ export async function createUserSession(
 
 // This for register new user to chat DB:
 async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
-  const url = "http://localhost:3000/api/login-with-phone";
+  // const url = "http://66.42.50.59:9090/api/login-with-phone";
+  const url = `http://xaosao-chat-node-api:9090/api/login-with-phone`;
+  console.log("User dATA::", userData);
+  console.log("User dATA11111::", JSON.stringify(userData));
 
   try {
     const response = await fetch(url, {
@@ -203,10 +206,13 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
 
     const data = await response.json();
 
+
+    console.log("Response:::", data);
+
     // Check if the request was successful
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
-    }
+    // if (!response.success) {
+    //   throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    // }
 
     return {
       token: data.token,
@@ -214,7 +220,7 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
       message: data.message,
     };
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration from RRV7 to React failed 11:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -302,7 +308,7 @@ export async function customerLogin({
 async function registerUserWithoutOTP(
   userData: UserRegistrationData
 ): Promise<RegistrationResponse> {
-  const url = "http://localhost:3000/api/register-without-otp";
+  const url = "http://66.42.50.59:9090/api/register-without-otp";
 
   try {
     const response = await fetch(url, {
@@ -327,7 +333,7 @@ async function registerUserWithoutOTP(
       message: "User registered successfully",
     };
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration from RRV7 to React failed11:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
