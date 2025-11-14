@@ -49,12 +49,18 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
     try {
         // Dynamic import for code splitting
         const { customerLogin } = await import("~/services");
+        const { prisma } = await import("~/services/database.server");
+
         const formData = await request.formData();
 
         // Extract and sanitize form data
         const whatsappRaw = formData.get("whatsapp");
         const passwordRaw = formData.get("password");
         const rememberMeRaw = formData.get("rememberMe");
+
+        // Get GPS coordinates from client (if provided)
+        const latitudeRaw = formData.get("latitude");
+        const longitudeRaw = formData.get("longitude");
 
         // Validate required fields
         if (!whatsappRaw || !passwordRaw) {
@@ -86,7 +92,45 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
         validateSignInInputs(signInData);
         const result = await customerLogin(signInData);
 
-        // Ensure we always return a proper ActionResponse
+        // Update user GPS location if provided (non-blocking - don't fail login if this fails)
+        if (latitudeRaw && longitudeRaw) {
+            try {
+                const latitude = parseFloat(String(latitudeRaw));
+                const longitude = parseFloat(String(longitudeRaw));
+
+                console.log("Paokue GPS coordinates received:", latitude, longitude);
+
+                // Validate coordinates
+                if (!isNaN(latitude) && !isNaN(longitude) &&
+                    latitude >= -90 && latitude <= 90 &&
+                    longitude >= -180 && longitude <= 180) {
+
+                    const customer = await prisma.customer.findFirst({
+                        where: { whatsapp },
+                        select: { id: true }
+                    });
+
+                    if (customer) {
+                        // Update customer GPS location in database
+                        await prisma.customer.update({
+                            where: { id: customer.id },
+                            data: {
+                                latitude,
+                                longitude,
+                            },
+                        }).catch(err => {
+                            // Log error but don't fail login
+                            console.error("Failed to update GPS location on login:", err);
+                        });
+
+                        console.log(`GPS location updated for user ${whatsapp}: (${latitude}, ${longitude})`);
+                    }
+                }
+            } catch (locationError) {
+                console.error("GPS location update error during login:", locationError);
+            }
+        }
+
         if (!result) {
             return {
                 success: false,
@@ -129,10 +173,7 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
     }
 }
 
-/**
- * Login page component
- * Handles user authentication with phone number and password
- */
+
 export default function SignInPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -142,6 +183,7 @@ export default function SignInPage() {
     // Local state
     const [showPassword, setShowPassword] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
     // Computed values
     const isSubmitting = navigation.state !== "idle" && navigation.formMethod === "POST";
@@ -157,6 +199,30 @@ export default function SignInPage() {
         }, CAROUSEL_INTERVAL_MS);
 
         return () => clearInterval(interval);
+    }, []);
+
+    // Get user's GPS location on component mount
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setLocation({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                    console.log("GPS location obtained:", position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    console.warn("Geolocation permission denied or unavailable:", error.message);
+                    // Continue without location - login will still work
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000, // Cache for 5 minutes
+                }
+            );
+        }
     }, []);
 
     // Toggle password visibility handler
@@ -210,6 +276,14 @@ export default function SignInPage() {
                 </div>
 
                 <Form method="post" className="space-y-4 sm:space-y-6" noValidate>
+                    {/* Hidden fields for GPS coordinates */}
+                    {location && (
+                        <>
+                            <input type="hidden" name="latitude" value={location.latitude} />
+                            <input type="hidden" name="longitude" value={location.longitude} />
+                        </>
+                    )}
+
                     <div>
                         <Label htmlFor="whatsapp" className="text-gray-300 text-sm">
                             {t('login.phoneNumber')}

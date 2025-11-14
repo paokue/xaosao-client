@@ -15,12 +15,19 @@ interface ForYouFilters {
   perPage?: number;
 }
 
-// Discover page
+// Discover page - Get online/active models that customer hasn't passed
 export async function getModelsForCustomer(customerId: string) {
   try {
+    // Get customer location for distance calculation
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { latitude: true, longitude: true },
+    });
+
     const models = await prisma.model.findMany({
       where: {
         status: "active",
+        // Exclude models the customer has passed
         customer_interactions: {
           none: {
             customerId,
@@ -29,6 +36,12 @@ export async function getModelsForCustomer(customerId: string) {
         },
       },
       take: 20,
+      orderBy: [
+        // Prioritize models with higher ratings
+        { rating: "desc" },
+        // Then by most recent activity
+        { updatedAt: "desc" },
+      ],
       select: {
         id: true,
         firstName: true,
@@ -40,17 +53,21 @@ export async function getModelsForCustomer(customerId: string) {
         address: true,
         profile: true,
         rating: true,
+        total_review: true,
         latitude: true,
         longitude: true,
         available_status: true,
         createdAt: true,
+        updatedAt: true,
         Images: {
           where: { status: "active" },
+          take: 5,
           select: { id: true, name: true },
+          orderBy: { createdAt: "desc" },
         },
         customer_interactions: {
           where: { customerId },
-          select: { action: true },
+          select: { action: true, createdAt: true },
         },
         friend_contacts: {
           where: {
@@ -64,17 +81,44 @@ export async function getModelsForCustomer(customerId: string) {
             contactType: true,
           },
         },
+        // Count total likes received
+        _count: {
+          select: {
+            customer_interactions: {
+              where: { action: "LIKE" },
+            },
+            model_interactions: {
+              where: { action: "LIKE" },
+            },
+          },
+        },
       },
     });
 
-    return models.map((model) => ({
-      ...model,
-      customerAction:
-        model.customer_interactions.length > 0
-          ? model.customer_interactions[0].action
-          : null,
-      isContact: model.friend_contacts.length > 0,
-    }));
+    // Calculate distance and enhance models
+    return models.map((model) => {
+      let distance = null;
+      if (customer?.latitude && customer?.longitude && model.latitude && model.longitude) {
+        distance = calculateDistance(
+          customer.latitude,
+          customer.longitude,
+          model.latitude,
+          model.longitude
+        );
+      }
+
+      return {
+        ...model,
+        distance: distance ? Number(distance.toFixed(2)) : null,
+        customerAction:
+          model.customer_interactions.length > 0
+            ? model.customer_interactions[0].action
+            : null,
+        isContact: model.friend_contacts.length > 0,
+        totalLikes: model._count.customer_interactions,
+        popularity: model._count.customer_interactions + model._count.model_interactions,
+      };
+    });
   } catch (error: any) {
     console.error("GET_MODELS_FOR_CUSTOMER_ERROR:", error);
     throw new FieldValidationError({
@@ -101,10 +145,15 @@ function calculateDistance(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export async function getNearbyModels(customerId: string) {
+// Get nearby models based on geolocation distance
+export async function getNearbyModels(customerId: string, maxDistanceKm: number = 50) {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
-    select: { latitude: true, longitude: true },
+    select: {
+      latitude: true,
+      longitude: true,
+      gender: true, // Use for opposite gender matching
+    },
   });
 
   if (!customer?.latitude || !customer?.longitude)
@@ -115,22 +164,39 @@ export async function getNearbyModels(customerId: string) {
       latitude: { not: null },
       longitude: { not: null },
       status: "active",
+      // Exclude models the customer has passed
+      customer_interactions: {
+        none: {
+          customerId,
+          action: "PASS",
+        },
+      },
     },
-    take: 20,
     select: {
       id: true,
       firstName: true,
       lastName: true,
       dob: true,
+      gender: true,
+      bio: true,
       profile: true,
       latitude: true,
       longitude: true,
+      address: true,
       status: true,
+      rating: true,
+      total_review: true,
       available_status: true,
+      updatedAt: true,
       Images: {
         take: 3,
         where: { status: "active" },
         select: { id: true, name: true },
+        orderBy: { createdAt: "desc" },
+      },
+      customer_interactions: {
+        where: { customerId },
+        select: { action: true },
       },
       friend_contacts: {
         where: {
@@ -144,10 +210,18 @@ export async function getNearbyModels(customerId: string) {
           contactType: true,
         },
       },
+      _count: {
+        select: {
+          customer_interactions: {
+            where: { action: "LIKE" },
+          },
+        },
+      },
     },
   });
 
-  const sorted = models
+  // Calculate distance and filter by maxDistance
+  const modelsWithDistance = models
     .map((m) => {
       const distance = calculateDistance(
         customer.latitude!,
@@ -160,39 +234,72 @@ export async function getNearbyModels(customerId: string) {
         ...m,
         distance: Number(distance.toFixed(2)),
         isContact: m.friend_contacts.length > 0,
+        customerAction:
+          m.customer_interactions.length > 0
+            ? m.customer_interactions[0].action
+            : null,
+        totalLikes: m._count.customer_interactions,
       };
     })
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 9);
+    .filter((m) => m.distance <= maxDistanceKm) // Filter by max distance
+    .sort((a, b) => {
+      // Sort by distance first, then by rating
+      if (a.distance !== b.distance) {
+        return a.distance - b.distance;
+      }
+      return b.rating - a.rating;
+    })
+    .slice(0, 20); // Return top 20 nearest
 
-  return sorted;
+  return modelsWithDistance;
 }
 
-// Get model profile data by id and customer id
-export async function getHotModels(customerId: string) {
+// Get hot/trending models based on popularity and recent activity
+export async function getHotModels(customerId: string, limit: number = 10) {
   try {
+    // Get customer info for personalized results
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { latitude: true, longitude: true, gender: true },
+    });
+
+    // Calculate "hot" models based on multiple factors:
+    // 1. Total likes received (both from customers and models)
+    // 2. High rating
+    // 3. Recent activity (updatedAt)
+    // 4. Number of reviews
+    const currentDate = new Date();
+    const thirtyDaysAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+
     const hotModels = await prisma.model.findMany({
       where: {
         status: "active",
-      },
-      take: 10,
-      orderBy: {
-        model_interactions: {
-          _count: "desc",
-        },
-      },
-      include: {
-        _count: {
-          select: {
-            model_interactions: {
-              where: {
-                action: "LIKE",
-              },
-            },
+        // Exclude models the customer has passed
+        customer_interactions: {
+          none: {
+            customerId,
+            action: "PASS",
           },
         },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        dob: true,
+        gender: true,
+        bio: true,
+        profile: true,
+        rating: true,
+        total_review: true,
+        latitude: true,
+        longitude: true,
+        address: true,
+        available_status: true,
+        updatedAt: true,
+        createdAt: true,
         Images: {
-          take: 1,
+          take: 3,
           where: {
             status: "active",
           },
@@ -200,6 +307,11 @@ export async function getHotModels(customerId: string) {
             id: true,
             name: true,
           },
+          orderBy: { createdAt: "desc" },
+        },
+        customer_interactions: {
+          where: { customerId },
+          select: { action: true },
         },
         friend_contacts: {
           where: {
@@ -213,14 +325,94 @@ export async function getHotModels(customerId: string) {
             contactType: true,
           },
         },
+        _count: {
+          select: {
+            // Count all likes from customers
+            customer_interactions: {
+              where: { action: "LIKE" },
+            },
+            // Count all likes from other models
+            model_interactions: {
+              where: { action: "LIKE" },
+            },
+            // Count recent interactions (last 30 days)
+            service_booking: {
+              where: {
+                createdAt: { gte: thirtyDaysAgo },
+                status: { in: ["confirmed", "completed"] },
+              },
+            },
+          },
+        },
       },
     });
 
-    return hotModels.map((model) => ({
-      ...model,
-      likeCount: model._count.model_interactions,
-      isContact: model.friend_contacts.length > 0,
-    }));
+    // Calculate popularity score for each model
+    const modelsWithScore = hotModels.map((model) => {
+      const customerLikes = model._count.customer_interactions;
+      const modelLikes = model._count.model_interactions;
+      const recentBookings = model._count.service_booking;
+      const reviewScore = model.total_review * 0.5;
+      const ratingScore = model.rating * 10;
+
+      // Calculate days since last activity
+      const daysSinceUpdate = Math.floor(
+        (currentDate.getTime() - new Date(model.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const recencyScore = Math.max(0, 30 - daysSinceUpdate); // Higher score for recent activity
+
+      // Calculate distance if location available
+      let distance = null;
+      let distanceScore = 0;
+      if (customer?.latitude && customer?.longitude && model.latitude && model.longitude) {
+        distance = calculateDistance(
+          customer.latitude,
+          customer.longitude,
+          model.latitude,
+          model.longitude
+        );
+        // Closer models get higher score (max 20 points for models within 10km)
+        distanceScore = Math.max(0, 20 - distance / 5);
+      }
+
+      // Popularity formula (weighted scoring):
+      // - Customer likes: 3 points each
+      // - Model likes: 2 points each
+      // - Recent bookings: 5 points each
+      // - Rating: rating * 10 (max 50 points)
+      // - Reviews: total_review * 0.5
+      // - Recency: max 30 points
+      // - Distance: max 20 points
+      const popularityScore =
+        customerLikes * 3 +
+        modelLikes * 2 +
+        recentBookings * 5 +
+        ratingScore +
+        reviewScore +
+        recencyScore +
+        distanceScore;
+
+      return {
+        ...model,
+        distance: distance ? Number(distance.toFixed(2)) : null,
+        customerAction:
+          model.customer_interactions.length > 0
+            ? model.customer_interactions[0].action
+            : null,
+        isContact: model.friend_contacts.length > 0,
+        likeCount: customerLikes,
+        totalLikes: customerLikes + modelLikes,
+        recentBookings: recentBookings,
+        popularityScore: Number(popularityScore.toFixed(2)),
+      };
+    });
+
+    // Sort by popularity score and return top results
+    const sortedModels = modelsWithScore
+      .sort((a, b) => b.popularityScore - a.popularityScore)
+      .slice(0, limit);
+
+    return sortedModels;
   } catch (error: any) {
     console.log("GET_HOT_MODELS_ERROR:", error);
     throw new FieldValidationError({
