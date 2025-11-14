@@ -42,12 +42,15 @@
     "verifying": "Đang xác minh...",
     "dontReceive": "Không nhận được mã OTP?",
     "resendCode": "Gửi lại mã",
-    "resending": "Đang gửi lại..."
+    "resending": "Đang gửi lại...",
+    "resendCodeIn": "Bạn có thể gửi lại mã trong:"
   },
   "resetPassword": {
     "title": "Đặt lại mật khẩu?",
     "subtitle": "Đừng lo lắng, chúng tôi sẽ giúp bạn!",
     "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "passwordMismatch": "Mật khẩu không khớp!",
     "reset": "Đặt lại",
     "reseting": "Đang đặt lại...",
     "rememberPassword": "Nhớ mật khẩu của bạn?"

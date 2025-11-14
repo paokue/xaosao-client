@@ -42,12 +42,15 @@
     "verifying": "Verifying...",
     "dontReceive": "Don't Receive OTP Code?",
     "resendCode": "Resend Code",
-    "resending": "Resending..."
+    "resending": "Resending...",
+    "resendCodeIn": "You can resend code in:"
   },
   "resetPassword": {
     "title": "Reset Password?",
     "subtitle": "No worries, let's get you back on track!",
     "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match!",
     "reset": "Reset",
     "reseting": "Reseting...",
     "rememberPassword": "Remember your password?"

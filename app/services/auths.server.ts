@@ -190,10 +190,7 @@ export async function createUserSession(
 
 // This for register new user to chat DB:
 async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
-  // const url = "http://66.42.50.59:9090/api/login-with-phone";
-  const url = `http://xaosao-chat-node-api:9090/api/login-with-phone`;
-  console.log("User dATA::", userData);
-  console.log("User dATA11111::", JSON.stringify(userData));
+  const url = `${process.env.VITE_API_URL}login-with-phone`;
 
   try {
     const response = await fetch(url, {
@@ -203,16 +200,11 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
       },
       body: JSON.stringify(userData),
     });
-
     const data = await response.json();
 
-
-    console.log("Response:::", data);
-
-    // Check if the request was successful
-    // if (!response.success) {
-    //   throw new Error(data.message || `HTTP error! status: ${response.status}`);
-    // }
+    if (!data.success) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
 
     return {
       token: data.token,
@@ -224,7 +216,7 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-      message: "Failed to register user",
+      message: "Failed to login user",
     };
   }
 }
@@ -301,6 +293,23 @@ export async function customerLogin({
       rememberMe,
       "/dashboard"
     );
+  } else {
+    // If MySQL login fails, log the error
+    const error = new Error(
+      `Failed to login to chat system: ${chatLogin.message || chatLogin.error}`
+    ) as Error & {
+      status?: number;
+    };
+    error.status = 500;
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `MySQL login failed for customer ${existingUser.id}. Error: ${chatLogin.message}`,
+      status: "failed",
+      onError: chatLogin.error,
+    });
+
+    throw error;
   }
 }
 
@@ -308,7 +317,7 @@ export async function customerLogin({
 async function registerUserWithoutOTP(
   userData: UserRegistrationData
 ): Promise<RegistrationResponse> {
-  const url = "http://66.42.50.59:9090/api/register-without-otp";
+  const url = `${process.env.VITE_API_URL}register-without-otp`;
 
   try {
     const response = await fetch(url, {
@@ -316,14 +325,13 @@ async function registerUserWithoutOTP(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(""),
     });
 
-    // Parse the response
-    const data = await response.json();
+    const data: RegistrationResponse = await response.json();
 
     // Check if the request was successful
-    if (!response.ok) {
+    if (!data.success) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -362,7 +370,7 @@ export async function customerRegister(
     const locationDetails = await getLocationDetails(ip, accessKey);
     const passwordHash = await hash(customerData.password, 12);
 
-    console.log("Location Details::::", locationDetails);
+    // console.log("Location Details::::", locationDetails);
 
     // Get latest number and calculate next
     const latestUser = await prisma.customer.findFirst({
@@ -443,7 +451,31 @@ export async function customerRegister(
       };
 
       const chatRes = await registerUserWithoutOTP(userData);
-      console.log("Chat Res:::", chatRes);
+
+      // If MySQL registration fails, rollback MongoDB data
+      if (!chatRes.success) {
+        // Delete wallet first (due to foreign key constraint)
+        await prisma.wallet.deleteMany({
+          where: { customerId: customer.id },
+        });
+
+        // Delete customer from MongoDB
+        await prisma.customer.delete({
+          where: { id: customer.id },
+        });
+
+        await createAuditLogs({
+          action: "CUSTOMER_REGISTER",
+          customer: customer.id,
+          description: `MySQL registration failed for customer ${customer.id}. Rolled back MongoDB data. Error: ${chatRes.message}`,
+          status: "failed",
+          onError: chatRes.error,
+        });
+
+        throw new Error(
+          `Failed to register user in chat system: ${chatRes.message || chatRes.error}`
+        );
+      }
     }
     return {
       success: true,
@@ -529,13 +561,15 @@ export async function forgotPassword(whatsapp: number) {
     }
 
     const resetToken = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6 character token
-    const resetTokenExpiry = new Date(Date.now() + 60000); // 10 minutes from now (shorter for SMS)
+    const resetTokenExpiry = new Date(Date.now() + 600000); // 10 minutes from now (token validity)
+    const resendCooldown = new Date(Date.now() + 60000); // 60 seconds cooldown for resend
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
         resetToken,
         resetTokenExpiry,
+        updatedAt: resendCooldown, // Use updatedAt to track resend cooldown
       },
     });
 
@@ -577,16 +611,23 @@ export async function resendResetToken(whatsapp: number) {
     const customer = await prisma.customer.findFirst({
       where: {
         whatsapp: whatsapp,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
       },
     });
 
     if (!customer) {
       return await forgotPassword(whatsapp);
     }
-    throw new Error("Please wait 60 seconds before resending OTP!");
+
+    // Check if user is within cooldown period (60 seconds from last request)
+    const cooldownExpiry = new Date(customer.updatedAt.getTime());
+    const now = new Date();
+
+    if (cooldownExpiry > now) {
+      throw new Error("Please wait 60 seconds before resending OTP!");
+    }
+
+    // If cooldown expired, send new OTP
+    return await forgotPassword(whatsapp);
   } catch (error: any) {
     console.error("RESEND_RESET_TOKEN_ERROR", error);
     await createAuditLogs({

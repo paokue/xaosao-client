@@ -1,25 +1,18 @@
-// export function Countdown({ timeLeft }: { timeLeft: number }) {
-//   const minutes = Math.floor(timeLeft / 1000 / 60)
-//     .toString()
-//     .padStart(2, "0");
-//   const seconds = Math.floor((timeLeft / 1000) % 60)
-//     .toString()
-//     .padStart(2, "0");
-
-//   return (
-//     <p className="text-sm text-gray-400">
-//       Resend code in {minutes}:{seconds}
-//     </p>
-//   );
-// }
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface CountdownProps {
   initialMs: number; // e.g. 60000
 }
 
 export default function Countdown({ initialMs }: CountdownProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(initialMs);
+
+  useEffect(() => {
+    // Reset timeLeft when initialMs changes
+    setTimeLeft(initialMs);
+  }, [initialMs]);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -37,7 +30,7 @@ export default function Countdown({ initialMs }: CountdownProps) {
 
   return (
     <span>
-      You can resend code in: {minutes}:{seconds.toString().padStart(2, "0")}
+      {t('forgotPassword.resendCodeIn')} {minutes}:{seconds.toString().padStart(2, "0")}
     </span>
   );
 }

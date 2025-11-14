@@ -24,8 +24,15 @@ export async function action({ request }: Route.ActionArgs) {
 
     const formData = await request.formData();
     const password = formData.get("password") as string;
-    if (!otp || !password) {
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (!otp || !password || !confirmPassword) {
         return { success: false, error: true, message: "Invalid OTP or password!" }
+    }
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+        return { success: false, error: true, message: "Passwords do not match!" }
     }
 
     try {
@@ -39,8 +46,8 @@ export async function action({ request }: Route.ActionArgs) {
         console.log("Error::", error)
         if (error instanceof FieldValidationError) {
             return {
-                success: error.payload.message === "Please wait 60 seconds before resending OTP!" ? true : error.payload.success,
-                error: error.payload.error,
+                success: false,
+                error: true,
                 message: error.payload.message || "Something went wrong. Try again later!",
             };
         }
@@ -80,7 +87,6 @@ export default function ResetPasswordPage() {
                         }}
                     />
                 ))}
-                {/* <div className="absolute inset-0 bg-black/10" /> */}
             </div>
 
             <div
@@ -92,31 +98,47 @@ export default function ResetPasswordPage() {
                 <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
                     <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
+                        {/* <span className="text-white text-xl">XAOSAO</span> */}
                     </p>
                 </div>
 
                 <div className="space-y-6">
                     <div className="text-center">
-                        <h1 className="text-lg font-bold text-rose-500 uppercase">
+                        <h1 className="text-lg font-bold text-white uppercase">
                             {t('resetPassword.title')}
                         </h1>
-                        <p className="text-gray-400">{t('resetPassword.subtitle')}</p>
+                        <p className="text-gray-300">{t('resetPassword.subtitle')}</p>
                     </div>
 
                     <Form method="post" className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-gray-300">
-                                {t('resetPassword.newPassword')}
+                            <Label htmlFor="password" className="text-gray-300">
+                                {t('resetPassword.newPassword')} <span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 id="password"
                                 type="password"
                                 name="password"
-                                className="mt-1 border-rose-500 text-white placeholder-gray-400 focus:border-pink-500 backdrop-blur-sm"
+                                placeholder="Pa$$w0rd!"
+                                className="mt-1 border-white text-white placeholder-gray-400 backdrop-blur-sm"
                                 required
                             />
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword" className="text-gray-300">
+                                {t('resetPassword.confirmPassword')} <span className="text-rose-500">*</span>
+                            </Label>
+                            <Input
+                                id="confirmPassword"
+                                type="password"
+                                name="confirmPassword"
+                                placeholder="Pa$$w0rd!"
+                                className="mt-1 border-white text-white placeholder-gray-400 backdrop-blur-sm"
+                                required
+                            />
+                        </div>
+
                         {actionData?.error && (
                             <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
                                 <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
@@ -135,9 +157,9 @@ export default function ResetPasswordPage() {
                     </Form>
 
                     <div className="text-center pt-4">
-                        <p className="text-sm text-gray-400">
+                        <p className="text-md text-gray-400">
                             {t('resetPassword.rememberPassword')}{" "}&nbsp;&nbsp;
-                            <Link to="/login" className="text-rose-500 hover:text-rose-600 font-medium hover:underline uppercase hover:underline">
+                            <Link to="/login" className="text-white hover:text-rose-600 font-medium hover:underline uppercase hover:underline">
                                 {t('login.loginButton')}
                             </Link>
                         </p>

@@ -198,7 +198,7 @@ export default function SignInPage() {
                 >
                     <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
+                        {/* <span className="text-white text-xl">XAOSAO</span> */}
                     </p>
                 </button>
 
@@ -277,7 +277,7 @@ export default function SignInPage() {
                                 id="remember"
                                 type="checkbox"
                                 name="rememberMe"
-                                className="w-4 h-4 text-pink-500 bg-gray-900 border-gray-600 rounded focus:ring-pink-500 focus:ring-offset-0"
+                                className="w-4 h-4 text-pink-500 bg-gray-900 border-gray-600 rounded"
                                 aria-label="Remember me"
                             />
                             <Label htmlFor="remember" className="ml-2 text-sm text-gray-300 cursor-pointer">
@@ -287,7 +287,7 @@ export default function SignInPage() {
 
                         <Link
                             to="/forgot-password"
-                            className="text-white hover:text-rose-600 text-sm underline transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 rounded"
+                            className="text-white hover:text-rose-600 text-sm underline transition-colors rounded"
                         >
                             {t('login.forgotPassword')}
                         </Link>
@@ -308,7 +308,7 @@ export default function SignInPage() {
                             <span className="text-white">{t('login.noAccount')}</span>
                             <Link
                                 to="/register"
-                                className="text-white text-md underline font-bold hover:text-rose-500 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 rounded"
+                                className="text-white text-md underline font-bold hover:text-rose-500 transition-colors rounded"
                             >
                                 {isMobile ? t('login.createAccountMobile') : t('login.createAccount')}
                             </Link>

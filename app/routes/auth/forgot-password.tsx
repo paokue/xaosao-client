@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
-import { AlertCircle, ArrowLeft, LoaderCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, LoaderCircle, LockIcon } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -50,9 +50,9 @@ export async function action({ request }: Route.ActionArgs) {
             if (!phoneNumber) {
                 return { success: false, error: true, message: "Phone number is required!" };
             }
-            await validateForgotInputs({ whatsapp: Number(phone) });
+            await validateForgotInputs({ whatsapp: Number(phoneNumber) });
             const resendRes = await resendResetToken(Number(phoneNumber));
-            return { ...resendRes, phone, isResend };
+            return { ...resendRes, phone: Number(phoneNumber), isResend: true };
         }
         if (!phone) {
             return { success: false, error: true, message: "Phone number is required!" };
@@ -60,21 +60,23 @@ export async function action({ request }: Route.ActionArgs) {
         await validateForgotInputs({ whatsapp: Number(phone) });
         const forgotRes = await forgotPassword(Number(phone));
         if (forgotRes.success) {
-            return { phone: Number(phone), success: true, error: false, message: "OTP sent successfully to your phone number!" };
+            return { phone: Number(phone), success: true, error: false, message: "OTP sent successfully to your phone number!", isResend: false };
         }
 
-        return { success: false, error: true, message: forgotRes.message ?? "Failed to send OTP" };
+        return { success: false, error: true, message: forgotRes.message ?? "Failed to send OTP", isResend: false, phone: Number(phone) };
     } catch (error: any) {
         console.error("Forgot password error:", error);
         if (error instanceof FieldValidationError) {
             return {
-                success: error.payload.message === "Please wait 60 seconds before resending OTP!" ? true : error.payload.success,
-                error: error.payload.error,
+                success: false,
+                error: true,
                 message: error.payload.message || "Something went wrong. Try again later!",
+                isResend: isResend,
+                phone: isResend ? Number(phoneNumber) : (phone ? Number(phone) : undefined),
             };
         }
         const value = Object.values(error)[0];
-        return { success: false, error: true, message: value };
+        return { success: false, error: true, message: value, isResend: isResend, phone: isResend ? Number(phoneNumber) : undefined };
     }
 }
 
@@ -128,11 +130,12 @@ export default function ForgotPasswordPage() {
     }, [backgroundImages.length]);
 
     useEffect(() => {
-        if (actionData?.success) {
+        // Reset timer only when OTP is successfully sent (initial or resend)
+        if (actionData?.success && !actionData?.error) {
             setTimeLeft(60000);
             setOtp(["", "", "", "", "", ""]);
         }
-    }, [actionData?.success]);
+    }, [actionData]);
 
     return (
         <div className="fullscreen safe-area relative overflow-hidden">
@@ -150,7 +153,6 @@ export default function ForgotPasswordPage() {
                         }}
                     />
                 ))}
-                {/* <div className="absolute inset-0 bg-black/10" /> */}
             </div>
 
             <div
@@ -162,21 +164,18 @@ export default function ForgotPasswordPage() {
                 <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
                     <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
+                        {/* <span className="text-white text-xl">XAOSAO</span> */}
                     </p>
                 </div>
 
                 {!showOtpForm ? (
                     <div className="space-y-6">
-                        <div className="text-center">
-                            <h1 className="text-xl font-bold text-rose-500 uppercase">
-                                {t('forgotPassword.title')}
+                        <div className="text-center space-y-2 ">
+                            <h1 className="flex items-center justify-center text-md sm:text-lg font-bold text-white uppercase">
+                                <LockIcon className="text-rose-500" />&nbsp; {t('forgotPassword.title')}
                             </h1>
-                            <p className="text-gray-400">
-                                {t('forgotPassword.subtitle')}
-                            </p>
+                            <p className="text-white text-sm"> {t('forgotPassword.subtitle')}</p>
                         </div>
-
                         <Form method="post" className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="whatsapp" className="text-gray-300">
@@ -201,7 +200,7 @@ export default function ForgotPasswordPage() {
                             )}
                             <Button
                                 type="submit"
-                                className="w-full border border-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300"
+                                className="w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300"
                             >
                                 {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
                                 {isSubmitting ? t('forgotPassword.processing') : t('forgotPassword.getOtpButton')}
@@ -209,11 +208,11 @@ export default function ForgotPasswordPage() {
                         </Form>
 
                         <div className="text-center">
-                            <p className="text-sm text-gray-400">
+                            <p className="text-md text-gray-400">
                                 {t('forgotPassword.rememberPassword')}{" "}
                                 <Link
                                     to="/login"
-                                    className="text-rose-500 hover:text-rose-600 font-medium hover:underline ml-2 uppercase hover:underline"
+                                    className="text-white hover:text-rose-600 font-medium hover:underline ml-2 uppercase hover:underline"
                                 >
                                     {t('login.loginButton')}
                                 </Link>
@@ -222,13 +221,11 @@ export default function ForgotPasswordPage() {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        <div className="text-center">
-                            <h1 className="text-2xl font-bold text-rose-500 mb-2">
-                                {t('forgotPassword.verifyTitle')}
+                        <div className="text-center space-y-2 ">
+                            <h1 className="flex items-center justify-center text-md sm:text-lg font-bold text-white uppercase">
+                                <LockIcon className="text-rose-500" />&nbsp;  {t('forgotPassword.verifyTitle')}
                             </h1>
-                            <p className="text-gray-400">
-                                {t('forgotPassword.verifySubtitle')}
-                            </p>
+                            <p className="text-white text-sm">{t('forgotPassword.verifySubtitle')}</p>
                         </div>
 
                         <Form method="post" className="space-y-6">
@@ -267,23 +264,18 @@ export default function ForgotPasswordPage() {
                             </Button>
                         </Form>
 
-                        <div className="text-center">
-                            <input
-                                type="text"
-                                name="isResend"
-                                value={"true"}
-                                className="hidden"
-                            />
+                        <div className="text-center space-y-4">
                             {timeLeft > 0 ? (
                                 <div className="text-sm text-gray-400">
                                     <Countdown initialMs={timeLeft} />
                                 </div>
                             ) : (
-                                <Form method="post" className="space-y-6">
+                                <Form method="post" className="space-y-4">
                                     <input type="hidden" name="isResend" value="true" />
                                     <input type="hidden" name="phoneNumber" value={phoneNumber} />
-                                    {actionData?.error && (
-                                        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
+
+                                    {actionData?.isResend && actionData?.error && (
+                                        <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
                                             <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
                                             <span className="text-red-200 text-sm">
                                                 {actionData?.message}
@@ -295,7 +287,7 @@ export default function ForgotPasswordPage() {
                                         <p className="text-sm text-gray-400">{t('forgotPassword.dontReceive')}</p>
                                         <Button
                                             type="submit"
-                                            className="cursor-pointer text-sm text-rose-500 hover:text-rose-600 font-medium"
+                                            className="cursor-pointer text-md text-rose-500 hover:text-rose-600 font-medium"
                                         >
                                             {isSubmitting ? t('forgotPassword.resending') : t('forgotPassword.resendCode')}
                                         </Button>

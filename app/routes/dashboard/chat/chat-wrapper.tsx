@@ -12,7 +12,7 @@ const ChatWrapper = () => {
    return (
       <div style={{ width: "100%", height: "100vh" }}>
          <iframe
-            src={`${CHAT_URL}/contact-list`}
+            src={`${CHAT_URL}contact-list`}
             style={{ width: "100%", height: "100%", border: "none" }}
             title="Realtime Chat"
          />

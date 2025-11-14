@@ -138,14 +138,14 @@ export default function SignUpPage() {
             ))}
 
             <div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-auto
-                            bg-black/50 backdrop-blur-lg shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start rounded-lg z-20
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-auto rounded-sm
+                            bg-black/50 backdrop-blur-lg shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                <div className="rounded-full hidden sm:flex items-center justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
                     <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
+                        {/* <span className="text-white text-xl">XAOSAO</span> */}
                     </p>
                 </div>
 
@@ -155,7 +155,7 @@ export default function SignUpPage() {
                     </h1>
                     <p className="text-white text-xs sm:text-sm">{t('register.subtitle')}</p>
                 </div>
-                <Form method="post" className="space-y-2 sm:space-y-4">
+                <Form method="post" className="space-y-3 sm:space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="firstName" className="text-gray-300 text-sm">
@@ -330,7 +330,7 @@ export default function SignUpPage() {
                         </div>
                     )}
 
-                    <div className="flex items-center justify-start space-x-2 text-sm">
+                    <div className="flex items-center justify-start space-x-2 text-sm mt-8 sm:mt-0">
                         <input
                             id="terms"
                             type="checkbox"
@@ -354,15 +354,15 @@ export default function SignUpPage() {
                     <Button
                         type="submit"
                         disabled={isAcceptTerms === false || isSubmitting}
-                        className={`w-full border border-rose-500 hover:bg-rose-600 text-white py-3 font-medium my-4 uppercase ${isAcceptTerms === false ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        className={`w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium my-4 uppercase ${isAcceptTerms === false ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                         {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
                         {isSubmitting ? t('register.registering') : t('register.registerButton')}
                     </Button>
 
-                    <div className="text-center space-x-4">
+                    <div className="text-center space-x-2">
                         <span className="text-white">{t('register.alreadyHaveAccount')} </span>
-                        <Link to="/login" className="text-rose-500 hover:text-rose-600 font-xs underline">
+                        <Link to="/login" className="text-white font-bold hover:text-rose-600 font-xs underline">
                             {t('register.backLogin')}
                         </Link>
                     </div>

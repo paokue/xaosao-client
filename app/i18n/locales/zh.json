@@ -42,12 +42,15 @@
     "verifying": "验证中...",
     "dontReceive": "没有收到验证码？",
     "resendCode": "重新发送",
-    "resending": "正在重新发送..."
+    "resending": "正在重新发送...",
+    "resendCodeIn": "您可以在以下时间后重新发送验证码："
   },
   "resetPassword": {
     "title": "重置密码？",
     "subtitle": "别担心，让我们帮您找回！",
     "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "passwordMismatch": "密码不匹配！",
     "reset": "重置",
     "reseting": "重置中...",
     "rememberPassword": "记起密码了？"

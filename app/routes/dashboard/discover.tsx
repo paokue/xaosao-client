@@ -7,15 +7,15 @@ import {
     Calendar,
     Minimize,
     Maximize,
+    UserPlus,
     ChevronLeft,
     ChevronRight,
-    MessageSquareText,
     LoaderCircle,
-    UserPlus,
+    MessageSquareText,
 } from "lucide-react";
 import type { Route } from "./+types/discover";
-import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
+import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
 
 // swiper
 import "swiper/css";
@@ -36,12 +36,12 @@ import type { IHotmodelsResponse, ImodelsResponse, INearbyModelResponse } from "
 import { getHotModels, getModelsForCustomer, getNearbyModels } from "~/services/model.server";
 
 interface LoaderReturn {
-    models: ImodelsResponse[];
-    hotModels: IHotmodelsResponse[];
-    nearbyModels: INearbyModelResponse[]
     latitude: number;
     longitude: number;
+    models: ImodelsResponse[];
     hasActiveSubscription: boolean;
+    hotModels: IHotmodelsResponse[];
+    nearbyModels: INearbyModelResponse[];
 }
 
 interface DiscoverPageProps {
@@ -501,7 +501,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                         <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">
                             {t('discover.dailyPicks')}
                         </h1>
-                        <p className="text-sm font-normal text-gray-600">
+                        <p className="text-xs sm:text-sm font-normal text-gray-600">
                             {t('discover.dailyPicksDescription')}
                         </p>
                     </div>
@@ -602,7 +602,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
             <div className="flex flex-col items-start justify-start p-4 w-full space-y-4">
                 <div className="space-y-2">
                     <h1 className="text-md font-bold text-gray-700 uppercase text-shadow-md">{t('discover.nearbyYou')}</h1>
-                    <p className="text-sm font-normal text-gray-600">
+                    <p className="text-xs sm:text-sm font-normal text-gray-600">
                         {t('discover.nearbyDescription')}
                     </p>
                 </div>

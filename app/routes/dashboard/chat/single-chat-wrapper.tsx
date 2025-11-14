@@ -12,10 +12,13 @@ const SingleChatWrapper = () => {
    const queryParams = new URLSearchParams(location.search);
    const id = queryParams.get("id");
 
+   console.log("Paokue URL");
+   console.log("Url:", `${CHAT_URL}chat?id=${id}`);
+
    return (
       <div style={{ width: "100%", height: "100vh" }}>
          <iframe
-            src={`${CHAT_URL}/chat?id=${id}`}
+            src={`${CHAT_URL}chat?id=${id}`}
             style={{ width: "100%", height: "100%", border: "none" }}
             title="Realtime Chat"
          />
