@@ -50,6 +50,8 @@ interface LoaderReturn {
     favouritePagination: PaginationProps;
     myPassModels: IForYouModelResponse[];
     passPagination: PaginationProps;
+    customerLatitude: number;
+    customerLongitude: number;
 }
 
 interface ForyouModelsProps {
@@ -82,7 +84,13 @@ const DEFAULT_PAGINATION: PaginationProps = {
 // Loader
 export const loader: LoaderFunction = async ({ request }) => {
     const customerId = await requireUserSession(request);
+    const { getCustomerProfile } = await import("~/services/profile.server");
     const url = new URL(request.url);
+
+    // Get customer's current GPS location from database
+    const customer = await getCustomerProfile(customerId);
+    const customerLatitude = customer?.latitude || 0;
+    const customerLongitude = customer?.longitude || 0;
 
     // Pagination params
     const page = Number(url.searchParams.get("page") || 1);
@@ -156,6 +164,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -172,6 +182,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -190,6 +202,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -206,6 +220,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -218,6 +234,8 @@ export const loader: LoaderFunction = async ({ request }) => {
         likemePagination: DEFAULT_PAGINATION,
         favouritePagination: DEFAULT_PAGINATION,
         passPagination: DEFAULT_PAGINATION,
+        customerLatitude,
+        customerLongitude,
     } as LoaderReturn;
 };
 
@@ -313,6 +331,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
         likemePagination,
         favouritePagination,
         passPagination,
+        customerLatitude,
+        customerLongitude,
     } = loaderData;
     const actionData = useActionData<typeof action>();
 
@@ -428,16 +448,16 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     className="w-full space-y-2"
                 >
                     <TabsList className="w-full">
-                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.forYou')}
                         </TabsTrigger>
-                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.likeMe')}
                         </TabsTrigger>
-                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.favourite')}
                         </TabsTrigger>
-                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.passed')}
                         </TabsTrigger>
                     </TabsList>
@@ -586,7 +606,12 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 px-2">
                                     {foryouModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {foryouPagination.totalPages > 1 && (
@@ -620,7 +645,12 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {likeMeModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {likemePagination.totalPages > 1 && (
@@ -655,7 +685,12 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {myFavouriteModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {favouritePagination.totalPages > 1 && (
@@ -690,7 +725,12 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {myPassModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {passPagination.totalPages > 1 && (

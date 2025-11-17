@@ -9,15 +9,17 @@ import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 // utils and interface
-import { calculateAgeFromDOB } from "~/utils";
+import { calculateAgeFromDOB, calculateDistance } from "~/utils";
 import type { IForYouModelResponse } from "~/interfaces";
 
 interface ModelCardProps {
     model: IForYouModelResponse;
     fetcher?: FetcherWithComponents<any>;
+    customerLatitude?: number;
+    customerLongitude?: number;
 }
 
-export default function ModelCard({ model }: ModelCardProps) {
+export default function ModelCard({ model, customerLatitude, customerLongitude }: ModelCardProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -108,16 +110,25 @@ export default function ModelCard({ model }: ModelCardProps) {
             </div>
 
             <div className="absolute bottom-4 left-0 right-0 p-4 text-white z-10">
-                <div className="flex items-center gap-1 mb-1">
-                    <MapPin size={14} className="text-rose-500" />
-                    <span className="text-sm font-medium">52 {t('matches.km')}</span>
-                </div>
-
-                <h3 className="text-lg mb-1">
+                <h3 className="text-lg">
                     {model.firstName} {model.lastName},{" "}
                     <span className="text-sm">{calculateAgeFromDOB(model.dob)} {t('matches.yearsOld')}</span>
                 </h3>
                 <p className="text-sm text-white/90 leading-tight">{model.bio}</p>
+                <div className="flex items-center gap-1 mt-1">
+                    <MapPin size={14} className="text-rose-500" />
+                    <span className="text-sm font-medium">
+                        {customerLatitude && customerLongitude && model?.latitude && model?.longitude
+                            ? `${calculateDistance(
+                                Number(model.latitude),
+                                Number(model.longitude),
+                                Number(customerLatitude),
+                                Number(customerLongitude)
+                              ).toFixed(1)} ${t('matches.km')}`
+                            : `-- ${t('matches.km')}`
+                        }
+                    </span>
+                </div>
             </div>
         </div>
     );
