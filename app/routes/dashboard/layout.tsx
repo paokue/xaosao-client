@@ -53,9 +53,9 @@ export default function Dashboard() {
 
 
     return (
-        <div className="flex h-screen w-full relative">
+        <div className="flex min-h-screen w-full relative">
             {/* Sidebar for Desktop */}
-            <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between">
+            <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between sm:sticky sm:top-0 sm:h-screen">
                 <div className="w-full">
                     <div className="flex items-center space-x-3">
                         <img
@@ -95,7 +95,7 @@ export default function Dashboard() {
             </div>
 
             {/* Main Content */}
-            <div className="w-full sm:w-4/5 flex flex-col h-screen overflow-scroll pb-16 sm:pb-0">
+            <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
                 <main className="bg-background flex-1">
                     <Outlet />
                 </main>

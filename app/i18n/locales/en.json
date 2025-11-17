@@ -271,7 +271,7 @@
       "sufficientBalance": "You have enough balance to subscribe to this package.",
       "paymentMethodNote": "The subscription fee will be automatically deducted from your wallet balance. The subscription will be activated immediately upon successful payment.",
       "cancel": "Cancel",
-      "topUpWallet": "Top-up Wallet",
+      "topUpWallet": "TopUp",
       "proceedToPayment": "Proceed to Payment",
       "confirmPayment": "Confirm Payment",
       "upgradeMessage": "You are about to upgrade to {{planName}}",
@@ -294,7 +294,7 @@
     "availableBalance": "Available Balance",
     "totalRecharge": "Total Recharge",
     "totalDeposit": "Total Deposit",
-    "topUpWallet": "Top-up Wallet",
+    "topUpWallet": "TopUp",
     "transactionHistory": "Transaction History:",
     "tabs": {
       "all": "All",
@@ -313,13 +313,13 @@
     "status": "Status",
     "date": "Date",
     "topup": {
-      "title": "Top-up Wallet",
+      "title": "TopUp",
       "backToWallet": "Back To Wallet",
       "steps": {
-        "amount": "Top-up your wallet balance",
+        "amount": "TopUp your wallet balance",
         "payment": "Choose payment method",
         "upload": "Upload payment voucher",
-        "confirmation": "Top-up submitted"
+        "confirmation": "TopUp submitted"
       },
       "selectAmount": "Select Amount",
       "enterAmount": "Enter Amount",
@@ -351,14 +351,14 @@
       "uploading": "Uploading...",
       "processingTime": "Processing Time:",
       "processingTimeDescription": "Your deposit will be processed within 1-2 business hours after voucher verification.",
-      "confirmTopUp": "Confirm Top-up",
-      "requestSubmitted": "Top-up Request Submitted!",
+      "confirmTopUp": "Confirm TopUp",
+      "requestSubmitted": "TopUp Request Submitted!",
       "requestSubmittedDescription": "Your payment voucher has been submitted successfully. We'll process your deposit within 1-2 business hours.",
-      "reviewDetails": "Please review your top-up details:",
-      "topUpAmount": "Top-up Amount",
+      "reviewDetails": "Please review your TopUp details:",
+      "topUpAmount": "TopUp Amount",
       "paymentMethod": "Payment Method",
       "viewVoucher": "View Voucher",
-      "processingNote": "Your top-up request will be reviewed and processed within 24 hours. You will be notified once it's approved.",
+      "processingNote": "Your TopUp request will be reviewed and processed within 24 hours. You will be notified once it's approved.",
       "close": "Close",
       "back": "Back",
       "next": "Next",
@@ -423,11 +423,11 @@
       "close": "Close",
       "statusMessages": {
         "approvedTitle": "Transaction Approved",
-        "approvedMessage": "Your top-up has been approved and added to your wallet balance.",
+        "approvedMessage": "Your TopUp has been approved and added to your wallet balance.",
         "pendingTitle": "Awaiting Review",
-        "pendingMessage": "Your top-up request is being reviewed. We'll notify you once it's processed.",
+        "pendingMessage": "Your TopUp request is being reviewed. We'll notify you once it's processed.",
         "rejectedTitle": "Transaction Rejected",
-        "rejectedMessage": "Your top-up request was rejected. Please contact support for more information."
+        "rejectedMessage": "Your TopUp request was rejected. Please contact support for more information."
       }
     },
     "delete": {
