@@ -21,7 +21,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
       try {
          const res = await cancelServiceBooking(id!, customerId);
          if (res.id) {
-            return redirect(`/dashboard/dates-history?toastMessage=Delete+date+booking+successfully!&toastType=success`);
+            return redirect(`/dashboard/dates-history?toastMessage=Cancel+date+booking+successfully!&toastType=success`);
          }
       } catch (error: any) {
          if (error?.payload) {
@@ -30,7 +30,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
          return {
             success: false,
             error: true,
-            message: error || "Failed to delete date booking!",
+            message: error || "Failed to cancel date booking!",
          };
       }
    }

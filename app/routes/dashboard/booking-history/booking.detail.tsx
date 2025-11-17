@@ -26,14 +26,14 @@ export default function BookingServiceDetails() {
    }
 
    return (
-      <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full py-8 sm:py-4 px-4 sm:w-3/6 p-4 border rounded-xl">
-         <div className="space-y-4">
+      <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full p-2 sm:w-3/6 border rounded-xl">
+         <div className="space-y-4 mt-10 sm:mt-0 p-2">
             <div className="mt-4 sm:mt-0 px-2">
                <h3 className="flex items-center text-black text-md font-bold">{t('booking.detail.title')}</h3>
             </div>
             <div className="space-y-2 px-2">
                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t('booking.detail.bookingId')}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{data?.id}</p>
@@ -44,7 +44,7 @@ export default function BookingServiceDetails() {
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t('booking.detail.date')}:</label>
-                        <p className="mt-0 sm:mt-1 text-sm">{formatDate(String(data?.startDate))} {data?.startDate ? "-" : ""} {data?.startDate && formatDate(String(data?.endDate))}</p>
+                        <p className="mt-0 sm:mt-1 text-sm">{formatDate(String(data?.startDate))} {data?.endDate ? "-" : ""} {data?.endDate && formatDate(String(data?.endDate))}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t('booking.detail.dayAmount')}:</label>

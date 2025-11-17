@@ -47,7 +47,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       await validateServiceBookingInputs(bookingData as IServiceBookingCredentials);
       const res = await createServiceBooking(customerId, modelId, modelServiceId, bookingData as IServiceBookingCredentials);
       if (res.id) {
-         return redirect(`/dashboard/user-profile/${modelId}?toastMessage=Book+service+successfully!&toastType=success`);
+         return redirect(`/dashboard/dates-history?toastMessage=Book+service+successfully!&toastType=success`);
       }
    } catch (error: any) {
       if (error?.payload) {
@@ -105,7 +105,7 @@ export default function ServiceBooking() {
             <Form method="post" className="space-y-4">
                <div className="space-y-6">
                   <div>
-                     <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-2">
+                     <div className="grid gap-3 sm:gap-6 md:grid-cols-2">
                         <input
                            type="hidden"
                            name="price"
