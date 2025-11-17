@@ -24,7 +24,7 @@ import { getModelProfile } from '~/services/model.server';
 import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
 import type { ISinglemodelProfileResponse } from '~/interfaces';
 import { capitalize, getFirstWord } from '~/utils/functions/textFormat';
-import { getUserTokenFromSession, requireUserSession } from '~/services';
+import { getUserTokenFromSession, requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
     model: ISinglemodelProfileResponse
@@ -368,7 +368,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                         {model.ModelService.map((service) => {
                                             const name = getFirstWord(service.service.name).toLowerCase();
                                             return (
-                                                <Card className={`cursor-pointer w-full max-w-sm ${name === "sleep" ? "border-cyan-500" : name === "drinking" ? "border-green-500" : "border-rose-500"}`}>
+                                                <Card key={service.id} className={`cursor-pointer w-full max-w-sm ${name === "sleep" ? "border-cyan-500" : name === "drinking" ? "border-green-500" : "border-rose-500"}`}>
                                                     <CardHeader>
                                                         <CardTitle className='text-sm'>{service.service.name}</CardTitle>
                                                         <CardDescription className='text-xs'>

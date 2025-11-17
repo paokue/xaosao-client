@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import LanguageSwitcher from "~/components/LanguageSwitcher";
 
 // service and interface
-import { requireUserSession, validateICustomerSettingInputs, validateReportUpInputs, validateUpdateProfileInputs } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
+import { validateICustomerSettingInputs, validateReportUpInputs, validateUpdateProfileInputs } from "~/services/validation.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import type { ICustomerCredentials, ICustomerResponse, ICustomerSettingCredentials } from "~/interfaces/customer";
 import { changeCustomerPassword, createReport, deleteAccount, getCustomerProfile, updateCustomerSetting, updateProfile } from "~/services/profile.server";

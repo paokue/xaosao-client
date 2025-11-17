@@ -21,12 +21,13 @@ import type { IWalletResponse } from '~/interfaces';
 import { capitalize } from '~/utils/functions/textFormat';
 import type { PaginationProps } from '~/interfaces/pagination';
 import type { ITransactionResponse } from '~/interfaces/transaction';
-import { getCustomerTransactions, getWalletByCustomerId, requireUserSession } from '~/services';
 
 // components
 import { Button } from '~/components/ui/button';
 import Pagination from '~/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { requireUserSession } from '~/services/auths.server';
+import { getCustomerTransactions, getWalletByCustomerId } from '~/services/wallet.server';
 
 interface LoaderReturn {
     wallet: IWalletResponse;

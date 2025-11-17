@@ -12,7 +12,7 @@ import { Button } from "~/components/ui/button";
 // functions
 import Countdown from "~/lib/count-down";
 import { FieldValidationError } from "~/services/base.server";
-import { validateForgotInputs, validateVerifyOTPInputs } from "~/services";
+import { validateForgotInputs, validateVerifyOTPInputs } from "~/services/validation.server";
 
 const backgroundImages = [
     "https://images.pexels.com/photos/17441715/pexels-photo-17441715.jpeg",

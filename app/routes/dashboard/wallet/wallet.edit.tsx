@@ -13,7 +13,9 @@ import { downloadImage } from "~/utils/functions/download"
 import { capitalize, extractFilenameFromCDNSafe } from "~/utils/functions/textFormat"
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server"
 import type { ITransactionCredentials, ITransactionResponse } from "~/interfaces/transaction"
-import { getTransaction, requireUserSession, updateTransaction, validateTopUpInputs } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
+import { getTransaction, updateTransaction } from "~/services/wallet.server";
+import { validateTopUpInputs } from "~/services/validation.server";
 import { formatCurrency, parseFormattedNumber } from "~/utils"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {

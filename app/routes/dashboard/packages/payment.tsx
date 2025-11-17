@@ -9,7 +9,7 @@ import Modal from "~/components/ui/model";
 
 // service and type:
 import { formatCurrency } from "~/utils";
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";;
 import { getPackage } from "~/services/package.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import type { ISubscriptionPlanWithCurrentResponse } from "~/interfaces/packages";

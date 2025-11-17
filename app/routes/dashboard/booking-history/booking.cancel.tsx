@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 // components
 import Modal from "~/components/ui/model";
 import { Button } from "~/components/ui/button";
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import { cancelServiceBooking } from "~/services/booking.server";
 

@@ -8,12 +8,13 @@ import { useTranslation } from "react-i18next";
 import Modal from "~/components/ui/model";
 import { capitalize } from "~/utils/functions/textFormat";
 import { uploadFileToBunnyServer } from "~/services/upload.server";
-import { requireUserSession, validateTopUpInputs } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
+import { validateTopUpInputs } from "~/services/validation.server";
 import type { ITransactionCredentials } from "~/interfaces/transaction";
 import { formatCurrency } from "~/utils";
 
 export async function action({ request }: Route.ActionArgs) {
-    const { topUpWallet } = await import("~/services");
+    const { topUpWallet } = await import("~/services/wallet.server");
     const customerId = await requireUserSession(request);
     const formData = await request.formData();
     const transactionData = Object.fromEntries(formData) as Partial<ITransactionCredentials>;

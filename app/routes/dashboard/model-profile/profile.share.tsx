@@ -16,9 +16,10 @@ import QRCode from 'qrcode';
 // components
 import Modal from '~/components/ui/model';
 import { truncateText } from '~/utils/functions/textFormat';
-import { requireUserSession } from '~/services';
+
 import { getModel } from '~/services/model.server';
 import type { ISinglemodelResponse } from '~/interfaces';
+import { requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
     model: ISinglemodelResponse

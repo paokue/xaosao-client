@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { AlertCircle, Calendar1, CalendarIcon, LoaderCircle, X } from "lucide-react"
-import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router"
+import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, useParams, type LoaderFunctionArgs } from "react-router"
 
 // components:
 import Modal from "~/components/ui/model"
@@ -16,19 +16,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 
 // utils:
 import { cn } from "~/lib/utils"
-import { calculateDayAmount, formatCurrency, parseFormattedNumber } from "~/utils"
-import { getModelService, requireUserSession, validateServiceBookingInputs } from "~/services"
 import type { Route } from "./+types/profile.book"
-import type { IServiceBookingCredentials, IServiceBookingResponse } from "~/interfaces/service"
-import { createServiceBooking } from "~/services/booking.server"
 import { capitalize } from "~/utils/functions/textFormat"
+import { calculateDayAmount, formatCurrency, parseFormattedNumber } from "~/utils"
+import type { IServiceBookingCredentials, IServiceBookingResponse } from "~/interfaces/service"
+import { requireUserSession } from "~/services/auths.server";
+import { getModelService } from "~/services/model.server";
+import { validateServiceBookingInputs } from "~/services/validation.server";
 
 export async function loader({ params }: LoaderFunctionArgs) {
    const service = await getModelService(params.modelId!, params.serviceId!);
+
    return service;
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
+   const { createServiceBooking } = await import("~/services/booking.server")
    const modelId = params.modelId
    const modelServiceId = params.serviceId
    const customerId = await requireUserSession(request)
@@ -76,6 +79,7 @@ export async function action({ params, request }: Route.ActionArgs) {
 export default function ServiceBooking() {
    const navigate = useNavigate()
    const navigation = useNavigation()
+   const params = useParams()
    const [startDate, setStartDate] = useState<Date>()
    const [endDate, setEndDate] = useState<Date>()
 
@@ -85,13 +89,13 @@ export default function ServiceBooking() {
       navigation.state !== "idle" && navigation.formMethod === "POST";
 
    function closeHandler() {
-      navigate("/dashboard/wallets");
+      navigate(`/dashboard/user-profile/${params.modelId}`);
    }
 
    return (
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full sm:w-3/6 py-8 sm:py-4 px-4 border rounded-xl">
-         <div className="space-y-6">
-            <div className="space-y-2">
+         <div className="space-y-3 sm:space-y-6">
+            <div className="space-y-2 mt-10 sm:mt-0">
                <div className="text-md font-bold text-balance">{service.service.name}</div>
                <div className="text-sm leading-relaxed">
                   {service.service.description}
@@ -101,7 +105,7 @@ export default function ServiceBooking() {
             <Form method="post" className="space-y-4">
                <div className="space-y-6">
                   <div>
-                     <div className="grid gap-6 md:grid-cols-2">
+                     <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-2">
                         <input
                            type="hidden"
                            name="price"
@@ -139,6 +143,7 @@ export default function ServiceBooking() {
                                        type="time"
                                        name="startDate"
                                        className="w-full"
+                                       placeholder="Dates"
                                        onChange={(e) => {
                                           if (!startDate) return;
                                           const [hours, minutes] = e.target.value.split(":").map(Number);
@@ -154,6 +159,7 @@ export default function ServiceBooking() {
 
                            {startDate && (
                               <input
+                                 placeholder="Date"
                                  type="hidden"
                                  name="startDate"
                                  value={startDate.toISOString()}
@@ -293,7 +299,7 @@ export default function ServiceBooking() {
                      type="button"
                      variant="outline"
                      onClick={closeHandler}
-                     className="bg-gray-500 text-white hover:bg-gray-600 hover:text-white"
+                     className="text-gray-500 border border-gray-300"
                   >
                      <X />
                      Close

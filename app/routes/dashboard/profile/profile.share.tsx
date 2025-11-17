@@ -17,9 +17,9 @@ import { useNavigate, useNavigation, type LoaderFunction } from 'react-router';
 // components
 import Modal from '~/components/ui/model';
 import type { ICustomerResponse } from '~/interfaces/customer';
-import { requireUserSession } from '~/services';
 import { getCustomerProfile } from '~/services/profile.server';
 import { truncateText } from '~/utils/functions/textFormat';
+import { requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
     customerData: ICustomerResponse;

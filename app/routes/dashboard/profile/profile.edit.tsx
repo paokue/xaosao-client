@@ -11,7 +11,8 @@ import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
-import { requireUserSession, validateUpdateProfileInputs } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
+import { validateUpdateProfileInputs } from "~/services/validation.server";
 import { getCustomerProfile, updateProfile } from "~/services/profile.server";
 import type { ICustomerCredentials, ICustomerResponse } from "~/interfaces/customer";
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server";

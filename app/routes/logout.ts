@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { destroyUserSession } from "~/services";
+import { destroyUserSession } from "~/services/auths.server";
 
 export function action({ request }: { request: Request }) {
   if (request.method !== "POST") {

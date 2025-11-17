@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 // interfaces and services
 import { isAdult } from "~/lib/validation"
 import type { Gender } from "~/interfaces/base"
-import { validateCustomerSignupInputs } from "~/services"
+import { validateCustomerSignupInputs } from "~/services/validation.server"
 import type { ICustomerSignupCredentials } from "~/interfaces"
 import { FieldValidationError, getCurrentIP } from "~/services/base.server"
 
@@ -26,7 +26,7 @@ const backgroundImages = [
 ]
 
 export async function action({ request }: Route.ActionArgs) {
-    const { customerRegister } = await import("~/services")
+    const { customerRegister } = await import("~/services/auths.server")
     const formData = await request.formData()
     const ip = await getCurrentIP();
     const accessKey = process.env.APIIP_API_KEY || "";

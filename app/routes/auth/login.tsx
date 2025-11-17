@@ -10,7 +10,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 
 // Services & Types
-import { validateSignInInputs } from "~/services";
+import { validateSignInInputs } from "~/services/validation.server";
 import type { ICustomerSigninCredentials } from "~/interfaces";
 
 // Constants
@@ -48,7 +48,7 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
 
     try {
         // Dynamic import for code splitting
-        const { customerLogin } = await import("~/services");
+        const { customerLogin } = await import("~/services/auths.server");
         const { prisma } = await import("~/services/database.server");
 
         const formData = await request.formData();

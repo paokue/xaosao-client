@@ -8,12 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 
 // insterface and services
 import { calculateAgeFromDOB } from '~/utils';
-import { requireUserSession } from '~/services';
 import { createCustomerImage, getCustomerProfile, updateCustomerImage } from '~/services/profile.server';
 import type { ICustomerResponse } from '~/interfaces/customer';
 import React, { useRef } from 'react';
 import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
 import { capitalize, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
+import { requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
     customerData: ICustomerResponse;

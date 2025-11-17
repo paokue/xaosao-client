@@ -29,7 +29,7 @@ import { Navigation, Pagination } from "swiper/modules";
 // service and backend
 import { capitalize } from "~/utils/functions/textFormat";
 import { calculateAgeFromDOB, calculateDistance } from "~/utils";
-import { getUserTokenFromSession, requireUserSession } from "~/services";
+import { getUserTokenFromSession, requireUserSession } from "~/services/auths.server";
 import type { Gender, IAvailableStatus, IUserImages } from "~/interfaces/base";
 import { createCustomerInteraction, customerAddFriend } from "~/services/interaction.server";
 import type { IHotmodelsResponse, ImodelsResponse, INearbyModelResponse } from "~/interfaces";

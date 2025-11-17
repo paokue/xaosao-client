@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formatCurrency } from "~/utils";
 import { capitalize } from "~/utils/functions/textFormat";
 import { getSubscriptionHistory } from "~/services/package.server";
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
 
 // Components
 import { Button } from "~/components/ui/button";

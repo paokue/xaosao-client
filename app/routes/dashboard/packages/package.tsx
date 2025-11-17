@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "~/components/ui/button"
 import { Card, CardContent } from "~/components/ui/card"
 
-import { requireUserSession } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
 import { getPackages } from "~/services/package.server"
 import { calculateDiscountPercent, formatCurrency } from "~/utils"
 import type { ISubscriptionPlanWithCurrentResponse } from "~/interfaces/packages"

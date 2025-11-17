@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 // service and interface
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
 import type { Route } from "./+types/setting-detail";
 import { capitalize } from "~/utils/functions/textFormat";
 import type { ICustomerCredentials, ICustomerResponse, ICustomerSettingCredentials } from "~/interfaces/customer";

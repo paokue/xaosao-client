@@ -9,7 +9,8 @@ import { Button } from "~/components/ui/button"
 // utils and service
 import { capitalize } from "~/utils/functions/textFormat"
 import { downloadImage } from "~/utils/functions/download"
-import { getTransaction, requireUserSession } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
+import { getTransaction } from "~/services/wallet.server";
 import type { ITransactionResponse } from "~/interfaces/transaction"
 import { formatCurrency } from "~/utils"
 

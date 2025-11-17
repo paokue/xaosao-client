@@ -32,12 +32,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // interface, service and utils
 import type { IForYouModelResponse } from "~/interfaces";
-import { getUserTokenFromSession, requireUserSession } from "~/services";
+import { getUserTokenFromSession, requireUserSession } from "~/services/auths.server";
 import {
     getForyouModels,
     getLikeMeModels,
     getModelsByInteraction,
-} from "~/services";
+} from "~/services/model.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 

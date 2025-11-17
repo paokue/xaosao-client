@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { Button } from "~/components/ui/button"
-import { validateResetPasswordInputs } from "~/services"
+import { validateResetPasswordInputs } from "~/services/validation.server"
 import { FieldValidationError } from "~/services/base.server"
 
 const backgroundImages = [
@@ -18,7 +18,7 @@ const backgroundImages = [
 ]
 
 export async function action({ request }: Route.ActionArgs) {
-    const { resetPassword } = await import("~/services");
+    const { resetPassword } = await import("~/services/auths.server");
     const url = new URL(request.url);
     const otp = url.searchParams.get("otp");
 
