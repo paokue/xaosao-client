@@ -494,7 +494,37 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                     <Form
                                         method="get"
                                         className="flex flex-col h-full"
-                                        onSubmit={() => setDrawerOpen(false)}
+                                        onSubmit={(e) => {
+                                            // Get form data
+                                            const formData = new FormData(e.currentTarget);
+                                            const newParams = new URLSearchParams();
+
+                                            // Preserve the current tab
+                                            newParams.set("forYouOnly", "true");
+                                            newParams.set("page", "1");
+
+                                            // Add filter values only if they have values
+                                            const distance = formData.get("distance");
+                                            const ageMin = formData.get("ageMin");
+                                            const ageMax = formData.get("ageMax");
+                                            const rating = formData.get("rating");
+                                            const gender = formData.get("gender");
+                                            const location = formData.get("location");
+                                            const relationshipStatus = formData.get("relationshipStatus");
+
+                                            if (distance) newParams.set("distance", distance.toString());
+                                            if (ageMin) newParams.set("ageMin", ageMin.toString());
+                                            if (ageMax) newParams.set("ageMax", ageMax.toString());
+                                            if (rating) newParams.set("rating", rating.toString());
+                                            if (gender) newParams.set("gender", gender.toString());
+                                            if (location) newParams.set("location", location.toString());
+                                            if (relationshipStatus) newParams.set("relationshipStatus", relationshipStatus.toString());
+
+                                            // Navigate with new params
+                                            navigate(`?${newParams.toString()}`, { replace: true });
+                                            setDrawerOpen(false);
+                                            e.preventDefault();
+                                        }}
                                     >
                                         <div className="hidden sm:flex items-center justify-between px-6 py-2 border-b">
                                             <h2 className="text-lg font-bold text-rose-500">{t('matches.filterOptions')}</h2>
@@ -516,6 +546,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                                     name="distance"
                                                     min={1}
                                                     max={500}
+                                                    defaultValue={searchParams.get("distance") || ""}
+                                                    placeholder="10 km"
                                                     className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                                                 />
                                             </div>
@@ -523,14 +555,34 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.ageRange')}</label>
                                                 <div className="flex gap-2 mt-2">
-                                                    <input type="number" name="ageMin" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
-                                                    <input type="number" name="ageMax" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
+                                                    <input
+                                                        type="number"
+                                                        name="ageMin"
+                                                        min={2}
+                                                        max={100}
+                                                        defaultValue={searchParams.get("ageMin") || ""}
+                                                        className="w-1/2 p-2 border rounded-md"
+                                                        placeholder="Age...."
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        name="ageMax"
+                                                        min={2}
+                                                        max={100}
+                                                        defaultValue={searchParams.get("ageMax") || ""}
+                                                        className="w-1/2 p-2 border rounded-md"
+                                                        placeholder="Age...."
+                                                    />
                                                 </div>
                                             </div>
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.minRating')}</label>
-                                                <select name="rating" className="w-full mt-2 p-2 border rounded-md" defaultValue="">
+                                                <select
+                                                    name="rating"
+                                                    className="w-full mt-2 p-2 border rounded-md"
+                                                    defaultValue={searchParams.get("rating") || ""}
+                                                >
                                                     <option value="">{t('matches.selectRating')}</option>
                                                     {[1, 2, 3, 4, 5].map((r) => (
                                                         <option key={r} value={r}>{r}+</option>
@@ -540,7 +592,11 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.gender')}</label>
-                                                <select name="gender" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                                                <select
+                                                    name="gender"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                    defaultValue={searchParams.get("gender") || ""}
+                                                >
                                                     <option value="">{t('matches.all')}</option>
                                                     <option value="female">{t('matches.female')}</option>
                                                     <option value="male">{t('matches.male')}</option>
@@ -550,7 +606,11 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.location')}</label>
-                                                <select name="location" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                                                <select
+                                                    name="location"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                    defaultValue={searchParams.get("location") || ""}
+                                                >
                                                     <option value="">{t('matches.anyLocation')}</option>
                                                     <option value="Turkey">Turkey</option>
                                                     <option value="Spain">Spain</option>
@@ -564,19 +624,43 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                                 <label className="block text-gray-700 font-medium">{t('matches.relationshipStatus')}</label>
                                                 <div className="space-y-1 mt-2">
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Single" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Single"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Single"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.single')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Divorced" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Divorced"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Divorced"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.divorced')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Widowed" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Widowed"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Widowed"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.widowed')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Separated" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Separated"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Separated"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.separated')}
                                                     </label>
                                                 </div>
@@ -584,7 +668,18 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                         </div>
 
                                         <div className="flex items-center justify-between p-6 space-x-3 border-t">
-                                            <button type="reset" onClick={() => setDrawerOpen(false)} className="w-full bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    // Clear all filters and keep only the tab
+                                                    const newParams = new URLSearchParams();
+                                                    newParams.set("forYouOnly", "true");
+                                                    newParams.set("page", "1");
+                                                    navigate(`?${newParams.toString()}`, { replace: true });
+                                                    setDrawerOpen(false);
+                                                }}
+                                                className="w-full bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                                            >
                                                 {t('matches.resetFilters')}
                                             </button>
 

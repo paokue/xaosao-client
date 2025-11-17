@@ -98,7 +98,12 @@ export async function getModelsForCustomer(customerId: string) {
     // Calculate distance and enhance models
     return models.map((model) => {
       let distance = null;
-      if (customer?.latitude && customer?.longitude && model.latitude && model.longitude) {
+      if (
+        customer?.latitude &&
+        customer?.longitude &&
+        model.latitude &&
+        model.longitude
+      ) {
         distance = calculateDistance(
           customer.latitude,
           customer.longitude,
@@ -116,7 +121,8 @@ export async function getModelsForCustomer(customerId: string) {
             : null,
         isContact: model.friend_contacts.length > 0,
         totalLikes: model._count.customer_interactions,
-        popularity: model._count.customer_interactions + model._count.model_interactions,
+        popularity:
+          model._count.customer_interactions + model._count.model_interactions,
       };
     });
   } catch (error: any) {
@@ -146,7 +152,10 @@ function calculateDistance(
 }
 
 // Get nearby models based on geolocation distance
-export async function getNearbyModels(customerId: string, maxDistanceKm: number = 50) {
+export async function getNearbyModels(
+  customerId: string,
+  maxDistanceKm: number = 50
+) {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
     select: {
@@ -269,7 +278,9 @@ export async function getHotModels(customerId: string, limit: number = 10) {
     // 3. Recent activity (updatedAt)
     // 4. Number of reviews
     const currentDate = new Date();
-    const thirtyDaysAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(
+      currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
 
     const hotModels = await prisma.model.findMany({
       where: {
@@ -357,14 +368,20 @@ export async function getHotModels(customerId: string, limit: number = 10) {
 
       // Calculate days since last activity
       const daysSinceUpdate = Math.floor(
-        (currentDate.getTime() - new Date(model.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+        (currentDate.getTime() - new Date(model.updatedAt).getTime()) /
+          (1000 * 60 * 60 * 24)
       );
       const recencyScore = Math.max(0, 30 - daysSinceUpdate); // Higher score for recent activity
 
       // Calculate distance if location available
       let distance = null;
       let distanceScore = 0;
-      if (customer?.latitude && customer?.longitude && model.latitude && model.longitude) {
+      if (
+        customer?.latitude &&
+        customer?.longitude &&
+        model.latitude &&
+        model.longitude
+      ) {
         distance = calculateDistance(
           customer.latitude,
           customer.longitude,
@@ -583,33 +600,14 @@ export async function getForyouModels(
     const perPage = filters.perPage ?? 20;
     const skip = (page - 1) * perPage;
 
-    // Count total first (without pagination)
-    const totalCount = await prisma.model.count({
-      where: {
-        status: "active",
-        ...(filters.gender ? { gender: filters.gender } : {}),
-        ...(filters.location
-          ? { address: { contains: filters.location } }
-          : {}),
-        ...(filters.minRating ? { rating: { gte: filters.minRating } } : {}),
-        ...(filters.relationshipStatus
-          ? { available_status: filters.relationshipStatus }
-          : {}),
-        NOT: {
-          customer_interactions: {
-            some: {
-              customerId,
-              action: "PASS",
-            },
-          },
-        },
-      },
+    // Get customer location for distance filtering
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { latitude: true, longitude: true },
     });
 
-    // Fetch models with pagination
-    const models = await prisma.model.findMany({
-      skip,
-      take: perPage,
+    // Fetch ALL models (without pagination first, for distance filtering)
+    const allModels = await prisma.model.findMany({
       where: {
         status: "active",
         ...(filters.gender ? { gender: filters.gender } : {}),
@@ -668,32 +666,30 @@ export async function getForyouModels(
     });
 
     // Local filtering (age, distance)
-    const filteredModels = models.filter((m) => {
+    const filteredModels = allModels.filter((m) => {
       let pass = true;
 
+      // Age filter
       if (filters.ageRange) {
         const age = differenceInYears(new Date(), new Date(m.dob));
         if (age < filters.ageRange[0] || age > filters.ageRange[1])
           pass = false;
       }
 
+      // Distance filter - use customer's GPS coordinates from database
       if (
         filters.maxDistance &&
-        filters.customerLat &&
-        filters.customerLng &&
+        customer?.latitude &&
+        customer?.longitude &&
         m.latitude &&
         m.longitude
       ) {
-        const R = 6371; // km
-        const dLat = ((m.latitude - filters.customerLat) * Math.PI) / 180;
-        const dLng = ((m.longitude - filters.customerLng) * Math.PI) / 180;
-        const a =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos((filters.customerLat * Math.PI) / 180) *
-            Math.cos((m.latitude * Math.PI) / 180) *
-            Math.sin(dLng / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
+        const distance = calculateDistance(
+          customer.latitude,
+          customer.longitude,
+          m.latitude,
+          m.longitude
+        );
 
         if (distance > filters.maxDistance) pass = false;
       }
@@ -711,11 +707,15 @@ export async function getForyouModels(
       isContact: model.friend_contacts.length > 0,
     }));
 
+    // Apply pagination AFTER filtering
+    const totalCount = enhancedModels.length;
+    const paginatedModels = enhancedModels.slice(skip, skip + perPage);
+
     // Pagination info
     const totalPages = Math.ceil(totalCount / perPage);
 
     return {
-      models: enhancedModels,
+      models: paginatedModels,
       pagination: {
         currentPage: page,
         totalPages,
