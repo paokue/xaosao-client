@@ -1,6 +1,6 @@
 import type { Route } from "./+types/login";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
 import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react";
 
@@ -8,6 +8,9 @@ import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+
+// Hooks
+import { useIsMobile } from "~/hooks/use-mobile";
 
 // Services & Types
 import { validateSignInInputs } from "~/services/validation.server";
@@ -188,10 +191,7 @@ export default function SignInPage() {
 
     // Computed values
     const isSubmitting = navigation.state !== "idle" && navigation.formMethod === "POST";
-    const isMobile = useMemo(
-        () => typeof window !== "undefined" && window.innerWidth < 768,
-        []
-    );
+    const isMobile = useIsMobile();
 
     // Background image carousel effect
     useEffect(() => {

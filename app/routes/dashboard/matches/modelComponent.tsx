@@ -1,5 +1,5 @@
 import { Form, useNavigate, type FetcherWithComponents } from "react-router";
-import { MapPin, MessageSquareText, Heart, X, UserPlus } from "lucide-react";
+import { MapPin, MessageSquareText, Heart, X, UserPlus, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // swiper imports
@@ -47,12 +47,18 @@ export default function ModelCard({ model, customerLatitude, customerLongitude }
                         ))
                     ) : (
                         <SwiperSlide>
-                            <img
-                                src={model.profile ?? ""}
-                                alt={model.firstName}
-                                className="w-full h-full object-cover"
-                                onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
-                            />
+                            {model.profile ? (
+                                <img
+                                    src={model.profile}
+                                    alt={model.firstName}
+                                    className="w-full h-full object-cover"
+                                    onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <User className="w-16 h-16 text-gray-400" />
+                                </div>
+                            )}
                         </SwiperSlide>
                     )}
                 </Swiper>

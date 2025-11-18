@@ -338,13 +338,15 @@ export default function WalletTopUpPage() {
                             >
                                 {uploadedFile ? (
                                     <div className="space-y-4">
-                                        <div className="w-full flex items-center justify-center">
-                                            <img
-                                                src={previewSlip ?? ""}
-                                                alt="New slip preview"
-                                                className="mt-2 h-28 rounded-md border"
-                                            />
-                                        </div>
+                                        {previewSlip && (
+                                            <div className="w-full flex items-center justify-center">
+                                                <img
+                                                    src={previewSlip}
+                                                    alt="New slip preview"
+                                                    className="mt-2 h-28 rounded-md border"
+                                                />
+                                            </div>
+                                        )}
                                         <div>
                                             <div className="font-medium text-green-700">{uploadedFile.name}</div>
                                             <div className="text-sm text-green-600">

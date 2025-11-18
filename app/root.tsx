@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import "./i18n/config";
 import Toast from "./components/toast";
+import { useLanguageInit } from "./hooks/use-language-init";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -48,6 +49,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Initialize language from localStorage after hydration
+  useLanguageInit();
+
   return <Outlet />;
 }
 

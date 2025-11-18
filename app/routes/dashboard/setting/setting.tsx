@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import LanguageSwitcher from "~/components/LanguageSwitcher";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 // service and interface
 import { requireUserSession } from "~/services/auths.server";
@@ -302,7 +303,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
         }));
     };
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const isMobile = useIsMobile();
 
     if (isSubmitting || isCreating || isDeleting) {
         return (

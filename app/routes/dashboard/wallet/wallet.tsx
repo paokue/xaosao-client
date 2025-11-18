@@ -222,11 +222,9 @@ export default function WalletPage({ loaderData }: TransactionProps) {
 
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
-                                                    <Button variant="ghost" size="sm" className="text-gray-500 h-7 w-7 p-0">
-                                                        <MoreVertical className="h-3 w-3" />
-                                                        <span className="sr-only">More</span>
-                                                    </Button>
+                                                <Button variant="ghost" size="sm" className="text-gray-500 h-8 w-8 p-0">
+                                                    <MoreVertical className="h-3 w-3" />
+                                                    <span className="sr-only">More</span>
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent className="w-48" align="end" forceMount>

@@ -296,13 +296,19 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                     className={`border-3 ${selectedProfile?.id === data.id
                                         ? "border-rose-500"
                                         : "border-gray-600"
-                                        } rounded-full w-20 h-20 flex items-center justify-center hover:border-rose-500`}
+                                        } rounded-full w-20 h-20 flex items-center justify-center hover:border-rose-500 overflow-hidden`}
                                 >
-                                    <img
-                                        src={data?.profile || ""}
-                                        alt="Profile"
-                                        className="w-full h-full rounded-full object-cover"
-                                    />
+                                    {data?.profile ? (
+                                        <img
+                                            src={data.profile}
+                                            alt="Profile"
+                                            className="w-full h-full rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                                            <User className="w-10 h-10 text-gray-400" />
+                                        </div>
+                                    )}
                                 </div>
                                 <p className="text-xs">{data.firstName}&nbsp;{data.lastName}</p>
                             </div>
@@ -532,12 +538,18 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                     <input type="hidden" name="modelId" value={model.id} />
                                     <input type="hidden" name="isFriend" value="true" id="isFriend" />
                                     <div className="relative h-full overflow-hidden">
-                                        <img
-                                            src={model.Images?.[0]?.name ?? ""}
-                                            alt={model.firstName + model.lastName}
-                                            className="w-full h-full object-cover transition-transform duration-300"
-                                            onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
-                                        />
+                                        {model.Images?.[0]?.name ? (
+                                            <img
+                                                src={model.Images[0].name}
+                                                alt={model.firstName + model.lastName}
+                                                className="w-full h-full object-cover transition-transform duration-300"
+                                                onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                <User className="w-16 h-16 text-gray-400" />
+                                            </div>
+                                        )}
                                         {model?.isContact ?
                                             <button
                                                 type="button"
@@ -561,11 +573,17 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                         <div className="absolute top-0 left-4 right-4 text-white transition-all duration-300">
                                             <div className="flex items-start space-x-3 mt-2">
                                                 <div className="w-12 h-12">
-                                                    <img
-                                                        src={model.profile ?? ""}
-                                                        alt="Profile"
-                                                        className="w-full h-full rounded-full object-cover border-2 border-gray-700"
-                                                    />
+                                                    {model.profile ? (
+                                                        <img
+                                                            src={model.profile}
+                                                            alt="Profile"
+                                                            className="w-full h-full rounded-full object-cover border-2 border-gray-700"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
+                                                            <User className="w-6 h-6 text-gray-400" />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-2">
                                                     <h2
@@ -654,11 +672,17 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                         onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
                                         className="w-full h-[30vh]"
                                     >
-                                        <img
-                                            src={model.Images[0]?.name ?? ""}
-                                            alt={model.firstName}
-                                            className="cursor-pointer w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                        />
+                                        {model.Images[0]?.name ? (
+                                            <img
+                                                src={model.Images[0].name}
+                                                alt={model.firstName}
+                                                className="cursor-pointer w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="cursor-pointer w-full h-full bg-gray-200 flex items-center justify-center">
+                                                <User className="w-16 h-16 text-gray-400" />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                                     <div className="absolute bottom-4 left-4 right-4 text-white sm:opacity-0 sm:group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 space-y-1">
@@ -691,12 +715,21 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                     {nearbyModels?.map((model) => (
                         <div key={model.id} className="flex items-start justify-between pb-4 border-b">
                             <div className="flex items-start justify-start gap-2">
-                                <img
-                                    src={model.profile ?? ""}
-                                    alt="Profile"
-                                    className="w-14 h-14 border-1 border-gray-600 rounded-full object-cover cursor-pointer"
-                                    onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
-                                />
+                                {model.profile ? (
+                                    <img
+                                        src={model.profile}
+                                        alt="Profile"
+                                        className="w-14 h-14 border-1 border-gray-600 rounded-full object-cover cursor-pointer"
+                                        onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-14 h-14 border-1 border-gray-600 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
+                                        onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                    >
+                                        <User className="w-7 h-7 text-gray-400" />
+                                    </div>
+                                )}
                                 <div className="space-y-0.5 text-gray-500">
                                     <h2
                                         className="flex items-center justify-start text-sm sm:text-md text-black"
@@ -718,13 +751,15 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                     </div>
                                     <div className="flex items-start justify-start gap-2 mt-4">
                                         {model.Images && model.Images.map((image, index) => (
-                                            <img
-                                                key={image.name + index}
-                                                src={image.name ?? ""}
-                                                alt="Profile"
-                                                className="w-24 h-24 rounded-2xl object-cover cursor-pointer"
-                                                onClick={(e) => { setImages(model.Images), setSelectedIndex(index) }}
-                                            />
+                                            image.name ? (
+                                                <img
+                                                    key={image.name + index}
+                                                    src={image.name}
+                                                    alt="Profile"
+                                                    className="w-24 h-24 rounded-2xl object-cover cursor-pointer"
+                                                    onClick={() => { setImages(model.Images), setSelectedIndex(index) }}
+                                                />
+                                            ) : null
                                         ))}
 
                                         {selectedIndex !== null && (

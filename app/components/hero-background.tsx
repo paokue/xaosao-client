@@ -25,8 +25,12 @@ const backgroundImages = [
 
 export function HeroBackground() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // Ensure component is mounted before starting transitions
+    setMounted(true)
+
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
     }, 50000)
@@ -34,6 +38,7 @@ export function HeroBackground() {
     return () => clearInterval(interval)
   }, [])
 
+  // Always render with index 0 initially for SSR consistency
   return (
     <div className="absolute inset-0">
       {backgroundImages.map((image, index) => (

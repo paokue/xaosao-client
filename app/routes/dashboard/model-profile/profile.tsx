@@ -206,7 +206,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <div className="flex-shrink-0">
                             <img
-                                src={model?.profile || ""}
+                                src={model?.profile || undefined}
                                 alt={`${model.firstName}-${model.lastName}`}
                                 className="w-32 h-32 rounded-full object-cover border-2 border-rose-500"
                             />
