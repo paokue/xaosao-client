@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Mail,
     Link,
@@ -10,7 +10,8 @@ import {
     ChevronLeft,
     MessageCircle,
 } from 'lucide-react';
-import { useNavigate, useParams, type LoaderFunction } from 'react-router';
+import { useLoaderData, useNavigate, useParams, type LoaderFunction } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 
 // components
@@ -33,44 +34,47 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     await requireUserSession(request)
     const modelId = params.userId
     const model = await getModel(modelId as string)
-    return { model }
+
+    return { model, VITE_FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL }
 }
 
 export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
     const navigate = useNavigate()
+    const { t } = useTranslation();
     const { userId } = useParams<{ userId: string }>();
+    const { VITE_FRONTEND_URL } = useLoaderData() as { VITE_FRONTEND_URL: string };
+
     const [linkCopied, setLinkCopied] = useState(false);
     const [qrDownloaded, setQrDownloaded] = useState(false);
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const { model } = loaderData
-    const url = `http://localhost:5173/dashboard/user-profile/${userId}`
+    const url = `${VITE_FRONTEND_URL}dashboard/user-profile/${userId}`
     const socialPlatforms = [
         {
-            name: 'WhatsApp',
+            name: t('profileShare.whatsapp'),
             icon: MessageCircle,
             color: 'bg-green-500 hover:bg-green-600',
             action: () => shareToWhatsApp()
         },
         {
-            name: 'Facebook',
+            name: t('profileShare.facebook'),
             icon: Facebook,
             color: 'bg-blue-600 hover:bg-blue-700',
             action: () => shareToFacebook()
         },
         {
-            name: 'Instagram',
+            name: t('profileShare.instagram'),
             icon: Instagram,
             color: 'bg-purple-400 hover:bg-purple-500',
             action: () => shareToInstagram()
         },
         {
-            name: 'Email',
+            name: t('profileShare.email'),
             icon: Mail,
             color: 'bg-gray-600 hover:bg-gray-700',
             action: () => shareViaEmail()
         }
     ];
-
 
     // Generate QR code when component mounts or URL changes
     useEffect(() => {
@@ -140,7 +144,7 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
     };
 
     const shareToWhatsApp = () => {
-        const message = `Check out ${model.firstName}'s profile: ${url}`;
+        const message = t('profileShare.whatsappMessage', { name: model.firstName, url });
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -150,12 +154,12 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
 
     const shareToInstagram = () => {
         copyProfileUrl();
-        alert('Profile link copied! You can now paste it in your Instagram story or post.');
+        alert(t('profileShare.instagramAlert'));
     };
 
     const shareViaEmail = () => {
-        const subject = `Check out ${model.firstName}'s profile`;
-        const body = `Hi!\n\nI thought you might be interested in checking out ${model.firstName}'s profile:\n\n${url}\n\nBest regards!`;
+        const subject = t('profileShare.emailSubject', { name: model.firstName });
+        const body = t('profileShare.emailBody', { name: model.firstName, url });
         window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     };
 
@@ -174,7 +178,7 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
 
                 <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
                     <div className="text-center">
-                        <h3 className="hidden sm:block text-md font-semibold text-gray-900 mb-4">QR Code</h3>
+                        <h3 className="hidden sm:block text-md font-semibold text-gray-900 mb-4">{t('profileShare.qrCode')}</h3>
                         <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-4">
                             <div className="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                                 {qrCodeDataUrl ? (
@@ -184,11 +188,11 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
                                         className="w-full h-full object-contain"
                                     />
                                 ) : (
-                                    <div className="text-gray-400">Generating QR Code...</div>
+                                    <div className="text-gray-400">{t('profileShare.generatingQR')}</div>
                                 )}
                             </div>
                             <p className="text-sm text-gray-600 mb-4">
-                                Scan with any QR code reader to view profile
+                                {t('profileShare.scanQR')}
                             </p>
                             <button
                                 onClick={downloadQRCode}
@@ -196,16 +200,16 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
                                 className="text-sm inline-flex items-center space-x-2 px-4 py-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Download className="w-4 h-4" />
-                                <span>{qrDownloaded ? 'Downloaded!' : 'Download QR'}</span>
+                                <span>{qrDownloaded ? t('profileShare.downloaded') : t('profileShare.downloadQR')}</span>
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="text-md font-semibold text-gray-900 mb-2 sm:mb-4">Share Options</h3>
+                        <h3 className="text-md font-semibold text-gray-900 mb-2 sm:mb-4">{t('profileShare.shareOptions')}</h3>
                         <div className="bg-gray-50 rounded-xl p-4 mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Profile Link
+                                {t('profileShare.profileLink')}
                             </label>
                             <div className="flex items-center space-x-2">
                                 <div className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
@@ -223,12 +227,12 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
                                     {linkCopied ? (
                                         <>
                                             <Check className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Copied!</span>
+                                            <span className="hidden sm:inline">{t('profileShare.copied')}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Copy className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Copy</span>
+                                            <span className="hidden sm:inline">{t('profileShare.copy')}</span>
                                         </>
                                     )}
                                 </button>
@@ -237,7 +241,7 @@ export default function ShareProfilePage({ loaderData }: ProfilePageProps) {
 
                         <div>
                             <label className="block text-md font-bold text-gray-700 mb-2 sm:mb-4">
-                                Share on Social Media
+                                {t('profileShare.shareOnSocial')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                                 {socialPlatforms.map((platform) => (

@@ -1,19 +1,19 @@
+import React, { useRef } from 'react';
+import { AlertCircle, BadgeCheck, Forward, LoaderCircle, Plus, Settings, UserRoundPen } from 'lucide-react';
 import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
-import { AlertCircle, BadgeCheck, Forward, LoaderCircle, Plus, Settings, UserPlus, UserRoundPen } from 'lucide-react';
 
 // components
 import { Badge } from '~/components/ui/badge';
 import { Separator } from '~/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // insterface and services
 import { calculateAgeFromDOB } from '~/utils';
-import { createCustomerImage, getCustomerProfile, updateCustomerImage } from '~/services/profile.server';
-import type { ICustomerResponse } from '~/interfaces/customer';
-import React, { useRef } from 'react';
-import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
-import { capitalize, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
 import { requireUserSession } from '~/services/auths.server';
+import type { ICustomerResponse } from '~/interfaces/customer';
+import { capitalize, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
+import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
+import { createCustomerImage, getCustomerProfile, updateCustomerImage } from '~/services/profile.server';
 
 interface LoaderReturn {
     customerData: ICustomerResponse;
@@ -310,14 +310,17 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
                             <p><strong>Whatsapp:</strong> {customerData.whatsapp}</p>
                             <div><strong>Status:</strong>&nbsp;&nbsp;
                                 <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
-                                    {customerData.status}
+                                    {capitalize(customerData.status)}
                                 </Badge>
                             </div>
-                            <div><strong>Relationship status:</strong>&nbsp;&nbsp;
-                                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
-                                    {customerData.relationshipStatus}
-                                </Badge>
-                            </div>
+                            {customerData.relationshipStatus &&
+                                <div>
+                                    <strong>Relationship status:</strong>&nbsp;&nbsp;
+                                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-0.5">
+                                        {capitalize(customerData.relationshipStatus)}
+                                    </Badge>
+                                </div>
+                            }
                             {customerData.bio && <p><strong>BIO:</strong> {customerData.bio}</p>}
                             {customerData.career && <p><strong>Career:</strong> {customerData.career}</p>}
                             {customerData.education && <p><strong>Education:</strong> {customerData.education}</p>}

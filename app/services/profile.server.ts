@@ -106,6 +106,8 @@ export async function updateProfile(
   customerId: string,
   data: ICustomerCredentials
 ) {
+  // console.log("DDAATTAA", data);
+
   if (!customerId)
     throw new FieldValidationError({
       success: false,

@@ -24,6 +24,7 @@ import { requireUserSession } from '~/services/auths.server';
 interface LoaderReturn {
     customerData: ICustomerResponse;
     customerId: string;
+    VITE_FRONTEND_URL: string;
 }
 
 interface TransactionProps {
@@ -33,17 +34,18 @@ interface TransactionProps {
 export const loader: LoaderFunction = async ({ request }) => {
     const customerId = await requireUserSession(request)
     const customerData = await getCustomerProfile(customerId)
-    return { customerData, customerId }
+    const VITE_FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL
+    return { customerData, customerId, VITE_FRONTEND_URL }
 }
 
 export default function ShareProfilePage({ loaderData }: TransactionProps) {
-    const { customerData, customerId } = loaderData;
+    const { customerData, customerId, VITE_FRONTEND_URL } = loaderData;
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [linkCopied, setLinkCopied] = useState(false)
     const [qrDownloaded, setQrDownloaded] = useState(false)
     const qrRef = useRef<HTMLDivElement>(null)
-    const url = `http://localhost:5173/dashboard/user-profile/${customerId}`
+    const url = `${VITE_FRONTEND_URL}dashboard/profile/${customerId}`
     const isLoading = navigation.state === "loading"
 
     const socialPlatforms = [

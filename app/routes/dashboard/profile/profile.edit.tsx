@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { Route } from "./+types/profile.edit";
-import { AlertCircle, Camera, Check, ChevronLeft, Copy, Link, LoaderCircle, X } from "lucide-react";
+import { AlertCircle, Camera, ChevronLeft, LoaderCircle, X } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
 
 // components
@@ -8,7 +8,6 @@ import Modal from "~/components/ui/model";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 import { requireUserSession } from "~/services/auths.server";
@@ -16,7 +15,7 @@ import { validateUpdateProfileInputs } from "~/services/validation.server";
 import { getCustomerProfile, updateProfile } from "~/services/profile.server";
 import type { ICustomerCredentials, ICustomerResponse } from "~/interfaces/customer";
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server";
-import { capitalize, extractFilenameFromCDNSafe, truncateText } from "~/utils/functions/textFormat";
+import { capitalize, extractFilenameFromCDNSafe } from "~/utils/functions/textFormat";
 
 interface LoaderReturn {
     customerData: ICustomerResponse;
@@ -99,8 +98,6 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
     const actionData = useActionData<typeof action>()
     const { customerData, customerId } = loaderData
     const [image, setImage] = useState<string>("")
-    const [linkCopied, setLinkCopied] = useState(false)
-    const url = `http://localhost:5173/dashboard/user-profile/${customerId}`
     const isSubmitting =
         navigation.state !== "idle" && navigation.formMethod === "PATCH"
     const isLoading = navigation.state === "loading"
@@ -114,16 +111,6 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                 setImage(result);
             };
             reader.readAsDataURL(file);
-        }
-    };
-
-    const copyProfileUrl = async () => {
-        try {
-            await navigator.clipboard.writeText(url);
-            setLinkCopied(true);
-            setTimeout(() => setLinkCopied(false), 2000);
-        } catch (err) {
-            console.error('Failed to copy: ', err);
         }
     };
 
@@ -173,54 +160,20 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
 
                 <div className="flex flex-col sm:flex-row items-center justify-start">
                     <div className="flex flex-col items-center justify-center space-y-2">
-                        <div className="relative w-[120px] h-[120px] rounded-full flex items-center justify-center">
+                        <div className="relative w-[100px] h-[100px] rounded-full flex items-center justify-center">
                             <img
                                 src={image ? image : customerData.profile ? customerData.profile : "/images/default.webp"}
                                 alt="Profile"
                                 className="w-full h-full rounded-full object-cover shadow-md"
                             />
-                            <label className="absolute bottom-1 right-1 bg-white p-2 rounded-full cursor-pointer shadow-md hover:bg-gray-100">
-                                <Camera className="w-5 h-5 text-gray-700" />
+                            <label className="absolute bottom-1 right-1 bg-white p-1 rounded-full cursor-pointer shadow-md hover:bg-gray-100">
+                                <Camera className="w-4 h-4 text-gray-700" />
                                 <input type="file" name="newProfile" accept="image/*" ref={fileInputRef} className="hidden" onChange={onFileChange} />
                             </label>
                             <input className="hidden" name="profile" defaultValue={customerData.profile} />
                         </div>
                     </div>
-
-                    <div className="space-y-2">
-                        <p className="px-4 text-md font-bold">{customerData.firstName}&nbsp;{customerData.lastName}</p>
-                        <div className="flex items-center space-x-2 px-4">
-                            <div className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
-                                <div className="flex items-center space-x-2">
-                                    <Link className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="hidden sm:block text-sm text-gray-600 truncate">
-                                        {url}
-                                    </span>
-                                    <span className="block sm:hidden text-sm text-gray-600 truncate">
-                                        {truncateText(url, 40)}
-                                    </span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={copyProfileUrl}
-                                className="text-sm px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center space-x-2"
-                            >
-                                {linkCopied ? (
-                                    <>
-                                        <Check className="w-4 h-4" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy className="w-4 h-4" />
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
                 </div>
-
-                <Separator />
 
                 <div className="px-4 rounded-md">
                     <h1>Basic information:</h1>
@@ -287,7 +240,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                 <Label htmlFor="dob" className="text-gray-500 text-sm mb-1">
                                     Relationship Status<span className="text-rose-500">*</span>
                                 </Label>
-                                <Select name="relationship_status" required defaultValue={customerData.relationshipStatus ?? "single"}>
+                                <Select name="relationshipStatus" required defaultValue={customerData.relationshipStatus ?? "single"}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
                                         <SelectValue placeholder="Select gender" />
                                     </SelectTrigger>
