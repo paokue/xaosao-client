@@ -325,7 +325,7 @@ async function registerUserWithoutOTP(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(""),
+      body: JSON.stringify(userData),
     });
 
     const data: RegistrationResponse = await response.json();

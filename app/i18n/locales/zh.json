@@ -252,7 +252,8 @@
       "mostPopular": "最受欢迎",
       "save": "节省",
       "selectPlan": "选择计划",
-      "continue": "继续"
+      "continue": "继续",
+      "features": "功能"
     },
     "payment": {
       "title": "订阅付款",

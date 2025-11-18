@@ -252,7 +252,8 @@
       "mostPopular": "Most Popular",
       "save": "Save",
       "selectPlan": "Select Plan",
-      "continue": "Countinue"
+      "continue": "Countinue",
+      "features": "Features"
     },
     "payment": {
       "title": "Subscription Payment",

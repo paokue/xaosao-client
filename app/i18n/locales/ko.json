@@ -252,7 +252,8 @@
       "mostPopular": "가장 인기 있는",
       "save": "절약",
       "selectPlan": "플랜 선택",
-      "continue": "계속"
+      "continue": "계속",
+      "features": "기능"
     },
     "payment": {
       "title": "구독 결제",

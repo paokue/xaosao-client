@@ -76,7 +76,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
          <div className="flex items-start justify-between bg-rose-100 sm:bg-white w-full p-3 sm:px-0 rounded-md">
             <div className="space-y-1">
                <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">{t('booking.title')}</h1>
-               <p className="text-sm font-normal text-gray-600">
+               <p className="text-xs sm:text-sm font-normal text-gray-600">
                   {t('booking.subtitle')}
                </p>
             </div>

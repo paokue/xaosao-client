@@ -217,13 +217,13 @@ export default function WalletTopUpPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                                 {t('wallet.topup.quickAmount')}
                             </label>
-                            <div className="grid grid-cols-5 gap-2">
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
                                 {quickAmounts.map((quickAmount) => (
                                     <button
                                         type="button"
                                         key={quickAmount}
                                         onClick={() => setAmount(quickAmount)}
-                                        className="cursor-pointer py-2 px-3 border border-gray-200 rounded-lg text-sm font-medium hover:border-rose-500 hover:text-rose-500 transition-colors"
+                                        className="cursor-pointer py-2 px-1 sm:px-3 border border-gray-200 rounded-lg text-sm font-medium hover:border-rose-500 hover:text-rose-500 transition-colors"
                                     >
                                         {formatCurrency(quickAmount)}
                                     </button>
@@ -237,27 +237,24 @@ export default function WalletTopUpPage() {
                 return (
                     <div className="p-0 sm:p-4 space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                {t('wallet.topup.choosePaymentMethod')}
-                            </label>
                             <div className="flex items-center justify-between gap-2">
                                 {paymentMethods.map((method) => (
                                     <button
                                         key={method.id}
                                         type="button"
                                         onClick={() => setPaymentMethod(method.id)}
-                                        className={`cursor-pointer w-full py-2 px-4 border rounded-md flex items-center space-x-3 transition-colors ${paymentMethod === method.id
+                                        className={`cursor-pointer w-full py-2 px-4 border rounded-md flex items-start sm:items-center space-x-3 transition-colors ${paymentMethod === method.id
                                             ? "border-rose-500 bg-rose-50"
                                             : "border-gray-200 hover:border-gray-300"
                                             }`}
                                     >
                                         <method.icon
-                                            className={`h-6 w-6 ${paymentMethod === method.id ? "text-rose-500" : "text-gray-400"
+                                            className={`hidden sm:block h-6 w-6 ${paymentMethod === method.id ? "text-rose-500" : "text-gray-400"
                                                 }`}
                                         />
                                         <div className="text-left">
                                             <div className="text-sm font-medium text-gray-900">{method.name}</div>
-                                            <div className="text-sm text-gray-500">{method.description}</div>
+                                            <div className="text-xs sm:text-sm text-gray-500">{method.description}</div>
                                         </div>
                                     </button>
                                 ))}
@@ -267,7 +264,7 @@ export default function WalletTopUpPage() {
                         {paymentMethod === "qr" && (
                             <div className="bg-white border border-dashed border-gray-200 rounded-xl p-6 text-center">
                                 <div className="w-52 h-52 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <img src="/images/qr-code.jpg" alt="QR-code" />
+                                    <img src="/images/qr-code.png" alt="QR-code" />
                                 </div>
                                 <button
                                     type="button"
@@ -425,11 +422,11 @@ export default function WalletTopUpPage() {
 
     return (
         <Modal onClose={closeHandler} className="w-full h-screen sm:h-auto sm:w-2/4 space-y-2 py-8 px-4 sm:px-4 sm:p-0 border">
-            <Form method="post" encType="multipart/form-data" className="space-y-4">
-                <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
+            <Form method="post" encType="multipart/form-data" className="space-y-4 mt-10 sm:mt-0">
+                {/* <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
                     <ArrowLeft className="text-gray-500" size={20} />
                     <span>{t('wallet.topup.backToWallet')}</span>
-                </div>
+                </div> */}
                 <div className="space-y-1">
                     <h1 className="text-lg text-gray-800">
                         {step === 1 && t('wallet.topup.steps.amount')}

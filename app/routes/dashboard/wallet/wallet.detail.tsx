@@ -38,15 +38,10 @@ export default function TransactionDetails() {
 
    return (
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full py-8 sm:py-4 px-4 sm:w-3/6 p-4 border rounded-xl">
-         <div className="space-y-4">
-            <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
-               <ArrowLeft className="block sm:hidden text-gray-500" size={20} />
-               <span>{t('wallet.detail.backToWallet')}</span>
-            </div>
-
-            <div className="mt-4 sm:mt-0">
+         <div className="space-y-4 mt-10 sm:mt-0">
+            <div className="mt-4 sm:mt-0 px-4">
                <h3 className="flex items-center text-black text-md font-bold">{t('wallet.detail.title')}</h3>
-               <p className="text-gray-500 text-sm ml-2">{t('wallet.detail.subtitle')}</p>
+               <p className="text-gray-500 text-sm">{t('wallet.detail.subtitle')}</p>
             </div>
             <div className="space-y-2 px-4">
                <div className="space-y-4">
@@ -141,7 +136,7 @@ export default function TransactionDetails() {
                      )}
                   </div>
                   <hr />
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between sm:space-x-3 space-y-2 sm:space-y-0">
+                  <div className="flex sm:items-center justify-between sm:space-x-3 space-y-2 sm:space-y-0">
                      <div className="flex items-center space-x-3">
                         <FileText className="h-8 w-8 text-blue-600" />
                         <div>
@@ -149,7 +144,7 @@ export default function TransactionDetails() {
                            <p className="text-sm text-gray-500">{t('wallet.detail.paymentSlip.uploaded')}</p>
                         </div>
                      </div>
-                     <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleDownloadSlip}>
+                     <Button variant="outline" size="sm" className="flex" onClick={handleDownloadSlip}>
                         <Download className="h-4 w-4" />
                         {t('wallet.detail.download')}
                      </Button>
