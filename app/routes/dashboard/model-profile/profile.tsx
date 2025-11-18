@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Route } from './+types/profile';
 import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
-import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, PhoneForwarded, Video, LoaderCircle, Book, BriefcaseBusiness, Heart } from 'lucide-react';
+import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, LoaderCircle, Book, BriefcaseBusiness, Heart } from 'lucide-react';
 
 // components
 import {
@@ -21,9 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // interface, services and utils
 import { getModelProfile } from '~/services/model.server';
-import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
 import type { ISinglemodelProfileResponse } from '~/interfaces';
 import { capitalize, getFirstWord } from '~/utils/functions/textFormat';
+import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
 import { getUserTokenFromSession, requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
@@ -181,7 +181,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                     <Button
                                         size="sm"
                                         type="button"
-                                        className="cursor-pointer block sm:hidden bg-gray-700 sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                                        className="cursor-pointer block sm:hidden border border-rose-500 sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                         onClick={() => navigate(`/dashboard/chat?id=${model.firstName}`)}
                                     >
                                         <MessageSquareText className="w-5 h-5 text-white cursor-pointer" />
