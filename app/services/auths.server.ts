@@ -414,6 +414,8 @@ export async function customerRegister(
       },
     });
 
+    console.log("Customer:", customer);
+
     const auditBase = {
       action: "CUSTOMER_REGISTER",
       customer: customer.id,

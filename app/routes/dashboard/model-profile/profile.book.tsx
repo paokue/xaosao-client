@@ -18,11 +18,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { cn } from "~/lib/utils"
 import type { Route } from "./+types/profile.book"
 import { capitalize } from "~/utils/functions/textFormat"
+import { getModelService } from "~/services/model.server";
+import { requireUserSession } from "~/services/auths.server";
+import { validateServiceBookingInputs } from "~/services/validation.server";
 import { calculateDayAmount, formatCurrency, parseFormattedNumber } from "~/utils"
 import type { IServiceBookingCredentials, IServiceBookingResponse } from "~/interfaces/service"
-import { requireUserSession } from "~/services/auths.server";
-import { getModelService } from "~/services/model.server";
-import { validateServiceBookingInputs } from "~/services/validation.server";
 
 export async function loader({ params }: LoaderFunctionArgs) {
    const service = await getModelService(params.modelId!, params.serviceId!);
