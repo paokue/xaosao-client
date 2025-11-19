@@ -251,7 +251,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
     const menuItems = [
         { id: 'basic', label: t('settings.menu.basic'), icon: User },
         { id: 'password', label: t('settings.menu.password'), icon: Lock },
-        { id: 'twofa', label: t('settings.menu.twofa'), icon: Shield },
+        // { id: 'twofa', label: t('settings.menu.twofa'), icon: Shield },
         { id: 'notification', label: t('settings.menu.notification'), icon: Bell },
         { id: 'language', label: t('settings.menu.language'), icon: Globe },
         // { id: 'mode', label: t('settings.menu.mode'), icon: darkMode ? Moon : Sun },
@@ -539,7 +539,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                     </Form>
 
                     {/* 2FA */}
-                    {actionData?.error && actionData.showError === "twoFactorAuthentication" && <ErrorAlert message={actionData.message} />}
+                    {/* {actionData?.error && actionData.showError === "twoFactorAuthentication" && <ErrorAlert message={actionData.message} />}
                     <Form method="patch">
                         <section id="twofa" className="scroll-mt-6 space-y-3">
                             <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
@@ -580,7 +580,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                 </Button>
                             </div>
                         </section>
-                    </Form>
+                    </Form> */}
 
                     {/* Notifications */}
                     {actionData?.error && actionData.showError === "notifications" && <ErrorAlert message={actionData.message} />}

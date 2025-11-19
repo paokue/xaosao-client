@@ -1,8 +1,8 @@
 import type { Route } from "./+types/login";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
-import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
 import { ArrowLeft, Eye, EyeOff, Loader, User, AlertCircle } from "lucide-react";
+import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
 
 // Components
 import { Label } from "~/components/ui/label";
@@ -100,8 +100,6 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
             try {
                 const latitude = parseFloat(String(latitudeRaw));
                 const longitude = parseFloat(String(longitudeRaw));
-
-                console.log("Paokue GPS coordinates received:", latitude, longitude);
 
                 // Validate coordinates
                 if (!isNaN(latitude) && !isNaN(longitude) &&

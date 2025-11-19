@@ -1,13 +1,13 @@
 {
   "navigation": {
-    "discover": "ຄົ້ນພົບ",
-    "match": "ແມັດ",
-    "chat": "ສົນທະນາ",
+    "discover": "ໜ້າຫຼັກ",
+    "match": "ຄູ່ເໝາະສົມ",
+    "chat": "ແຊັດ",
     "datingHistory": "ປະຫວັດການນັດພົບ",
     "dating": "ນັດພົບ",
     "packages": "ແພັກເກັດ",
     "wallet": "ກະເປົາເງິນ",
-    "myProfile": "ໂປຣໄຟລ໌ຂອງຂ້ອຍ",
+    "myProfile": "ໂປຣໄຟລ໌",
     "profile": "ໂປຣໄຟລ໌",
     "setting": "ການຕັ້ງຄ່າ",
     "notification": "ການແຈ້ງເຕືອນ",

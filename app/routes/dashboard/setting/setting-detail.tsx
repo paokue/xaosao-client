@@ -568,7 +568,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                   </div>
                }
 
-               {tab === "twofa" &&
+               {/* {tab === "twofa" &&
                   <div>
                      {actionData?.error && actionData.showError === "twoFactorAuthentication" &&
                         <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
@@ -627,7 +627,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </section>
                      </Form>
                   </div>
-               }
+               } */}
 
                {tab === "notification" &&
                   <div>

@@ -253,10 +253,28 @@ export async function customerLogin({
     throw error;
   }
 
+  if (existingUser.status !== "active") {
+    const error = new Error(
+      "Could not log you in, Your account is unavailable now!"
+    ) as Error & {
+      status?: number;
+    };
+    error.status = 401;
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Login failed, User is not active!`,
+      status: "failed",
+      onError: error,
+    });
+
+    throw error;
+  }
+
   const passwordCorrect = await compare(password, existingUser.password);
   if (!passwordCorrect) {
     const error = new Error(
-      "Could not log you in, please check the provided credentials."
+      "Could not log you in, Your account is not available now."
     ) as Error & {
       status?: number;
     };
