@@ -10,7 +10,7 @@ import {
     UserPlus,
     ChevronLeft,
     ChevronRight,
-    LoaderCircle,
+    Loader,
     MessageSquareText,
 } from "lucide-react";
 import type { Route } from "./+types/discover";
@@ -29,7 +29,7 @@ import { Navigation, Pagination } from "swiper/modules";
 // service and backend
 import { capitalize } from "~/utils/functions/textFormat";
 import { calculateAgeFromDOB, calculateDistance } from "~/utils";
-import { getUserTokenFromSession, requireUserSession } from "~/services";
+import { getUserTokenFromSession, requireUserSession } from "~/services/auths.server";
 import type { Gender, IAvailableStatus, IUserImages } from "~/interfaces/base";
 import { createCustomerInteraction, customerAddFriend } from "~/services/interaction.server";
 import type { IHotmodelsResponse, ImodelsResponse, INearbyModelResponse } from "~/interfaces";
@@ -51,9 +51,12 @@ interface DiscoverPageProps {
 export const loader: LoaderFunction = async ({ request }) => {
     const customerId = await requireUserSession(request);
     const { hasActiveSubscription } = await import("~/services/package.server");
+    const { getCustomerProfile } = await import("~/services/profile.server");
 
-    const latitude = 17;
-    const longitude = 16;
+    // Get customer's current GPS location from database
+    const customer = await getCustomerProfile(customerId);
+    const latitude = customer?.latitude || 0;
+    const longitude = customer?.longitude || 0;
 
     // Check if customer has active subscription
     const hasSubscription = await hasActiveSubscription(customerId);
@@ -255,7 +258,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
+                    {isSubmitting ? <Loader className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
                     <p className="text-rose-600">{t('discover.processing')}</p>
                 </div>
             </div>
@@ -263,11 +266,11 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
     }
 
     return (
-        <div className="space-y-2 sm:space-y-8 p-0 sm:p-6">
+        <div className="space-y-6 sm:space-y-8 p-0 sm:p-6">
             <div>
                 <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
                     <div className="space-y-1">
-                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">{t('discover.onlineMatchers')}</h1>
+                        <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">{t('discover.onlineMatchers')}</h1>
                     </div>
                 </div>
                 <div
@@ -293,13 +296,19 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                     className={`border-3 ${selectedProfile?.id === data.id
                                         ? "border-rose-500"
                                         : "border-gray-600"
-                                        } rounded-full w-20 h-20 flex items-center justify-center hover:border-rose-500`}
+                                        } rounded-full w-20 h-20 flex items-center justify-center hover:border-rose-500 overflow-hidden`}
                                 >
-                                    <img
-                                        src={data?.profile || ""}
-                                        alt="Profile"
-                                        className="w-full h-full rounded-full object-cover"
-                                    />
+                                    {data?.profile ? (
+                                        <img
+                                            src={data.profile}
+                                            alt="Profile"
+                                            className="w-full h-full rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                                            <User className="w-10 h-10 text-gray-400" />
+                                        </div>
+                                    )}
                                 </div>
                                 <p className="text-xs">{data.firstName}&nbsp;{data.lastName}</p>
                             </div>
@@ -497,8 +506,8 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
 
             <div className="flex flex-col items-start justify-start p-3 w-full space-y-4">
                 <div className="flex items-start justify-between w-full mb-2 sm:mb-4">
-                    <div className="space-y-1">
-                        <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">
+                    <div className="space-y-2 sm:space-y-1">
+                        <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">
                             {t('discover.dailyPicks')}
                         </h1>
                         <p className="text-xs sm:text-sm font-normal text-gray-600">
@@ -529,12 +538,18 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                     <input type="hidden" name="modelId" value={model.id} />
                                     <input type="hidden" name="isFriend" value="true" id="isFriend" />
                                     <div className="relative h-full overflow-hidden">
-                                        <img
-                                            src={model.Images?.[0]?.name ?? ""}
-                                            alt={model.firstName + model.lastName}
-                                            className="w-full h-full object-cover transition-transform duration-300"
-                                            onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
-                                        />
+                                        {model.Images?.[0]?.name ? (
+                                            <img
+                                                src={model.Images[0].name}
+                                                alt={model.firstName + model.lastName}
+                                                className="w-full h-full object-cover transition-transform duration-300"
+                                                onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                <User className="w-16 h-16 text-gray-400" />
+                                            </div>
+                                        )}
                                         {model?.isContact ?
                                             <button
                                                 type="button"
@@ -556,30 +571,44 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                         }
 
                                         <div className="absolute top-0 left-4 right-4 text-white transition-all duration-300">
-                                            <div className="flex items-center space-x-3 mt-2">
+                                            <div className="flex items-start space-x-3 mt-2">
                                                 <div className="w-12 h-12">
-                                                    <img
-                                                        src={model.profile ?? ""}
-                                                        alt="Profile"
-                                                        className="w-full h-full rounded-full object-cover border-2 border-gray-700"
-                                                    />
+                                                    {model.profile ? (
+                                                        <img
+                                                            src={model.profile}
+                                                            alt="Profile"
+                                                            className="w-full h-full rounded-full object-cover border-2 border-gray-700"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
+                                                            <User className="w-6 h-6 text-gray-400" />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div>
+                                                <div className="space-y-2">
                                                     <h2
-                                                        className="text-sm"
+                                                        className="flex items-center justify-start text-sm gap-1"
                                                         style={{
-                                                            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                                                            textShadow: "1px 1px 2px rgba(35, 35, 35, 0.8)",
                                                         }}
                                                     >
-                                                        {model.firstName + " " + model.lastName}
+                                                        <User size={16} />{model.firstName + " " + model.lastName}
                                                     </h2>
                                                     <p
-                                                        className="text-xs text-white"
+                                                        className="flex items-center justify-start text-xs text-white gap-1"
                                                         style={{
-                                                            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                                                            textShadow: "1px 1px 2px rgba(35, 35, 35, 0.8)",
                                                         }}
                                                     >
-                                                        {t('discover.age')} {calculateAgeFromDOB(model.dob.toLocaleDateString())} {t('discover.yearsOld')}
+                                                        <Calendar size={16} />{calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')}
+                                                    </p>
+                                                    <p
+                                                        className="flex items-center justify-start text-xs text-white gap-1"
+                                                        style={{
+                                                            textShadow: "1px 1px 2px rgba(35, 35, 35, 0.8)",
+                                                        }}
+                                                    >
+                                                        <MapPin size={16} />&nbsp;{calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} km
                                                     </p>
                                                 </div>
                                             </div>
@@ -601,7 +630,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
 
             <div className="flex flex-col items-start justify-start p-4 w-full space-y-4">
                 <div className="space-y-2">
-                    <h1 className="text-md font-bold text-gray-700 uppercase text-shadow-md">{t('discover.nearbyYou')}</h1>
+                    <h1 className="text-sm sm:text-md sm:font-bold text-gray-700 uppercase text-shadow-md">{t('discover.nearbyYou')}</h1>
                     <p className="text-xs sm:text-sm font-normal text-gray-600">
                         {t('discover.nearbyDescription')}
                     </p>
@@ -643,31 +672,37 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                                         onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
                                         className="w-full h-[30vh]"
                                     >
-                                        <img
-                                            src={model.Images[0]?.name ?? ""}
-                                            alt={model.firstName}
-                                            className="cursor-pointer w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                        />
+                                        {model.Images[0]?.name ? (
+                                            <img
+                                                src={model.Images[0].name}
+                                                alt={model.firstName}
+                                                className="cursor-pointer w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="cursor-pointer w-full h-full bg-gray-200 flex items-center justify-center">
+                                                <User className="w-16 h-16 text-gray-400" />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                                     <div className="absolute bottom-4 left-4 right-4 text-white sm:opacity-0 sm:group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 space-y-1">
-                                        <div className="flex items-center gap-2 justify-start">
+                                        <div className="flex items-start gap-2 justify-start flex-col">
                                             <h2
-                                                className="text-md"
+                                                className="flex items-center justify-start text-md"
                                                 style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
                                             >
-                                                {model.firstName}&nbsp;{model.lastName},
+                                                <User size={16} />&nbsp;{model.firstName}&nbsp;{model.lastName},
                                             </h2>
                                             <p
-                                                className="text-sm text-white"
+                                                className="flex items-center justify-start gap-2 text-sm text-white"
                                                 style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}
                                             >
-                                                {t('discover.age')} {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')}
+                                                <Calendar size={16} /> {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')}
                                             </p>
                                         </div>
                                         <div className="flex items-center text-sm opacity-90 mb-3">
-                                            <MapPin className="h-4 w-4 mr-1 text-rose-500" />
-                                            {model.distance} Km
+                                            <MapPin className="h-4 w-4 mr-1" />
+                                            {calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} Km
                                         </div>
                                     </div>
                                 </div>
@@ -680,38 +715,51 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
                     {nearbyModels?.map((model) => (
                         <div key={model.id} className="flex items-start justify-between pb-4 border-b">
                             <div className="flex items-start justify-start gap-2">
-                                <img
-                                    src={model.profile ?? ""}
-                                    alt="Profile"
-                                    className="w-14 h-14 border-1 border-gray-600 rounded-full object-cover cursor-pointer"
-                                    onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
-                                />
-                                <div className="space-y-0.5">
-                                    <h2
-                                        className="text-md"
+                                {model.profile ? (
+                                    <img
+                                        src={model.profile}
+                                        alt="Profile"
+                                        className="w-14 h-14 border-1 border-gray-600 rounded-full object-cover cursor-pointer"
+                                        onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-14 h-14 border-1 border-gray-600 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
+                                        onClick={() => navigate(`/dashboard/user-profile/${model.id}`)}
                                     >
-                                        {model.firstName}&nbsp;{model.lastName}
+                                        <User className="w-7 h-7 text-gray-400" />
+                                    </div>
+                                )}
+                                <div className="space-y-0.5 text-gray-500">
+                                    <h2
+                                        className="flex items-center justify-start text-sm sm:text-md text-black"
+                                    >
+                                        <User size={14} />&nbsp;{model.firstName}&nbsp;{model.lastName}
                                     </h2>
                                     <div className="flex items-start justify-start gap-2">
                                         <p
-                                            className="text-sm text-gray-700"
+                                            className="text-sm flex items-center "
                                         >
-                                            {t('discover.age')} {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')},
+                                            <Calendar size={12} />&nbsp; {calculateAgeFromDOB(model.dob)} {t('discover.yearsOld')},
                                         </p>
                                         <div className="flex items-center text-sm opacity-90">
                                             <MapPin className="h-3 w-3 mr-1 text-rose-500" />
-                                            {model.distance} Km
+                                            {/* {model.distance} Km */}
+                                            {calculateDistance(Number(selectedProfile?.latitude), Number(selectedProfile?.longitude), Number(latitude), Number(longitude))} Km
+
                                         </div>
                                     </div>
                                     <div className="flex items-start justify-start gap-2 mt-4">
                                         {model.Images && model.Images.map((image, index) => (
-                                            <img
-                                                key={image.name + index}
-                                                src={image.name ?? ""}
-                                                alt="Profile"
-                                                className="w-24 h-24 rounded-2xl object-cover cursor-pointer"
-                                                onClick={(e) => { setImages(model.Images), setSelectedIndex(index) }}
-                                            />
+                                            image.name ? (
+                                                <img
+                                                    key={image.name + index}
+                                                    src={image.name}
+                                                    alt="Profile"
+                                                    className="w-24 h-24 rounded-2xl object-cover cursor-pointer"
+                                                    onClick={() => { setImages(model.Images), setSelectedIndex(index) }}
+                                                />
+                                            ) : null
                                         ))}
 
                                         {selectedIndex !== null && (

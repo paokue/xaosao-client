@@ -3,6 +3,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { useState } from "react";
 
 import { Check, ArrowLeft, History } from "lucide-react"
 import { Link, useNavigate, type LoaderFunction } from "react-router"
@@ -12,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "~/components/ui/button"
 import { Card, CardContent } from "~/components/ui/card"
 
-import { requireUserSession } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
 import { getPackages } from "~/services/package.server"
 import { calculateDiscountPercent, formatCurrency } from "~/utils"
 import type { ISubscriptionPlanWithCurrentResponse } from "~/interfaces/packages"
@@ -38,6 +39,10 @@ export default function PricingPage({ loaderData }: TransactionProps) {
    const { t } = useTranslation();
 
    const navigate = useNavigate()
+
+   // Find the first non-current plan or popular plan for mobile default selection
+   const defaultSelectedPlan = plans.find(p => !p.current && p.isPopular) || plans.find(p => !p.current) || plans[0];
+   const [selectedPlan, setSelectedPlan] = useState<ISubscriptionPlanWithCurrentResponse>(defaultSelectedPlan)
 
    return (
       <div className="sm:min-h-screen relative overflow-hidden px-3 sm:px-0">
@@ -131,7 +136,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
             </div>
          </div>
 
-         <div className="sm:hidden p-2 rounded-md space-y-0">
+         <div className="sm:hidden p-2 rounded-md space-y-0 pb-20">
             <div className="text-center">
                <div className="inline-flex items-center justify-center p-1 bg-gradient-to-r from-rose-100 to-pink-100 rounded-full mb-3">
                   <span className="text-sm font-light text-rose-600 px-4 py-1 bg-white rounded-full shadow-sm">
@@ -155,20 +160,31 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                   className="flex items-center custom-swiper2"
                >
                   {plans.map((plan) => (
-                     <SwiperSlide key={plan.name}>
+                     <SwiperSlide key={plan.id}>
                         <Card
-                           key={plan.name}
-                           className={`py-2 cursor-pointer relative bg-white/80 backdrop-blur-xl transition-all duration-300
-                        ${plan.current ? "bg-rose-500 text-white" : !plans.some((p) => p.current) && plan.isPopular ? "bg-rose-500 text-white" : ""}`}
+                           onClick={() => setSelectedPlan(plan)}
+                           className={`py-2 cursor-pointer relative backdrop-blur-xl transition-all duration-300 border-2
+                              ${selectedPlan.id === plan.id
+                                 ? "bg-rose-500 text-white border-rose-600 ring-2 ring-rose-300"
+                                 : "bg-white/80 border-gray-200 hover:border-rose-300"
+                              }`}
                         >
+                           {selectedPlan.id === plan.id && (
+                              <div className="absolute -top-2 -right-2 bg-white rounded-full p-1">
+                                 <Check className="h-4 w-4 text-rose-500" />
+                              </div>
+                           )}
                            <CardContent className="p-1">
                               <div className="text-center mb-4 space-y-2">
-                                 <h3 className="text-lg font-bold">{plan.name}</h3>
-
-                                 <p className="text-md font-light">
+                                 <h3 className={`text-lg font-bold ${selectedPlan.id === plan.id ? "text-white" : "text-gray-800"}`}>
+                                    {plan.name}
+                                 </h3>
+                                 <p className={`text-md font-light ${selectedPlan.id === plan.id ? "text-white" : "text-gray-900"}`}>
                                     {formatCurrency(plan.price)}
                                  </p>
-                                 <span className="text-sm ml-2 text-rose-500">({t('packages.list.save')} {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)</span>
+                                 <span className={`text-sm ${selectedPlan.id === plan.id ? "text-white" : "text-rose-500"}`}>
+                                    ({t('packages.list.save')} {calculateDiscountPercent(30000, 7, plan.price, plan.durationDays)}%)
+                                 </span>
                               </div>
                            </CardContent>
                         </Card>
@@ -176,8 +192,15 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                   ))}
                </Swiper>
             </div>
+
+            {/* Display selected plan details */}
+            <div className="mt-4 p-3 bg-rose-50 rounded-lg border border-rose-200">
+               <h4 className="text-md font-bold text-gray-800 mb-2">{selectedPlan.name} - {t('packages.list.features')}</h4>
+               <p className="text-sm text-gray-600 mb-3">{selectedPlan.description}</p>
+            </div>
+
             <div className="space-y-4 mb-8 w-full px-3 py-4 border rounded-md">
-               {plans[0].features && Object.values(plans[0].features).map((feature, index) => (
+               {selectedPlan.features && Object.values(selectedPlan.features).map((feature, index) => (
                   <div key={index} className="flex items-center space-x-3 text-sm">
                      <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
                      <span className="text-gray-700 font-light">{feature}</span>
@@ -185,13 +208,19 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                ))}
             </div>
 
-            <div className="fixed bottom-0 z-9999999 bg-white w-full h-[8vh] left-0">
+            <div className="fixed bottom-0 z-50 bg-white w-full h-auto left-0 p-3 border-t shadow-lg">
                <Button
                   size="lg"
-                  className={`w-full py-3 rounded-md transition-all duration-300 bg-rose-500 text-white hover:shadow-lg hover:bg-rose-600 hover:text-white`}
+                  onClick={() => navigate(`/dashboard/payment/${selectedPlan.id}`)}
+                  disabled={selectedPlan.current}
+                  className={`w-full py-3 rounded-md transition-all duration-300 ${
+                     selectedPlan.current
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-rose-500 text-white hover:shadow-lg hover:bg-rose-600"
+                  }`}
                   variant={"outline"}
                >
-                  {t('packages.list.continue')}
+                  {selectedPlan.current ? t('packages.list.currentPlan') : t('packages.list.continue')}
                </Button>
             </div>
          </div>

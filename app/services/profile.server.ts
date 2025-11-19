@@ -1,4 +1,3 @@
-import { parseInterests } from "~/utils";
 import { prisma } from "./database.server";
 import { default as bcrypt } from "bcryptjs";
 import { createAuditLogs } from "./log.server";
@@ -106,6 +105,8 @@ export async function updateProfile(
   customerId: string,
   data: ICustomerCredentials
 ) {
+  // console.log("DDAATTAA", data);
+
   if (!customerId)
     throw new FieldValidationError({
       success: false,
@@ -146,7 +147,7 @@ export async function updateProfile(
         career: data.career,
         education: data.education,
         profile: data.profile,
-        interests: parseInterests(data.interests),
+        interests: data.interests,
       },
     });
 
@@ -296,6 +297,7 @@ export async function updateCustomerImage(
 // Update customer password
 export async function changeCustomerPassword(
   customerId: string,
+  oldPassword: string,
   password: string
 ) {
   if (!customerId || !password)
@@ -325,7 +327,7 @@ export async function changeCustomerPassword(
       });
     }
 
-    const passwordCorrect = await compare(password, existingUser.password);
+    const passwordCorrect = await compare(oldPassword, existingUser.password);
     if (!passwordCorrect) {
       await createAuditLogs({
         ...auditBase,

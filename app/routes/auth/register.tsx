@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import type { Route } from "./+types/register"
 import { useTranslation } from "react-i18next"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
-import { AlertCircle, ArrowLeft, Eye, EyeOff, LoaderCircle, User, UserPlus } from "lucide-react"
+import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader, User, UserPlus } from "lucide-react"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 // interfaces and services
 import { isAdult } from "~/lib/validation"
 import type { Gender } from "~/interfaces/base"
-import { validateCustomerSignupInputs } from "~/services"
+import { validateCustomerSignupInputs } from "~/services/validation.server"
 import type { ICustomerSignupCredentials } from "~/interfaces"
 import { FieldValidationError, getCurrentIP } from "~/services/base.server"
 
@@ -26,7 +26,7 @@ const backgroundImages = [
 ]
 
 export async function action({ request }: Route.ActionArgs) {
-    const { customerRegister } = await import("~/services")
+    const { customerRegister } = await import("~/services/auths.server")
     const formData = await request.formData()
     const ip = await getCurrentIP();
     const accessKey = process.env.APIIP_API_KEY || "";
@@ -143,10 +143,11 @@ export default function SignUpPage() {
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
                 <div className="rounded-full hidden sm:flex items-center justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
-                    <p className="flex items-center space-x-2">
+                    {/* <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        {/* <span className="text-white text-xl">XAOSAO</span> */}
-                    </p>
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p> */}
+                    <img src="/images/logo-white.png" className="w-30 h-10" />
                 </div>
 
                 <div className="space-y-2 mb-6">
@@ -356,7 +357,7 @@ export default function SignUpPage() {
                         disabled={isAcceptTerms === false || isSubmitting}
                         className={`w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium my-4 uppercase ${isAcceptTerms === false ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
-                        {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                        {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                         {isSubmitting ? t('register.registering') : t('register.registerButton')}
                     </Button>
 

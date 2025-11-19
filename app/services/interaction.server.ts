@@ -76,7 +76,7 @@ async function createContact(
   userData: ChatInputCredentials,
   token: string
 ): Promise<SuccessResponse> {
-  const url = "http://66.42.50.59:9090/api/add-contact-name";
+  const url = `${process.env.VITE_API_URL}add-contact-name`;
 
   try {
     const response = await fetch(url, {
@@ -116,7 +116,7 @@ export async function customerAddFriend(
       },
     });
 
-    console.log("PK MODEL:::", model);
+    // console.log("PK MODEL:::", model);
 
     const existing = await prisma.friend_contacts.findUnique({
       where: {

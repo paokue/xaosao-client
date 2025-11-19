@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Route } from './+types/profile';
 import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
-import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, PhoneForwarded, Video, LoaderCircle, Book, BriefcaseBusiness, Heart } from 'lucide-react';
+import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, Loader, Book, BriefcaseBusiness, Heart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // components
 import {
@@ -21,10 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // interface, services and utils
 import { getModelProfile } from '~/services/model.server';
-import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
 import type { ISinglemodelProfileResponse } from '~/interfaces';
 import { capitalize, getFirstWord } from '~/utils/functions/textFormat';
-import { getUserTokenFromSession, requireUserSession } from '~/services';
+import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
+import { getUserTokenFromSession, requireUserSession } from '~/services/auths.server';
 
 interface LoaderReturn {
     model: ISinglemodelProfileResponse
@@ -88,6 +89,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
     const navigate = useNavigate()
     const navigation = useNavigation()
     const [searchParams] = useSearchParams();
+    const { t } = useTranslation();
     const { model } = loaderData
     const images = model.Images
     const isSubmitting =
@@ -149,8 +151,8 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
-                    <p className="text-rose-600">Processing....</p>
+                    {isSubmitting ? <Loader className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
+                    <p className="text-rose-600">{t('profile.processing')}</p>
                 </div>
             </div>
         );
@@ -181,10 +183,10 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                     <Button
                                         size="sm"
                                         type="button"
-                                        className="cursor-pointer block sm:hidden bg-gray-700 sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                                        className="cursor-pointer block sm:hidden border border-rose-500 sm:block text-rose-500 bg-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                         onClick={() => navigate(`/dashboard/chat?id=${model.firstName}`)}
                                     >
-                                        <MessageSquareText className="w-5 h-5 text-white cursor-pointer" />
+                                        <MessageSquareText className="w-5 h-5 text-rose-500 cursor-pointer" />
                                     </Button>
                                     :
                                     <Button
@@ -206,7 +208,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <div className="flex-shrink-0">
                             <img
-                                src={model?.profile || ""}
+                                src={model?.profile || undefined}
                                 alt={`${model.firstName}-${model.lastName}`}
                                 className="w-32 h-32 rounded-full object-cover border-2 border-rose-500"
                             />
@@ -235,8 +237,8 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                         className={`cursor-pointer hidden sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md ${model.customer_interactions?.some(interaction => interaction.action === "LIKE") ? "bg-rose-500 hover:bg-rose-600" : "border border-rose-500 bg-white text-rose-500 hover:bg-rose-500 hover:text-white"}`}
                                     >
                                         {model.customer_interactions?.some(interaction => interaction.action === "LIKE")
-                                            ? "Liked"
-                                            : "Like"}
+                                            ? t('profile.liked')
+                                            : t('profile.like')}
                                     </Button>
                                 </Form>
                                 <Form method="post">
@@ -248,7 +250,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                             className="cursor-pointer hidden bg-gray-700 sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                             onClick={() => navigate(`/dashboard/chat?id=${model.firstName}`)}
                                         >
-                                            Message
+                                            {t('profile.message')}
                                         </Button>
                                         :
                                         <Button
@@ -258,7 +260,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                             value="true"
                                             className="cursor-pointer hidden bg-white border border-gray-700 hover:bg-gray-700 text-gray-700 sm:block hover:text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                         >
-                                            Add friend
+                                            {t('profile.addFriend')}
                                         </Button>
                                     }
                                 </Form>
@@ -268,18 +270,18 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                     className="cursor-pointer hidden bg-gray-600 sm:block text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                     onClick={() => navigate(`/dashboard/user-profile-share/${model.id}`)}
                                 >
-                                    Share
+                                    {t('profile.share')}
                                 </Button>
                             </div>
 
                             <div className="flex items-center gap-6 mb-4">
                                 <div className='flex items-center gap-1'>
                                     <span className="text-lg text-black font-bold">{formatNumber(model.totalLikes)}</span>
-                                    <span className="text-md text-gray-500 ml-1">Like</span>
+                                    <span className="text-md text-gray-500 ml-1">{t('profile.like')}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <span className="text-lg text-black font-bold">{formatNumber(model.totalFriends)}</span>
-                                    <span className="text-md text-gray-500 ml-1">Friends</span>
+                                    <span className="text-md text-gray-500 ml-1">{t('profile.friends')}</span>
                                 </div>
                             </div>
                         </div>
@@ -287,11 +289,11 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                     <div className="flex sm:hidden items-center justify-around w-full mb-4">
                         <div className="w-1/2 text-center flex items-center justify-center gap-3 border-r">
                             <div className="text-lg text-black font-bold">{formatNumber(model.totalLikes)}</div>
-                            <div className="text-md text-gray-500">Likes</div>
+                            <div className="text-md text-gray-500">{t('profile.likes')}</div>
                         </div>
                         <div className="w-1/2 text-center flex items-center justify-center gap-3">
                             <div className="text-lg text-black font-bold">{formatNumber(model.totalFriends)}</div>
-                            <div className="text-md text-gray-500">Friends</div>
+                            <div className="text-md text-gray-500">{t('profile.friends')}</div>
                         </div>
                     </div>
                 </div>
@@ -299,42 +301,42 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                 <div className="pb-4">
                     <Tabs defaultValue="account" className="w-full">
                         <TabsList className='w-full mb-2'>
-                            <TabsTrigger value="account">Account Info</TabsTrigger>
-                            <TabsTrigger value="services">Service</TabsTrigger>
-                            <TabsTrigger value="images">Images</TabsTrigger>
+                            <TabsTrigger value="account">{t('profile.tabs.accountInfo')}</TabsTrigger>
+                            <TabsTrigger value="services">{t('profile.tabs.service')}</TabsTrigger>
+                            <TabsTrigger value="images">{t('profile.tabs.images')}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="account">
                             <div className="flex flex-col sm:flex-row items-start justify-between space-y-2">
                                 <div className="w-full flex items-start justify-start flex-col space-y-3 text-sm p-2">
-                                    <h3 className="text-gray-800 font-bold">Personal Information:</h3>
-                                    <p className='flex items-center'><User size={14} />&nbsp;Fullname: {model.firstName}&nbsp;{model.lastName}</p>
-                                    <p className="flex items-center"> <Calendar size={14} />&nbsp;Age: {calculateAgeFromDOB(model.dob)} years old</p>
-                                    <div className="flex items-center"><MarsStroke size={14} />&nbsp;Gender:&nbsp;&nbsp;
+                                    <h3 className="text-gray-800 font-bold">{t('profile.personalInfo')}</h3>
+                                    <p className='flex items-center'><User size={14} />&nbsp;{t('profile.fullname')}: {model.firstName}&nbsp;{model.lastName}</p>
+                                    <p className="flex items-center"> <Calendar size={14} />&nbsp;{t('profile.age')}: {calculateAgeFromDOB(model.dob)} {t('profile.yearsOld')}</p>
+                                    <div className="flex items-center"><MarsStroke size={14} />&nbsp;{t('profile.gender')}:&nbsp;&nbsp;
                                         <Badge variant="outline" className={`${model.gender === "male" ? "bg-gray-700 text-gray-300" : "bg-rose-100 text-rose-500"} px-3 py-1`}>
                                             {capitalize(model.gender)}
                                         </Badge>
                                     </div>
-                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;Status:&nbsp;&nbsp;
+                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;{t('profile.status')}:&nbsp;&nbsp;
                                         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
                                             {capitalize(model.status)}
                                         </Badge>
                                     </div>
-                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;Available status for Chat and Call:&nbsp;&nbsp;
+                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;{t('profile.availableStatus')}:&nbsp;&nbsp;
                                         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
                                             {capitalize(model.available_status)}
                                         </Badge>
                                     </div>
-                                    <p className="flex items-center"><MapPin size={14} />&nbsp;Address: {model.address}</p>
-                                    <p className="flex items-center"><Calendar size={14} />&nbsp;Be member at: {model.createdAt.toDateString()}</p>
-                                    {model.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;Career: {model.career}</p>}
-                                    {model.education && <p className="flex items-center"><Book size={14} />&nbsp;Education: {model.education}</p>}
-                                    {model.bio && <p className="flex items-center"><User size={14} />&nbsp;BIO: {model.bio}</p>}
+                                    <p className="flex items-center"><MapPin size={14} />&nbsp;{t('profile.address')}: {model.address}</p>
+                                    <p className="flex items-center"><Calendar size={14} />&nbsp;{t('profile.memberSince')}: {model.createdAt.toDateString()}</p>
+                                    {model.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;{t('profile.career')}: {model.career}</p>}
+                                    {model.education && <p className="flex items-center"><Book size={14} />&nbsp;{t('profile.education')}: {model.education}</p>}
+                                    {model.bio && <p className="flex items-center"><User size={14} />&nbsp;{t('profile.bio')}: {model.bio}</p>}
                                 </div>
                                 <Separator className="block sm:hidden" />
                                 <div className="w-full mb-8 space-y-4">
                                     {model.interests &&
                                         <div className='space-y-2'>
-                                            <h3 className="text-sm text-gray-800 font-bold">Interests:</h3>
+                                            <h3 className="text-sm text-gray-800 font-bold">{t('profile.interests')}</h3>
                                             <div className="flex flex-wrap gap-2">
                                                 {Object.values(model.interests ?? {}).map((interest, index) => (
                                                     <Badge
@@ -349,11 +351,11 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                         </div>
                                     }
                                     <div className='space-y-2'>
-                                        <h3 className="text-sm text-gray-800 font-bold">Total rating:</h3>
+                                        <h3 className="text-sm text-gray-800 font-bold">{t('profile.totalRating')}</h3>
                                         <div className="flex items-center">
-                                            <Star size={14} />&nbsp;Rating: &nbsp; {model.rating === 0 ?
+                                            <Star size={14} />&nbsp;{t('profile.rating')}: &nbsp; {model.rating === 0 ?
                                                 <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 px-3 py-1">
-                                                    {capitalize("No Rating")}
+                                                    {capitalize(t('profile.noRating'))}
                                                 </Badge> : <Rating value={4} />}
                                         </div>
                                     </div>
@@ -363,20 +365,20 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                         <TabsContent value="services" className="space-y-4">
                             {model.ModelService.length > 0 ?
                                 <div className="w-full">
-                                    <h3 className="text-sm font-semibold text-gray-800 mb-3 uppercase">Service Rating:</h3>
+                                    <h3 className="text-sm font-semibold text-gray-800 mb-3 uppercase">{t('profile.serviceRating')}</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mx-auto ">
                                         {model.ModelService.map((service) => {
                                             const name = getFirstWord(service.service.name).toLowerCase();
                                             return (
-                                                <Card className={`cursor-pointer w-full max-w-sm ${name === "sleep" ? "border-cyan-500" : name === "drinking" ? "border-green-500" : "border-rose-500"}`}>
+                                                <Card key={service.id} className={`cursor-pointer w-full max-w-sm ${name === "sleep" ? "border-cyan-500" : name === "drinking" ? "border-green-500" : "border-rose-500"}`}>
                                                     <CardHeader>
                                                         <CardTitle className='text-sm'>{service.service.name}</CardTitle>
-                                                        <CardDescription className='text-xs'>
+                                                        <CardDescription className='text-xs sm:text-sm'>
                                                             {service.service.description}
                                                         </CardDescription>
                                                     </CardHeader>
                                                     <CardContent>
-                                                        <strong className="text-sm">{formatCurrency(Number(service.customRate ? service.customRate : service.service.baseRate))} / Time</strong>
+                                                        <strong className="text-sm">{formatCurrency(Number(service.customRate ? service.customRate : service.service.baseRate))} {t('profile.perTime')}</strong>
                                                     </CardContent>
                                                     <CardFooter className="flex-col gap-2">
                                                         <Button
@@ -385,7 +387,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                                             className="w-full hover:border hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
                                                             onClick={() => navigate(`/dashboard/book-service/${model.id}/${service.id}`)}
                                                         >
-                                                            Book Now
+                                                            {t('profile.bookNow')}
                                                         </Button>
                                                     </CardFooter>
                                                 </Card>
@@ -396,8 +398,8 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                 :
                                 <div className="w-full">
                                     <EmptyPage
-                                        title="No Services Available for This Model"
-                                        description="It looks like this model does not have any active services at the moment."
+                                        title={t('profile.noServices')}
+                                        description={t('profile.noServicesDesc')}
                                     />
                                 </div>
                             }
@@ -445,8 +447,8 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                     :
                                     <div className="w-full">
                                         <EmptyPage
-                                            title="No Photos Yet"
-                                            description="This model has not shared any images so far. Come back soon to see their latest gallery!"
+                                            title={t('profile.noPhotos')}
+                                            description={t('profile.noPhotosDesc')}
                                         />
 
                                     </div>

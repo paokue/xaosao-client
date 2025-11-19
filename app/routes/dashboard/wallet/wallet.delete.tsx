@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import Modal from "~/components/ui/model";
 import { Button } from "~/components/ui/button";
 import { capitalize } from "~/utils/functions/textFormat";
-import { deleteTransaction, requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
+import { deleteTransaction } from "~/services/wallet.server";
 
 export async function action({ params, request }: ActionFunctionArgs) {
    const customerId = await requireUserSession(request);

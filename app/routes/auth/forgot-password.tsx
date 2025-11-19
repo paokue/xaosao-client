@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
-import { AlertCircle, ArrowLeft, LoaderCircle, LockIcon } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader, LockIcon } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +12,8 @@ import { Button } from "~/components/ui/button";
 // functions
 import Countdown from "~/lib/count-down";
 import { FieldValidationError } from "~/services/base.server";
-import { validateForgotInputs, validateVerifyOTPInputs } from "~/services";
+import { validateForgotInputs, validateVerifyOTPInputs } from "~/services/validation.server";
+import { forgotPassword, resendResetToken, verifyResetToken } from "~/services/auths.server";
 
 const backgroundImages = [
     "https://images.pexels.com/photos/17441715/pexels-photo-17441715.jpeg",
@@ -23,7 +24,7 @@ const backgroundImages = [
 ];
 
 export async function action({ request }: Route.ActionArgs) {
-    const { forgotPassword, resendResetToken, verifyResetToken } = await import("~/services");
+    // const { forgotPassword, resendResetToken, verifyResetToken } = await import("~/services");
     const formData = await request.formData();
     const otp = formData.get("otp") as string;
     const phone = formData.get("whatsapp") as string;
@@ -161,11 +162,12 @@ export default function ForgotPasswordPage() {
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none"
             >
 
-                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
-                    <p className="flex items-center space-x-2">
+                <div className="rounded-full flex items-center justify-center mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    {/* <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        {/* <span className="text-white text-xl">XAOSAO</span> */}
-                    </p>
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p> */}
+                    <img src="/images/logo-white.png" className="w-30 h-10" />
                 </div>
 
                 {!showOtpForm ? (
@@ -202,7 +204,7 @@ export default function ForgotPasswordPage() {
                                 type="submit"
                                 className="w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300"
                             >
-                                {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                                {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                                 {isSubmitting ? t('forgotPassword.processing') : t('forgotPassword.getOtpButton')}
                             </Button>
                         </Form>
@@ -259,7 +261,7 @@ export default function ForgotPasswordPage() {
                                 className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300 uppercase"
                                 disabled={otp.some((digit) => !digit)}
                             >
-                                {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                                {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                                 {isSubmitting ? t('forgotPassword.verifying') : t('forgotPassword.verify')}
                             </Button>
                         </Form>

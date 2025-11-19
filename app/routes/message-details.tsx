@@ -3,7 +3,7 @@ import { useNavigate, type LoaderFunction } from "react-router";
 import { CheckCheck, ChevronDown, ChevronLeft, Lock, Mic, MoreVertical, Paperclip, Phone, Send, Video } from "lucide-react";
 
 // interface and service
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
 import { getMessages, getModelByConversation } from "~/services/chat.server";
 import type { IMessageModelResponse, IMessagesResponse } from "~/interfaces";
 

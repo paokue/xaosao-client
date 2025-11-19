@@ -13,8 +13,12 @@ const slogans = [
 
 export function DynamicSlogan() {
     const [currentSlogan, setCurrentSlogan] = useState(0)
+    const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
+        // Ensure component is mounted before starting transitions
+        setMounted(true)
+
         const interval = setInterval(() => {
             setCurrentSlogan((prev) => (prev + 1) % slogans.length)
         }, 20000)
@@ -22,8 +26,9 @@ export function DynamicSlogan() {
         return () => clearInterval(interval)
     }, [])
 
+    // Always render the same initial content for SSR consistency
     return (
-        <h2 className="text-3xl sm:text-7xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-6 font-serif">
+        <h2 className="text-3xl sm:text-10xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent mb-2 font-serif uppercase text-shadow-md">
             {slogans[currentSlogan]}
         </h2>
     )

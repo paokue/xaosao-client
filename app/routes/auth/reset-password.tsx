@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, LoaderCircle } from "lucide-react"
+import { AlertCircle, ArrowLeft, Loader } from "lucide-react"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { useState, useEffect } from "react"
 import type { Route } from "./+types/reset-password"
@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { Button } from "~/components/ui/button"
-import { validateResetPasswordInputs } from "~/services"
+import { validateResetPasswordInputs } from "~/services/validation.server"
 import { FieldValidationError } from "~/services/base.server"
 
 const backgroundImages = [
@@ -18,7 +18,7 @@ const backgroundImages = [
 ]
 
 export async function action({ request }: Route.ActionArgs) {
-    const { resetPassword } = await import("~/services");
+    const { resetPassword } = await import("~/services/auths.server");
     const url = new URL(request.url);
     const otp = url.searchParams.get("otp");
 
@@ -95,11 +95,12 @@ export default function ResetPasswordPage() {
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
 
-                <div className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
-                    <p className="flex items-center space-x-2">
+                <div className="rounded-full flex items-center justify-center mb-8 cursor-pointer" onClick={() => navigate("/")}>
+                    {/* <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        {/* <span className="text-white text-xl">XAOSAO</span> */}
-                    </p>
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p> */}
+                    <img src="/images/logo-white.png" className="w-30 h-10" />
                 </div>
 
                 <div className="space-y-6">
@@ -151,7 +152,7 @@ export default function ResetPasswordPage() {
                             type="submit"
                             className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300 uppercase"
                         >
-                            {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                            {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                             {isSubmitting ? t('resetPassword.reseting') : t('resetPassword.reset')}
                         </Button>
                     </Form>

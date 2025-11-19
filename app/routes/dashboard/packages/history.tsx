@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formatCurrency } from "~/utils";
 import { capitalize } from "~/utils/functions/textFormat";
 import { getSubscriptionHistory } from "~/services/package.server";
-import { requireUserSession } from "~/services";
+import { requireUserSession } from "~/services/auths.server";
 
 // Components
 import { Button } from "~/components/ui/button";
@@ -152,8 +152,8 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
          <div className="mx-auto space-y-4">
             <div className="flex items-center justify-between">
                <div>
-                  <h1 className="text-lg text-gray-900">{t('packages.history.title')}</h1>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h1 className="text-md sm:text-lg text-gray-900">{t('packages.history.title')}</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
                      {t('packages.history.subtitle')}
                   </p>
                </div>
@@ -169,7 +169,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
 
             {showFilters && (
                <div className="bg-white py-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                      <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">{t('packages.history.status')}</label>
                         <select
@@ -191,7 +191,7 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                            type="date"
                            value={localStartDate}
                            onChange={(e) => setLocalStartDate(e.target.value)}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
+                           className="w-11/12 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                         />
                      </div>
 
@@ -201,11 +201,11 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                            type="date"
                            value={localEndDate}
                            onChange={(e) => setLocalEndDate(e.target.value)}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
+                           className="w-11/12 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                         />
                      </div>
 
-                     <div className="flex items-center gap-2 justify-end mt-4">
+                     <div className="hidden sm:flex items-center gap-2 justify-end mt-4">
                         <Button onClick={clearFilters} variant="outline">
                            {t('packages.history.clearFilters')}
                         </Button>
@@ -213,6 +213,15 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                            {t('packages.history.applyFilters')}
                         </Button>
                      </div>
+                  </div>
+
+                  <div className="flex sm:hidden items-center gap-2 justify-start mt-4">
+                     <Button onClick={clearFilters} variant="outline">
+                        {t('packages.history.clearFilters')}
+                     </Button>
+                     <Button onClick={applyFilters} className="bg-rose-500 hover:bg-rose-600">
+                        {t('packages.history.applyFilters')}
+                     </Button>
                   </div>
                </div>
             )}
@@ -256,76 +265,133 @@ export default function SubscriptionHistoryPage({ loaderData }: HistoryProps) {
                      </Button>
                   </div>
                ) : (
-                  <div className="overflow-x-auto">
-                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                           <tr>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.plan')}
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.price')}
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.duration')}
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.period')}
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.payment')}
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                 {t('packages.history.status')}
-                              </th>
-                           </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                           {history.map((item) => (
-                              <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">
-                                       {item.planName}
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">
-                                       {formatCurrency(item.planPrice)}
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                                       <Clock className="h-4 w-4 text-gray-400" />
-                                       {item.durationDays} {t('packages.history.days')}
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-600">
-                                       <div>{formatDate(item.startDate)}</div>
-                                       <div className="text-xs text-gray-500">
-                                          to {formatDate(item.endDate)}
-                                       </div>
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">
-                                       {capitalize(item.paymentMethod)}
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                       className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(
-                                          item.status
-                                       )}`}
-                                    >
-                                       {capitalize(item.status)}
-                                    </span>
-                                 </td>
+                  <>
+                     {/* Desktop/Tablet Table View */}
+                     <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                           <thead className="bg-gray-50 border-b border-gray-200">
+                              <tr>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.plan')}
+                                 </th>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.price')}
+                                 </th>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.duration')}
+                                 </th>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.period')}
+                                 </th>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.payment')}
+                                 </th>
+                                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                    {t('packages.history.status')}
+                                 </th>
                               </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </div>
+                           </thead>
+                           <tbody className="bg-white divide-y divide-gray-200">
+                              {history.map((item) => (
+                                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <div className="text-sm font-medium text-gray-900">
+                                          {item.planName}
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <div className="text-sm text-gray-900">
+                                          {formatCurrency(item.planPrice)}
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <div className="text-sm text-gray-900 flex items-center gap-1">
+                                          <Clock className="h-4 w-4 text-gray-400" />
+                                          {item.durationDays} {t('packages.history.days')}
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <div className="text-sm text-gray-600">
+                                          <div>{formatDate(item.startDate)}</div>
+                                          <div className="text-xs text-gray-500">
+                                             to {formatDate(item.endDate)}
+                                          </div>
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <div className="text-sm text-gray-900">
+                                          {capitalize(item.paymentMethod)}
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                       <span
+                                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(
+                                             item.status
+                                          )}`}
+                                       >
+                                          {capitalize(item.status)}
+                                       </span>
+                                    </td>
+                                 </tr>
+                              ))}
+                           </tbody>
+                        </table>
+                     </div>
+
+                     {/* Mobile Card View */}
+                     <div className="md:hidden divide-y divide-gray-200">
+                        {history.map((item) => (
+                           <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                              <div className="flex items-start justify-between mb-3">
+                                 <div>
+                                    <h3 className="text-sm font-semibold text-gray-900">
+                                       {item.planName}
+                                    </h3>
+                                    <p className="text-lg font-bold text-rose-600 mt-1">
+                                       {formatCurrency(item.planPrice)}
+                                    </p>
+                                 </div>
+                                 <span
+                                    className={`px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
+                                       item.status
+                                    )}`}
+                                 >
+                                    {capitalize(item.status)}
+                                 </span>
+                              </div>
+
+                              <div className="space-y-2">
+                                 <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600 flex items-center gap-1">
+                                       <Clock className="h-4 w-4 text-gray-400" />
+                                       {t('packages.history.duration')}:
+                                    </span>
+                                    <span className="font-medium text-gray-900">
+                                       {item.durationDays} {t('packages.history.days')}
+                                    </span>
+                                 </div>
+
+                                 <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600 flex items-center gap-1">
+                                       <Calendar className="h-4 w-4 text-gray-400" />
+                                       {t('packages.history.period')}:
+                                    </span>
+                                    <span className="text-xs text-gray-900 text-right">
+                                       {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                                    </span>
+                                 </div>
+
+                                 <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600">{t('packages.history.payment')}:</span>
+                                    <span className="font-medium text-gray-900">
+                                       {capitalize(item.paymentMethod)}
+                                    </span>
+                                 </div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </>
                )}
             </div>
 

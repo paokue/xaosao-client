@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { AlertCircle, Calendar1, CalendarIcon, LoaderCircle, X } from "lucide-react"
-import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router"
+import { AlertCircle, Calendar1, CalendarIcon, Loader, X } from "lucide-react"
+import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, useParams, type LoaderFunctionArgs } from "react-router"
+import { useTranslation } from 'react-i18next';
 
 // components:
 import Modal from "~/components/ui/model"
@@ -16,19 +17,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 
 // utils:
 import { cn } from "~/lib/utils"
-import { calculateDayAmount, formatCurrency, parseFormattedNumber } from "~/utils"
-import { getModelService, requireUserSession, validateServiceBookingInputs } from "~/services"
 import type { Route } from "./+types/profile.book"
-import type { IServiceBookingCredentials, IServiceBookingResponse } from "~/interfaces/service"
-import { createServiceBooking } from "~/services/booking.server"
 import { capitalize } from "~/utils/functions/textFormat"
+import { getModelService } from "~/services/model.server";
+import { requireUserSession } from "~/services/auths.server";
+import { validateServiceBookingInputs } from "~/services/validation.server";
+import { calculateDayAmount, formatCurrency, parseFormattedNumber } from "~/utils"
+import type { IServiceBookingCredentials, IServiceBookingResponse } from "~/interfaces/service"
 
 export async function loader({ params }: LoaderFunctionArgs) {
    const service = await getModelService(params.modelId!, params.serviceId!);
+
    return service;
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
+   const { createServiceBooking } = await import("~/services/booking.server")
    const modelId = params.modelId
    const modelServiceId = params.serviceId
    const customerId = await requireUserSession(request)
@@ -44,7 +48,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       await validateServiceBookingInputs(bookingData as IServiceBookingCredentials);
       const res = await createServiceBooking(customerId, modelId, modelServiceId, bookingData as IServiceBookingCredentials);
       if (res.id) {
-         return redirect(`/dashboard/user-profile/${modelId}?toastMessage=Book+service+successfully!&toastType=success`);
+         return redirect(`/dashboard/dates-history?toastMessage=Book+service+successfully!&toastType=success`);
       }
    } catch (error: any) {
       if (error?.payload) {
@@ -76,6 +80,8 @@ export async function action({ params, request }: Route.ActionArgs) {
 export default function ServiceBooking() {
    const navigate = useNavigate()
    const navigation = useNavigation()
+   const params = useParams()
+   const { t } = useTranslation();
    const [startDate, setStartDate] = useState<Date>()
    const [endDate, setEndDate] = useState<Date>()
 
@@ -85,13 +91,13 @@ export default function ServiceBooking() {
       navigation.state !== "idle" && navigation.formMethod === "POST";
 
    function closeHandler() {
-      navigate("/dashboard/wallets");
+      navigate(`/dashboard/user-profile/${params.modelId}`);
    }
 
    return (
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full sm:w-3/6 py-8 sm:py-4 px-4 border rounded-xl">
-         <div className="space-y-6">
-            <div className="space-y-2">
+         <div className="space-y-3 sm:space-y-6">
+            <div className="space-y-2 mt-10 sm:mt-0">
                <div className="text-md font-bold text-balance">{service.service.name}</div>
                <div className="text-sm leading-relaxed">
                   {service.service.description}
@@ -101,7 +107,7 @@ export default function ServiceBooking() {
             <Form method="post" className="space-y-4">
                <div className="space-y-6">
                   <div>
-                     <div className="grid gap-6 md:grid-cols-2">
+                     <div className="grid gap-3 sm:gap-6 md:grid-cols-2">
                         <input
                            type="hidden"
                            name="price"
@@ -109,7 +115,7 @@ export default function ServiceBooking() {
                         />
                         <div className="space-y-2">
                            <Label htmlFor="start-date" className="text-sm font-medium">
-                              Start Date <span className="text-destructive">*</span>
+                              {t('profileBook.startDate')} <span className="text-destructive">*</span>
                            </Label>
                            <Popover>
                               <PopoverTrigger asChild>
@@ -122,7 +128,7 @@ export default function ServiceBooking() {
                                     )}
                                  >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? format(startDate, "PPP p") : "Pick date & time"}
+                                    {startDate ? format(startDate, "PPP p") : t('profileBook.pickDateTime')}
                                  </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 space-y-3" align="start">
@@ -139,6 +145,7 @@ export default function ServiceBooking() {
                                        type="time"
                                        name="startDate"
                                        className="w-full"
+                                       placeholder="Dates"
                                        onChange={(e) => {
                                           if (!startDate) return;
                                           const [hours, minutes] = e.target.value.split(":").map(Number);
@@ -154,6 +161,7 @@ export default function ServiceBooking() {
 
                            {startDate && (
                               <input
+                                 placeholder="Date"
                                  type="hidden"
                                  name="startDate"
                                  value={startDate.toISOString()}
@@ -163,7 +171,7 @@ export default function ServiceBooking() {
 
                         <div className="space-y-2">
                            <Label htmlFor="end-date" className="text-sm font-medium">
-                              End Date
+                              {t('profileBook.endDate')}
                            </Label>
                            <Popover>
                               <PopoverTrigger asChild>
@@ -176,7 +184,7 @@ export default function ServiceBooking() {
                                     )}
                                  >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate ? format(endDate, "PPP p") : "Pick date & time"}
+                                    {endDate ? format(endDate, "PPP p") : t('profileBook.pickDateTime')}
                                  </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 space-y-3" align="start">
@@ -223,12 +231,12 @@ export default function ServiceBooking() {
                <div className="space-y-4">
                   <div className="space-y-2">
                      <Label htmlFor="meeting-location" className="text-sm font-medium">
-                        Meeting Location <span className="text-destructive">*</span>
+                        {t('profileBook.location')} <span className="text-destructive">*</span>
                      </Label>
                      <Input
                         name="location"
                         id="meeting-location"
-                        placeholder="Enter the address or location where we'll meet"
+                        placeholder={t('profileBook.locationPlaceholder')}
                         className="h-11 text-sm"
                      />
                   </div>
@@ -237,34 +245,34 @@ export default function ServiceBooking() {
                <div className="space-y-4">
                   <div className="space-y-2">
                      <Label htmlFor="dress-code" className="text-sm font-medium">
-                        Preferred Attire
+                        {t('profileBook.preferredAttire')}
                      </Label>
                      <Textarea
                         name="preferred"
                         id="dress-code"
-                        placeholder="Let your partner know if there are any specific dress code requirements for the service...."
+                        placeholder={t('profileBook.attirePlaceholder')}
                         className="min-h-[100px] resize-none text-sm"
                      />
                   </div>
                </div>
 
                <div className="space-y-2 ">
-                  <h3 className="text-sm font-bold">Booking Summary:</h3>
+                  <h3 className="text-sm font-bold">{t('profileBook.summary')}</h3>
 
                   <div className="space-y-3 bg-secondary/30 p-2 rounded-lg">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Price per day</span>
+                        <span className="text-muted-foreground">{t('profileBook.pricePerDay')}</span>
                         <span className="font-medium">{formatCurrency(service.customRate ? service.customRate : service.service.baseRate)}</span>
                      </div>
 
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Number of days</span>
-                        <span className="font-medium">{calculateDayAmount(String(startDate), endDate ? String(endDate) : "")} Days</span>
+                        <span className="text-muted-foreground">{t('profileBook.numberOfDays')}</span>
+                        <span className="font-medium">{calculateDayAmount(String(startDate), endDate ? String(endDate) : "")} {t('profileBook.days')}</span>
                      </div>
 
                      <div className="border-t pt-3 mt-3">
                         <div className="flex justify-between items-center">
-                           <span className="text-sm font-bold">Total Price</span>
+                           <span className="text-sm font-bold">{t('profileBook.totalPrice')}</span>
                            <span className="text-md font-bold text-primary">
                               {
                                  formatCurrency((service.customRate ? service.customRate : service.service.baseRate)
@@ -293,18 +301,18 @@ export default function ServiceBooking() {
                      type="button"
                      variant="outline"
                      onClick={closeHandler}
-                     className="bg-gray-500 text-white hover:bg-gray-600 hover:text-white"
+                     className="text-gray-500 border border-gray-300"
                   >
                      <X />
-                     Close
+                     {t('profileBook.close')}
                   </Button>
                   <Button
                      type="submit"
                      variant="outline"
                      className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                   >
-                     {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-2 animate-spin" /> : <Calendar1 />}
-                     {isSubmitting ? "Booking...." : "Book Now"}
+                     {isSubmitting ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Calendar1 />}
+                     {isSubmitting ? t('profileBook.booking') : t('profileBook.bookNow')}
                   </Button>
                </div>
             </Form>

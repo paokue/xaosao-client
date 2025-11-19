@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
 
 // interface and service
-import { requireUserSession } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
 import { capitalize } from "~/utils/functions/textFormat"
 import type { IServiceBooking } from "~/interfaces/service"
 import { getAllMyServiceBookings } from "~/services/booking.server"
@@ -72,11 +72,11 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
    }
 
    return (
-      <div className="container space-y-2 pt-8 px-4 sm:px-10">
-         <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
+      <div className="container space-y-2 pt-2 sm:pt-8 px-4 sm:px-10">
+         <div className="flex items-start justify-between bg-rose-100 sm:bg-white w-full p-3 sm:px-0 rounded-md">
             <div className="space-y-1">
-               <h1 className="text-sm sm:text-md font-bold text-gray-800 uppercase text-shadow-md">{t('booking.title')}</h1>
-               <p className="text-sm font-normal text-gray-600">
+               <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">{t('booking.title')}</h1>
+               <p className="text-xs sm:text-sm font-normal text-gray-600">
                   {t('booking.subtitle')}
                </p>
             </div>
@@ -87,7 +87,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                {bookInfos.map((booking) => (
                   <Card
                      key={booking.id}
-                     className="border border-rose-100 hover:shadow-md transition-shadow"
+                     className="border border-rose-100 hover:shadow-md transition-shadow rounded-sm"
                   >
                      <CardHeader>
                         <div className="flex items-start justify-between gap-4">

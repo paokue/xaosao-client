@@ -4,7 +4,6 @@ import {
     X,
     Loader,
     BadgeCheck,
-    LoaderCircle,
     SlidersHorizontal,
 } from "lucide-react";
 import {
@@ -32,12 +31,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // interface, service and utils
 import type { IForYouModelResponse } from "~/interfaces";
-import { getUserTokenFromSession, requireUserSession } from "~/services";
+import { getUserTokenFromSession, requireUserSession } from "~/services/auths.server";
 import {
     getForyouModels,
     getLikeMeModels,
     getModelsByInteraction,
-} from "~/services";
+} from "~/services/model.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
@@ -50,6 +49,8 @@ interface LoaderReturn {
     favouritePagination: PaginationProps;
     myPassModels: IForYouModelResponse[];
     passPagination: PaginationProps;
+    customerLatitude: number;
+    customerLongitude: number;
 }
 
 interface ForyouModelsProps {
@@ -82,7 +83,13 @@ const DEFAULT_PAGINATION: PaginationProps = {
 // Loader
 export const loader: LoaderFunction = async ({ request }) => {
     const customerId = await requireUserSession(request);
+    const { getCustomerProfile } = await import("~/services/profile.server");
     const url = new URL(request.url);
+
+    // Get customer's current GPS location from database
+    const customer = await getCustomerProfile(customerId);
+    const customerLatitude = customer?.latitude || 0;
+    const customerLongitude = customer?.longitude || 0;
 
     // Pagination params
     const page = Number(url.searchParams.get("page") || 1);
@@ -156,6 +163,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -172,6 +181,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -190,6 +201,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination,
             passPagination: DEFAULT_PAGINATION,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -206,6 +219,8 @@ export const loader: LoaderFunction = async ({ request }) => {
             likemePagination: DEFAULT_PAGINATION,
             favouritePagination: DEFAULT_PAGINATION,
             passPagination,
+            customerLatitude,
+            customerLongitude,
         } as LoaderReturn;
     }
 
@@ -218,6 +233,8 @@ export const loader: LoaderFunction = async ({ request }) => {
         likemePagination: DEFAULT_PAGINATION,
         favouritePagination: DEFAULT_PAGINATION,
         passPagination: DEFAULT_PAGINATION,
+        customerLatitude,
+        customerLongitude,
     } as LoaderReturn;
 };
 
@@ -313,6 +330,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
         likemePagination,
         favouritePagination,
         passPagination,
+        customerLatitude,
+        customerLongitude,
     } = loaderData;
     const actionData = useActionData<typeof action>();
 
@@ -428,16 +447,16 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     className="w-full space-y-2"
                 >
                     <TabsList className="w-full">
-                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.forYou')}
                         </TabsTrigger>
-                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.likeMe')}
                         </TabsTrigger>
-                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.favourite')}
                         </TabsTrigger>
-                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs">
+                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs sm:text-sm">
                             {t('matches.passed')}
                         </TabsTrigger>
                     </TabsList>
@@ -474,7 +493,37 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                     <Form
                                         method="get"
                                         className="flex flex-col h-full"
-                                        onSubmit={() => setDrawerOpen(false)}
+                                        onSubmit={(e) => {
+                                            // Get form data
+                                            const formData = new FormData(e.currentTarget);
+                                            const newParams = new URLSearchParams();
+
+                                            // Preserve the current tab
+                                            newParams.set("forYouOnly", "true");
+                                            newParams.set("page", "1");
+
+                                            // Add filter values only if they have values
+                                            const distance = formData.get("distance");
+                                            const ageMin = formData.get("ageMin");
+                                            const ageMax = formData.get("ageMax");
+                                            const rating = formData.get("rating");
+                                            const gender = formData.get("gender");
+                                            const location = formData.get("location");
+                                            const relationshipStatus = formData.get("relationshipStatus");
+
+                                            if (distance) newParams.set("distance", distance.toString());
+                                            if (ageMin) newParams.set("ageMin", ageMin.toString());
+                                            if (ageMax) newParams.set("ageMax", ageMax.toString());
+                                            if (rating) newParams.set("rating", rating.toString());
+                                            if (gender) newParams.set("gender", gender.toString());
+                                            if (location) newParams.set("location", location.toString());
+                                            if (relationshipStatus) newParams.set("relationshipStatus", relationshipStatus.toString());
+
+                                            // Navigate with new params
+                                            navigate(`?${newParams.toString()}`, { replace: true });
+                                            setDrawerOpen(false);
+                                            e.preventDefault();
+                                        }}
                                     >
                                         <div className="hidden sm:flex items-center justify-between px-6 py-2 border-b">
                                             <h2 className="text-lg font-bold text-rose-500">{t('matches.filterOptions')}</h2>
@@ -496,6 +545,8 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                                     name="distance"
                                                     min={1}
                                                     max={500}
+                                                    defaultValue={searchParams.get("distance") || ""}
+                                                    placeholder="10 km"
                                                     className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                                                 />
                                             </div>
@@ -503,14 +554,34 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.ageRange')}</label>
                                                 <div className="flex gap-2 mt-2">
-                                                    <input type="number" name="ageMin" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
-                                                    <input type="number" name="ageMax" min={2} max={100} className="w-1/2 p-2 border rounded-md" />
+                                                    <input
+                                                        type="number"
+                                                        name="ageMin"
+                                                        min={2}
+                                                        max={100}
+                                                        defaultValue={searchParams.get("ageMin") || ""}
+                                                        className="w-1/2 p-2 border rounded-md"
+                                                        placeholder="Age...."
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        name="ageMax"
+                                                        min={2}
+                                                        max={100}
+                                                        defaultValue={searchParams.get("ageMax") || ""}
+                                                        className="w-1/2 p-2 border rounded-md"
+                                                        placeholder="Age...."
+                                                    />
                                                 </div>
                                             </div>
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.minRating')}</label>
-                                                <select name="rating" className="w-full mt-2 p-2 border rounded-md" defaultValue="">
+                                                <select
+                                                    name="rating"
+                                                    className="w-full mt-2 p-2 border rounded-md"
+                                                    defaultValue={searchParams.get("rating") || ""}
+                                                >
                                                     <option value="">{t('matches.selectRating')}</option>
                                                     {[1, 2, 3, 4, 5].map((r) => (
                                                         <option key={r} value={r}>{r}+</option>
@@ -520,7 +591,11 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.gender')}</label>
-                                                <select name="gender" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                                                <select
+                                                    name="gender"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                    defaultValue={searchParams.get("gender") || ""}
+                                                >
                                                     <option value="">{t('matches.all')}</option>
                                                     <option value="female">{t('matches.female')}</option>
                                                     <option value="male">{t('matches.male')}</option>
@@ -530,7 +605,11 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                                             <div>
                                                 <label className="block text-gray-700 font-medium">{t('matches.location')}</label>
-                                                <select name="location" className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                                                <select
+                                                    name="location"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                    defaultValue={searchParams.get("location") || ""}
+                                                >
                                                     <option value="">{t('matches.anyLocation')}</option>
                                                     <option value="Turkey">Turkey</option>
                                                     <option value="Spain">Spain</option>
@@ -544,19 +623,43 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                                 <label className="block text-gray-700 font-medium">{t('matches.relationshipStatus')}</label>
                                                 <div className="space-y-1 mt-2">
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Single" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Single"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Single"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.single')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Divorced" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Divorced"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Divorced"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.divorced')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Widowed" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Widowed"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Widowed"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.widowed')}
                                                     </label>
                                                     <label className="flex items-center text-sm">
-                                                        <input type="radio" name="relationshipStatus" value="Separated" className="mr-2 cursor-pointer text-rose-500" />
+                                                        <input
+                                                            type="radio"
+                                                            name="relationshipStatus"
+                                                            value="Separated"
+                                                            defaultChecked={searchParams.get("relationshipStatus") === "Separated"}
+                                                            className="mr-2 cursor-pointer text-rose-500"
+                                                        />
                                                         {t('matches.separated')}
                                                     </label>
                                                 </div>
@@ -564,7 +667,18 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                                         </div>
 
                                         <div className="flex items-center justify-between p-6 space-x-3 border-t">
-                                            <button type="reset" onClick={() => setDrawerOpen(false)} className="w-full bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    // Clear all filters and keep only the tab
+                                                    const newParams = new URLSearchParams();
+                                                    newParams.set("forYouOnly", "true");
+                                                    newParams.set("page", "1");
+                                                    navigate(`?${newParams.toString()}`, { replace: true });
+                                                    setDrawerOpen(false);
+                                                }}
+                                                className="w-full bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                                            >
                                                 {t('matches.resetFilters')}
                                             </button>
 
@@ -579,14 +693,19 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : foryouModels.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 px-2">
                                     {foryouModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {foryouPagination.totalPages > 1 && (
@@ -613,14 +732,19 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="likeme">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : likeMeModels.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {likeMeModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {likemePagination.totalPages > 1 && (
@@ -648,14 +772,19 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="favourite">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myFavouriteModels.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {myFavouriteModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {favouritePagination.totalPages > 1 && (
@@ -683,14 +812,19 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="passed">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myPassModels.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {myPassModels.map((model) => (
-                                        <ModelCard key={model.id} model={model} />
+                                        <ModelCard
+                                            key={model.id}
+                                            model={model}
+                                            customerLatitude={customerLatitude}
+                                            customerLongitude={customerLongitude}
+                                        />
                                     ))}
                                 </div>
                                 {passPagination.totalPages > 1 && (

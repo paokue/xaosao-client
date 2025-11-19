@@ -21,12 +21,13 @@ import type { IWalletResponse } from '~/interfaces';
 import { capitalize } from '~/utils/functions/textFormat';
 import type { PaginationProps } from '~/interfaces/pagination';
 import type { ITransactionResponse } from '~/interfaces/transaction';
-import { getCustomerTransactions, getWalletByCustomerId, requireUserSession } from '~/services';
 
 // components
 import { Button } from '~/components/ui/button';
 import Pagination from '~/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { requireUserSession } from '~/services/auths.server';
+import { getCustomerTransactions, getWalletByCustomerId } from '~/services/wallet.server';
 
 interface LoaderReturn {
     wallet: IWalletResponse;
@@ -221,11 +222,9 @@ export default function WalletPage({ loaderData }: TransactionProps) {
 
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
-                                                    <Button variant="ghost" size="sm" className="text-gray-500 h-7 w-7 p-0">
-                                                        <MoreVertical className="h-3 w-3" />
-                                                        <span className="sr-only">More</span>
-                                                    </Button>
+                                                <Button variant="ghost" size="sm" className="text-gray-500 h-8 w-8 p-0">
+                                                    <MoreVertical className="h-3 w-3" />
+                                                    <span className="sr-only">More</span>
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent className="w-48" align="end" forceMount>

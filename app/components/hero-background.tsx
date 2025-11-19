@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 
 const backgroundImages = [
-  // {
-  //   src: "https://images.pexels.com/photos/7610660/pexels-photo-7610660.jpeg?w=1920&h=1080&fit=crop&crop=center",
-  //   alt: "Couple on coffee shop date",
-  // },
+  {
+    src: "https://images.pexels.com/photos/5911151/pexels-photo-5911151.jpeg?w=1920&h=1080&fit=crop&crop=center",
+    alt: "Couple with city lights at night",
+  },
   {
     src: "https://images.pexels.com/photos/269583/pexels-photo-269583.jpeg?w=1920&h=1080&fit=crop&crop=center",
     alt: "Couple with city lights at night",
@@ -13,20 +13,16 @@ const backgroundImages = [
     src: "https://images.pexels.com/photos/348520/pexels-photo-348520.jpeg?w=1920&h=1080&fit=crop&crop=center",
     alt: "Couple with city lights at night",
   },
-  // {
-  //   src: "https://images.pexels.com/photos/1004014/pexels-photo-1004014.jpeg?w=1920&h=1080&fit=crop&crop=center",
-  //   alt: "Romantic couple in winter",
-  // },
-  // {
-  //   src: "https://images.pexels.com/photos/773124/pexels-photo-773124.jpeg?w=1920&h=1080&fit=crop&crop=center",
-  //   alt: "Couple on coffee shop date",
-  // },
 ]
 
 export function HeroBackground() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // Ensure component is mounted before starting transitions
+    setMounted(true)
+
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
     }, 50000)
@@ -34,6 +30,7 @@ export function HeroBackground() {
     return () => clearInterval(interval)
   }, [])
 
+  // Always render with index 0 initially for SSR consistency
   return (
     <div className="absolute inset-0">
       {backgroundImages.map((image, index) => (

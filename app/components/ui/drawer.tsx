@@ -3,11 +3,24 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "~/lib/utils"
 
-const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+// Helper function to check mobile - called during render, not at module level
+const getIsMobile = () => typeof window !== "undefined" && window.innerWidth < 768
 
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  React.useEffect(() => {
+    // Set mobile state after mount to avoid hydration mismatch
+    setIsMobile(getIsMobile())
+
+    // Optional: Add resize listener
+    const handleResize = () => setIsMobile(getIsMobile())
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return <DrawerPrimitive.Root data-slot="drawer" direction={isMobile ? "bottom" : "right"} {...props} />
 }
 

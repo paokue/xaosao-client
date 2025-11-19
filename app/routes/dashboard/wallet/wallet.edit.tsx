@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import type { Route } from "./+types/wallet.edit"
-import { AlertCircle, ArrowLeft, FileText, LoaderCircle, Upload } from "lucide-react"
+import { AlertCircle, ArrowLeft, FileText, Loader, Upload } from "lucide-react"
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router"
 import { useTranslation } from "react-i18next"
 
@@ -13,7 +13,9 @@ import { downloadImage } from "~/utils/functions/download"
 import { capitalize, extractFilenameFromCDNSafe } from "~/utils/functions/textFormat"
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server"
 import type { ITransactionCredentials, ITransactionResponse } from "~/interfaces/transaction"
-import { getTransaction, requireUserSession, updateTransaction, validateTopUpInputs } from "~/services"
+import { requireUserSession } from "~/services/auths.server";
+import { getTransaction, updateTransaction } from "~/services/wallet.server";
+import { validateTopUpInputs } from "~/services/validation.server";
 import { formatCurrency, parseFormattedNumber } from "~/utils"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -88,8 +90,8 @@ export default function TransactionEdit() {
    const navigate = useNavigate();
    const navigation = useNavigation();
    const actionData = useActionData<typeof action>()
-   const [amount, setAmount] = React.useState<number>(0);
    const transaction = useLoaderData<ITransactionResponse>();
+   const [amount, setAmount] = React.useState<number>(transaction.amount || 0);
    const isSubmitting =
       navigation.state !== "idle" && navigation.formMethod === "PATCH";
 
@@ -109,22 +111,48 @@ export default function TransactionEdit() {
    // When user uploads a new file
    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
       const file = e.target.files?.[0];
+      console.log("File selected:", file);
+
       if (file) {
          setSelectedFile(file); // Store the actual file
 
-         const reader = new FileReader();
-         reader.onloadend = () => {
-            const base64 = reader.result as string;
-            setPreviewSlip(base64); // Store base64 for preview only
-         };
-         reader.readAsDataURL(file);
+         // Create object URL for preview (more reliable on iOS)
+         try {
+            const objectUrl = URL.createObjectURL(file);
+            console.log("Preview URL created:", objectUrl);
+            setPreviewSlip(objectUrl);
+         } catch (error) {
+            console.error("Error creating preview:", error);
+
+            // Fallback to FileReader if URL.createObjectURL fails
+            const reader = new FileReader();
+            reader.onloadend = () => {
+               const base64 = reader.result as string;
+               console.log("FileReader preview created");
+               setPreviewSlip(base64);
+            };
+            reader.onerror = (error) => {
+               console.error("FileReader error:", error);
+            };
+            reader.readAsDataURL(file);
+         }
       }
    }
+
+   // Cleanup object URL when component unmounts or preview changes
+   React.useEffect(() => {
+      return () => {
+         if (previewSlip && previewSlip.startsWith('blob:')) {
+            URL.revokeObjectURL(previewSlip);
+         }
+      };
+   }, [previewSlip]);
 
    // Trigger hidden file input
    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
    function triggerFileSelect() {
+      console.log("Triggering file select");
       fileInputRef.current?.click();
    }
 
@@ -133,12 +161,7 @@ export default function TransactionEdit() {
    return (
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full sm:w-3/5 py-8 sm:py-4 px-4 border rounded-xl">
          <Form method="patch" className="space-y-4" encType="multipart/form-data">
-            <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
-               <ArrowLeft className="block sm:hidden text-gray-500" size={20} />
-               <span>{t('wallet.edit.backToWallet')}</span>
-            </div>
-
-            <div>
+            <div className="mt-10 sm:mt-0">
                <h3 className="flex items-center text-black text-md font-bold">{t('wallet.edit.title')}</h3>
                <p className="text-gray-500 text-sm ml-2">{t('wallet.edit.subtitle')}</p>
             </div>
@@ -204,21 +227,27 @@ export default function TransactionEdit() {
                      </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between sm:space-x-3 space-y-2 sm:space-y-0">
-                     <div className="flex items-center space-x-3">
-                        <div>
-                           <p className="text-sm font-medium">{t('wallet.edit.paymentSlip')}</p>
-                           {previewSlip ? (
-                              <div>
-                                 <img src={previewSlip} alt="New slip preview" className="mt-2 h-28 rounded-md border" />
-                                 <p className="text-xs text-green-600 mt-1">{t('wallet.edit.newFile')}: {selectedFile?.name}</p>
-                              </div>
-                           ) : transaction?.paymentSlip ? (
-                              <img src={transaction.paymentSlip} alt="Existing slip" className="mt-2 h-28 rounded-md border" />
-                           ) : (
-                              <p className="text-sm text-gray-500">{t('wallet.edit.noSlipUploaded')}</p>
-                           )}
-                        </div>
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between sm:space-x-3 space-y-4 sm:space-y-0">
+                     <div className="flex flex-col space-y-2 w-full sm:w-auto">
+                        <p className="text-sm font-medium">{t('wallet.edit.paymentSlip')}</p>
+                        {previewSlip ? (
+                           <div className="space-y-2">
+                              <img
+                                 src={previewSlip}
+                                 alt="New slip preview"
+                                 className="mt-2 w-full sm:w-auto h-48 sm:h-28 object-contain rounded-md border border-green-500"
+                              />
+                              <p className="text-xs text-green-600">{t('wallet.edit.newFile')}: {selectedFile?.name}</p>
+                           </div>
+                        ) : transaction?.paymentSlip ? (
+                           <img
+                              src={transaction.paymentSlip}
+                              alt="Existing slip"
+                              className="mt-2 w-full sm:w-auto h-48 sm:h-28 object-contain rounded-md border"
+                           />
+                        ) : (
+                           <p className="text-sm text-gray-500">{t('wallet.edit.noSlipUploaded')}</p>
+                        )}
                      </div>
                      <div className="flex space-x-2">
                         {transaction?.paymentSlip && !previewSlip && (
@@ -237,6 +266,7 @@ export default function TransactionEdit() {
                   <input
                      type="file"
                      accept="image/*"
+                     capture="environment"
                      ref={fileInputRef}
                      name="paymentSlip"
                      className="hidden"
@@ -271,7 +301,7 @@ export default function TransactionEdit() {
                   variant="outline"
                   className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                >
-                  {isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />}
+                  {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? t('wallet.edit.saving') : t('wallet.edit.saveChange')}
                </Button>
             </div>

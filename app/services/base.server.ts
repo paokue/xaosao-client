@@ -32,7 +32,28 @@ export async function getLocationDetails(
     return data;
   } catch (error) {
     console.error("ERROR_FETCH_LOCATION_DETAILS:", error);
-    throw error;
+    console.log("Using fallback location details");
+
+    // Return fallback location data when API fails
+    return {
+      ip: ip || "0.0.0.0",
+      continentCode: "AS",
+      continentName: "Asia",
+      countryCode: "LA",
+      countryName: "Laos",
+      countryNameNative: "ລາວ",
+      city: "Vientiane",
+      postalCode: "",
+      latitude: 17.9757,
+      longitude: 102.6331,
+      capital: "Vientiane",
+      phoneCode: "856",
+      countryFlag: "🇱🇦",
+      currencyCode: "LAK",
+      currencyName: "Lao Kip",
+      languages: "lo",
+      timeZone: "Asia/Vientiane",
+    };
   }
 }
 
@@ -43,6 +64,8 @@ export async function getCurrentIP() {
     return data.ip;
   } catch (error) {
     console.error("Error fetching IP:", error);
-    throw new Error("Failed to get IP address");
+    console.log("Using fallback IP address");
+    // Return a fallback IP instead of throwing error
+    return "0.0.0.0";
   }
 }

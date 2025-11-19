@@ -1,8 +1,3 @@
-export * from "./log.server";
-export * from "./auths.server";
-export * from "./database.server";
-export * from "./validation.server";
-export * from "./model.server";
-export * from "./wallet.server";
-export * from "./package.server";
-export * from "./upload.server";
+// Server-only modules should be imported directly from their .server files
+// in loaders and actions, not through this barrel export.
+// This prevents server-only code from being bundled into client code.

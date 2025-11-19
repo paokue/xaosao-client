@@ -1,16 +1,19 @@
 import type { Route } from "./+types/login";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, Eye, EyeOff, Loader, User, AlertCircle } from "lucide-react";
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
-import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react";
 
 // Components
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 
+// Hooks
+import { useIsMobile } from "~/hooks/use-mobile";
+
 // Services & Types
-import { validateSignInInputs } from "~/services";
+import { validateSignInInputs } from "~/services/validation.server";
 import type { ICustomerSigninCredentials } from "~/interfaces";
 
 // Constants
@@ -48,7 +51,7 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
 
     try {
         // Dynamic import for code splitting
-        const { customerLogin } = await import("~/services");
+        const { customerLogin } = await import("~/services/auths.server");
         const { prisma } = await import("~/services/database.server");
 
         const formData = await request.formData();
@@ -97,8 +100,6 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
             try {
                 const latitude = parseFloat(String(latitudeRaw));
                 const longitude = parseFloat(String(longitudeRaw));
-
-                console.log("Paokue GPS coordinates received:", latitude, longitude);
 
                 // Validate coordinates
                 if (!isNaN(latitude) && !isNaN(longitude) &&
@@ -188,10 +189,7 @@ export default function SignInPage() {
 
     // Computed values
     const isSubmitting = navigation.state !== "idle" && navigation.formMethod === "POST";
-    const isMobile = useMemo(
-        () => typeof window !== "undefined" && window.innerWidth < 768,
-        []
-    );
+    const isMobile = useIsMobile();
 
     // Background image carousel effect
     useEffect(() => {
@@ -303,10 +301,11 @@ export default function SignInPage() {
                     className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer"
                     aria-label="Go back to home"
                 >
-                    <p className="flex items-center space-x-2">
+                    {/* <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        {/* <span className="text-white text-xl">XAOSAO</span> */}
-                    </p>
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p> */}
+                    <img src="/images/logo-white.png" className="w-30 h-10" />
                 </button>
 
                 <div className="space-y-2 mb-6">
@@ -319,7 +318,7 @@ export default function SignInPage() {
                     <div className="flex items-center justify-between pt-2">
                         {locationStatus === 'loading' && (
                             <p className="text-xs text-yellow-300 flex items-center">
-                                <LoaderCircle className="w-3 h-3 mr-1 animate-spin" />
+                                <Loader className="w-3 h-3 mr-1 animate-spin" />
                                 Getting your location...
                             </p>
                         )}
@@ -445,7 +444,7 @@ export default function SignInPage() {
                         className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 disabled:cursor-not-allowed text-white py-3 font-medium uppercase transition-colors"
                         aria-busy={isSubmitting}
                     >
-                        {isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
+                        {isSubmitting && <Loader className="w-4 h-4 animate-spin" aria-hidden="true" />}
                         {isSubmitting ? t('login.loggingIn') : t('login.loginButton')}
                     </Button>
 

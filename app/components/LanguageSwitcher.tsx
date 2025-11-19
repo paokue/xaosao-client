@@ -22,6 +22,10 @@ export default function LanguageSwitcher() {
 
   const handleLanguageChange = (langCode: string) => {
     i18n.changeLanguage(langCode);
+    // Persist language preference to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('i18nextLng', langCode);
+    }
   };
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
@@ -31,10 +35,10 @@ export default function LanguageSwitcher() {
       <Select value={i18n.language} onValueChange={handleLanguageChange}>
         <SelectTrigger className="w-[180px] bg-white/10 text-white backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <Languages className="w-4 h-4 text-white" />
+            <Languages className="w-4 h-4 text-rose-500" />
             <SelectValue>
               <span className="mr-2">{currentLanguage.flag}</span>
-              {currentLanguage.name}
+              <span className='text-rose-500'>{currentLanguage.name}</span>
             </SelectValue>
           </div>
         </SelectTrigger>

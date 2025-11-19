@@ -1,4 +1,5 @@
 import type { ReactNode, MouseEvent } from "react";
+import { useEffect } from "react";
 
 type ModalProps = {
     children: ReactNode;
@@ -15,6 +16,40 @@ export default function Modal({ children, onClose, className }: ModalProps) {
         event.stopPropagation();
     };
 
+    // Lock body scroll and set viewport meta tag for mobile
+    useEffect(() => {
+        // Save original body overflow
+        const originalOverflow = document.body.style.overflow;
+        const originalPosition = document.body.style.position;
+
+        // Lock body scroll
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+
+        // Set viewport meta for mobile browser UI auto-hide
+        let viewportMeta = document.querySelector('meta[name="viewport"]');
+        const originalContent = viewportMeta?.getAttribute('content');
+
+        if (viewportMeta) {
+            viewportMeta.setAttribute(
+                'content',
+                'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+            );
+        }
+
+        // Cleanup
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.position = originalPosition;
+            document.body.style.width = '';
+
+            if (viewportMeta && originalContent) {
+                viewportMeta.setAttribute('content', originalContent);
+            }
+        };
+    }, []);
+
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-20 backdrop-blur-sm border"
@@ -23,8 +58,12 @@ export default function Modal({ children, onClose, className }: ModalProps) {
             aria-modal="true"
         >
             <div
-                className={`bg-white rounded shadow p-2 sm:p-6 animate-fade-in overflow-y-auto ${className ?? "max-w-lg w-full"}`}
+                className={`bg-white rounded shadow p-2 sm:p-6 animate-fade-in overflow-y-auto max-h-screen ${className ?? "max-w-lg w-full"}`}
                 onClick={handleModalClick}
+                style={{
+                    WebkitOverflowScrolling: 'touch',
+                    touchAction: 'pan-y',
+                }}
             >
                 {children}
             </div>
