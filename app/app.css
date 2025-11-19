@@ -234,3 +234,8 @@
   margin-top: 16px;
   /* or mt-4 in tailwind */
 }
+
+.text-stroke-white {
+  -webkit-text-stroke: 1px white;
+  color: rgb(232, 0, 81);
+}

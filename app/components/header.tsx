@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router"
 
 // components
 import { Button } from "./ui/button"
-import { ThemeSwitcher } from "./theme-switcher"
-import LanguageSwitcher from "./LanguageSwitcher"
+// import { ThemeSwitcher } from "./theme-switcher"
+// import LanguageSwitcher from "./LanguageSwitcher"
 
 export function Header() {
     const navigate = useNavigate()
@@ -31,18 +31,10 @@ export function Header() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center space-x-2">
-                        <Heart className="w-6 h-6 text-pink-500 fill-current" />
-                        <span
-                            className={`text-xl font-serif font-medium tracking-wide transition-colors duration-300 ${isScrolled
-                                ? "text-[var(--foreground)]"
-                                : "bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent"
-                                }`}
-                        >
-                            XAOSAO
-                        </span>
+                        <img src="/images/logo-pink.png" className="w-35 h-12" />
                     </div>
 
-                    <div className="hidden md:flex items-center space-x-8 uppercase">
+                    {/* <div className="hidden md:flex items-center space-x-8 uppercase">
                         <Link
                             to="#about"
                             className={`transition-colors font-medium text-xs ${isScrolled
@@ -70,15 +62,15 @@ export function Header() {
                         >
                             Services
                         </Link>
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center space-x-3">
-                        <LanguageSwitcher />
-                        <ThemeSwitcher />
+                        {/* <LanguageSwitcher /> */}
+                        {/* <ThemeSwitcher /> */}
                         <Button
                             size="sm"
                             onClick={() => navigate("/login")}
-                            className="cursor-pointer hidden sm:block bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                            className="cursor-pointer hidden sm:block bg-rose-500 hover:bg-rose-600 text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                         >
                             Login
                         </Button>

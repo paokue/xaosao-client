@@ -301,10 +301,11 @@ export default function SignInPage() {
                     className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer"
                     aria-label="Go back to home"
                 >
-                    <p className="flex items-center space-x-2">
+                    {/* <p className="flex items-center space-x-2">
                         <ArrowLeft className="text-xl text-gray-300" />
-                        {/* <span className="text-white text-xl">XAOSAO</span> */}
-                    </p>
+                        <span className="text-white text-xl">XAOSAO</span>
+                    </p> */}
+                    <img src="/images/logo-white.png" className="w-30 h-10" />
                 </button>
 
                 <div className="space-y-2 mb-6">

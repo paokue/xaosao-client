@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
 import {
@@ -15,9 +15,29 @@ import {
     Wallet,
     Wallet2,
 } from "lucide-react";
+import type { ICustomerResponse } from "~/interfaces/customer";
+import { requireUserSession } from "~/services/auths.server";
+import { getCustomerProfile } from "~/services/profile.server";
 
-export default function Dashboard() {
+interface LoaderReturn {
+    customerData: ICustomerResponse;
+}
+
+interface TransactionProps {
+    loaderData: LoaderReturn;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+    const customerId = await requireUserSession(request)
+    const customerData = await getCustomerProfile(customerId)
+
+    return { customerData }
+}
+
+export default function Dashboard({ loaderData }: TransactionProps) {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { customerData } = loaderData;
     const { t, i18n } = useTranslation();
 
     const navigationItems = useMemo(() => [
@@ -59,17 +79,20 @@ export default function Dashboard() {
             <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between sm:sticky sm:top-0 sm:h-screen">
                 <div className="w-full">
                     <div className="flex items-center space-x-3">
-                        <img
-                            src="https://images.pexels.com/photos/5617870/pexels-photo-5617870.jpeg"
-                            alt="Profile"
-                            className="w-14 h-14 border-2 border-gray-400 rounded-full"
-                        />
+                        <div className="w-14 h-14 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
+                            <img
+                                src={customerData.profile}
+                                alt="Profile"
+                                className="w-full h-full rounded-full object-cover cursor-pointer"
+                            />
+                        </div>
                         <div>
-                            <h2 className="text-lg">Paokue Saolong</h2>
+                            <h2 className="text-lg">{customerData.firstName} {customerData?.lastName}</h2>
                             <p className="text-xs text-muted-foreground">
                                 Find your perfect match
                             </p>
                         </div>
+                        {/* <img src="/images/logo-pink.png" className="w-40 h-12" /> */}
                     </div>
 
                     <SidebarSeparator className="my-4" />
