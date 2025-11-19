@@ -445,7 +445,7 @@ export default function SignInPage() {
                         className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 disabled:cursor-not-allowed text-white py-3 font-medium uppercase transition-colors"
                         aria-busy={isSubmitting}
                     >
-                        {isSubmitting && <Loader className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
+                        {isSubmitting && <Loader className="w-4 h-4 animate-spin" aria-hidden="true" />}
                         {isSubmitting ? t('login.loggingIn') : t('login.loginButton')}
                     </Button>
 

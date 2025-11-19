@@ -9,7 +9,7 @@ import vi from './locales/vi.json';
 import ko from './locales/ko.json';
 
 // Initialize i18n without LanguageDetector to avoid hydration issues
-// Language will be detected and set on client-side only after mount
+// Language will be detected and set on client-side by useLanguageInit hook
 i18n
   .use(initReactI18next)
   .init({
@@ -26,14 +26,9 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    react: {
+      useSuspense: false, // Disable suspense to avoid hydration issues
+    },
   });
-
-// Only detect language on client-side after hydration
-if (typeof window !== 'undefined') {
-  const storedLanguage = localStorage.getItem('i18nextLng');
-  if (storedLanguage && i18n.language !== storedLanguage) {
-    i18n.changeLanguage(storedLanguage);
-  }
-}
 
 export default i18n;

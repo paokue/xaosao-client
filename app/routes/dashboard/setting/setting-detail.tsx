@@ -1,18 +1,19 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
 import { AlertCircle, ArrowLeft, Bell, Eye, EyeOff, Flag, Globe, Loader, Lock, Moon, Shield, Sun, Trash2, User } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 // component
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
+import LanguageSwitcher from "~/components/LanguageSwitcher";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 // service and interface
-import { requireUserSession } from "~/services/auths.server";
 import type { Route } from "./+types/setting-detail";
 import { capitalize } from "~/utils/functions/textFormat";
+import { requireUserSession } from "~/services/auths.server";
 import type { ICustomerCredentials, ICustomerResponse, ICustomerSettingCredentials } from "~/interfaces/customer";
 import { changeCustomerPassword, createReport, deleteAccount, getCustomerProfile, updateCustomerSetting, updateProfile } from "~/services/profile.server";
 
@@ -62,7 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
             } else if (data.new_password !== data.con_new_password) {
                return { success: false, error: true, message: "The new password not match. Check and try again!", showError: data.currectAction };
             } else {
-               const res = await changeCustomerPassword(customerId, data.new_password as string)
+               const res = await changeCustomerPassword(customerId, data.old_password as string, data.new_password as string)
                if (res.id) {
                   console.log("Change password success!!")
                   return redirect("/dashboard/setting?toastMessage=Change+password+successfully!&toastType=success");
@@ -194,7 +195,7 @@ export async function action({ request }: Route.ActionArgs) {
       try {
          const res = await deleteAccount(customerId);
          if (res.id) {
-            return redirect("/dashboard/setting?toastMessage=Your+account+was+deleted+succesful!&toastType=success");
+            return redirect("/login?toastMessage=Your+account+was+deleted+succesful!&toastType=success");
          }
       } catch (error: any) {
          console.error("Error to delete account:", error);
@@ -274,7 +275,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
             <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
                {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : ""}
-               <p className="text-gray-600">{t('settings.basic.processing')}</p>
+               <p className="text-gray-600">{t('profile.processing')}</p>
             </div>
          </div>
       );
@@ -301,7 +302,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                      }
 
                      <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="basic" className="scroll-mt-6 space-y-2">
@@ -376,8 +377,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                     <SelectContent>
                                        <SelectItem value="male">{t('settings.basic.male')}</SelectItem>
                                        <SelectItem value="female">{t('settings.basic.female')}</SelectItem>
-                                       <SelectItem value="nonbinary">{t('settings.basic.nonBinary')}</SelectItem>
-                                       <SelectItem value="all">{t('settings.basic.all')}</SelectItem>
+                                       <SelectItem value="other">{t('settings.basic.other')}</SelectItem>
                                     </SelectContent>
                                  </Select>
                               </div>
@@ -476,7 +476,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="password" className="scroll-mt-6 space-y-2">
@@ -579,7 +579,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="twofa" className="scroll-mt-6 space-y-3">
@@ -607,14 +607,10 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                                  </h4>
                                  <ol className="ml-2 space-y-2 text-sm text-gray-700">
                                     <li>
-                                       - {t('settings.twofa.step1')}
-                                    </li>
-                                    <li>- {t('settings.twofa.step2')}</li>
-                                    <li>
-                                       - {t('settings.twofa.step3')}
+                                       - {t('settings.twofa.instruction1')}
                                     </li>
                                     <li>
-                                       - {t('settings.twofa.step4')}
+                                       - {t('settings.twofa.instruction2')}
                                     </li>
                                  </ol>
                               </div>
@@ -644,7 +640,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="notification" className="scroll-mt-6 space-y-2">
@@ -712,54 +708,71 @@ export default function SettingPage({ loaderData }: TransactionProps) {
 
                {tab === "language" &&
                   <div>
-                     {actionData?.error && actionData.showError === "defaultLanguage" &&
-                        <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
-                           <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                           <span className="text-red-500 text-sm">
-                              {capitalize(actionData.message)}
-                           </span>
-                        </div>
-                     }
-                     <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
-                           <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
-                        </button>
-                        <section id="language" className="scroll-mt-6 space-y-2">
-                           <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
-                              <Globe className="text-rose-500" size={20} />
-                              {t('settings.language.title')}
-                           </h3>
-                           <input type="hidden" name="currectAction" defaultValue="defaultLanguage" />
-                           <input type="hidden" name="defaultTheme" defaultValue={customerData.defaultTheme} />
-                           <input type="hidden" name="emailNotification" defaultValue={String(customerData.sendMailNoti)} />
-                           <input type="hidden" name="pushNotification" defaultValue={String(customerData.sendPushNoti)} />
-                           <input type="hidden" name="smsNotification" defaultValue={String(customerData.sendSMSNoti)} />
-                           <input type="hidden" name="twofactorEnabled" value={String(customerData.twofactorEnabled)} />
-                           <div className="space-y-4">
-                              <div>
-                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language.selectLanguage')}</label>
-                                 <select
-                                    defaultValue={customerData.defaultLanguage}
-                                    name="defaultLanguage"
-                                    className="text-sm w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                                 >
-                                    <option value="en">{t('settings.language.english')}</option>
-                                    <option value="th">{t('settings.language.thai')}</option>
-                                    <option value="la">{t('settings.language.lao')}</option>
-                                 </select>
-                              </div>
+                     <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
+                        <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
+                     </button>
+                     <section id="language" className="scroll-mt-6 space-y-4 mt-4">
+                        <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
+                           <Globe className="text-rose-500" size={20} />
+                           {t('settings.language.title')}
+                        </h3>
+                        <div className="space-y-4">
+                           <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language.selectLanguage')}</label>
+                              <LanguageSwitcher />
                            </div>
-                        </section>
-                        <div className="flex items-center justify-end">
-                           <Button
-                              type="submit"
-                              className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
-                           >
-                              {t('settings.basic.saveChange')}
-                           </Button>
                         </div>
-                     </Form>
+                     </section>
                   </div>
+                  // <div>
+                  // {actionData?.error && actionData.showError === "defaultLanguage" &&
+                  //    <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
+                  //       <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  //       <span className="text-red-500 text-sm">
+                  //          {capitalize(actionData.message)}
+                  //       </span>
+                  //    </div>
+                  // }
+                  //    <Form method="patch" className="space-y-4">
+                  //       <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
+                  //          <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
+                  //       </button>
+                  //       <section id="language" className="scroll-mt-6 space-y-2">
+                  //          <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2">
+                  //             <Globe className="text-rose-500" size={20} />
+                  //             {t('settings.language.title')}
+                  //          </h3>
+                  //          <input type="hidden" name="currectAction" defaultValue="defaultLanguage" />
+                  //          <input type="hidden" name="defaultTheme" defaultValue={customerData.defaultTheme} />
+                  //          <input type="hidden" name="emailNotification" defaultValue={String(customerData.sendMailNoti)} />
+                  //          <input type="hidden" name="pushNotification" defaultValue={String(customerData.sendPushNoti)} />
+                  //          <input type="hidden" name="smsNotification" defaultValue={String(customerData.sendSMSNoti)} />
+                  //          <input type="hidden" name="twofactorEnabled" value={String(customerData.twofactorEnabled)} />
+                  //          <div className="space-y-4">
+                  //             <div>
+                  //                <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language.selectLanguage')}</label>
+                  //                <select
+                  //                   defaultValue={customerData.defaultLanguage}
+                  //                   name="defaultLanguage"
+                  //                   className="text-sm w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  //                >
+                  //                   <option value="en">{t('settings.language.english')}</option>
+                  //                   <option value="th">{t('settings.language.thai')}</option>
+                  //                   <option value="la">{t('settings.language.lao')}</option>
+                  //                </select>
+                  //             </div>
+                  //          </div>
+                  //       </section>
+                  //       <div className="flex items-center justify-end">
+                  //          <Button
+                  //             type="submit"
+                  //             className="cursor-pointer text-sm bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-500 hover:text-rose-600 font-medium"
+                  //          >
+                  //             {t('settings.basic.saveChange')}
+                  //          </Button>
+                  //       </div>
+                  //    </Form>
+                  // </div>
                }
 
                {tab === "mode" &&
@@ -773,7 +786,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="patch" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="mode" className="scroll-mt-6">
@@ -851,7 +864,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="post" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="report" className="scroll-mt-6 space-y-2">
@@ -918,7 +931,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                         </div>
                      }
                      <Form method="delete" className="space-y-4">
-                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center">
+                        <button type="button" onClick={() => navigate("/dashboard/setting")} className="text-gray-500 flex items-center justify-center mb-6">
                            <ArrowLeft className="text-gray-500" size={18} />&nbsp;{t('settings.common.back')}
                         </button>
                         <section id="delete" className="scroll-mt-6">

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
@@ -17,9 +18,9 @@ import {
 
 export default function Dashboard() {
     const location = useLocation();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
-    const navigationItems = [
+    const navigationItems = useMemo(() => [
         { title: t('navigation.discover'), url: "/dashboard", icon: Search },
         { title: t('navigation.match'), url: "/dashboard/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/dashboard/realtime-chat", icon: MessageCircle },
@@ -28,9 +29,9 @@ export default function Dashboard() {
         { title: t('navigation.wallet'), url: "/dashboard/wallets", icon: Wallet },
         { title: t('navigation.myProfile'), url: "/dashboard/profile", icon: User },
         { title: t('navigation.setting'), url: "/dashboard/setting", icon: Settings },
-    ];
+    ], [t, i18n.language]);
 
-    const mobileNavigationItems = [
+    const mobileNavigationItems = useMemo(() => [
         { title: t('navigation.discover'), url: "/dashboard", icon: Search },
         { title: t('navigation.match'), url: "/dashboard/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/dashboard/realtime-chat", icon: MessageCircle },
@@ -38,7 +39,7 @@ export default function Dashboard() {
         { title: t('navigation.wallet'), url: "/dashboard/wallets", icon: Wallet2 },
         // { title: t('navigation.notification'), url: "/dashboard/notification", icon: Bell },
         { title: t('navigation.profile'), url: "/dashboard/profile", icon: User2Icon },
-    ];
+    ], [t, i18n.language]);
 
     const isActiveRoute = (url: string) => {
         if (url === "/dashboard" && location.pathname === "/dashboard") return true;
@@ -86,7 +87,7 @@ export default function Dashboard() {
                                         }`}
                                 >
                                     <item.icon className="w-4 h-4" />
-                                    <p>{item.title}</p>
+                                    <p suppressHydrationWarning>{item.title}</p>
                                 </Link>
                             );
                         })}
@@ -120,6 +121,7 @@ export default function Dashboard() {
                                     <span
                                         className={`text-xs truncate ${isActive ? "text-rose-500" : "text-gray-600"
                                             }`}
+                                        suppressHydrationWarning
                                     >
                                         {item.title}
                                     </span>
