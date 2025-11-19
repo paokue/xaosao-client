@@ -1,6 +1,6 @@
 import React from "react";
 import type { Route } from "./+types/package";
-import { AlertCircle, CheckCircle, LoaderCircle, Wallet, ArrowRight, Check } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, Wallet, ArrowRight, Check } from "lucide-react";
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -341,7 +341,7 @@ export default function SubscriptionPaymentPage() {
                      disabled={isSubmitting}
                      className="text-sm cursor-pointer flex items-center space-x-2 px-6 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
-                     {isSubmitting && <LoaderCircle className="w-4 h-4 animate-spin" />}
+                     {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                      {!isSubmitting && <CheckCircle className="h-4 w-4" />}
                      <span>{isSubmitting ? t('packages.payment.processing') : t('packages.payment.confirmPayment')}</span>
                   </button>

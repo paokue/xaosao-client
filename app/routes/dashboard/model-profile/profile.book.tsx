@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { AlertCircle, Calendar1, CalendarIcon, LoaderCircle, X } from "lucide-react"
+import { AlertCircle, Calendar1, CalendarIcon, Loader, X } from "lucide-react"
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, useParams, type LoaderFunctionArgs } from "react-router"
 import { useTranslation } from 'react-i18next';
 
@@ -311,7 +311,7 @@ export default function ServiceBooking() {
                      variant="outline"
                      className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                   >
-                     {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-2 animate-spin" /> : <Calendar1 />}
+                     {isSubmitting ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Calendar1 />}
                      {isSubmitting ? t('profileBook.booking') : t('profileBook.bookNow')}
                   </Button>
                </div>

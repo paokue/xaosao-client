@@ -4,7 +4,6 @@ import {
     X,
     Loader,
     BadgeCheck,
-    LoaderCircle,
     SlidersHorizontal,
 } from "lucide-react";
 import {
@@ -694,7 +693,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
 
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : foryouModels.length > 0 ? (
@@ -733,7 +732,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="likeme">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : likeMeModels.length > 0 ? (
@@ -773,7 +772,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="favourite">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myFavouriteModels.length > 0 ? (
@@ -813,7 +812,7 @@ export default function MatchesPage({ loaderData }: ForyouModelsProps) {
                     <TabsContent value="passed">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myPassModels.length > 0 ? (

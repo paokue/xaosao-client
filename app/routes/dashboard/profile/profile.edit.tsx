@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import type { Route } from "./+types/profile.edit";
-import { AlertCircle, Camera, ChevronLeft, LoaderCircle, X } from "lucide-react";
-import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
 import { useTranslation } from 'react-i18next';
+import type { Route } from "./+types/profile.edit";
+import { AlertCircle, Camera, ChevronLeft, Loader, X } from "lucide-react";
+import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
 
 // components
 import Modal from "~/components/ui/model";
@@ -144,7 +144,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
     if (isLoading) {
         return (
             <div className="h-11/12 flex justify-center items-center min-h-[200px]">
-                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profileEdit.loading')}
+                <Loader className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profileEdit.loading')}
             </div>
         )
     }
@@ -178,9 +178,8 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                 </div>
 
                 <div className="px-4 rounded-md">
-                    <h1>{t('profileEdit.basicInfo')}</h1>
-                    <div className="space-y-4 sm:space-y-6 mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <div className="space-y-4 sm:space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-start">
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="firstName" className="text-gray-500 text-sm">
                                     {t('profileEdit.firstName')}<span className="text-rose-500">*</span>
@@ -363,7 +362,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                 type="submit"
                                 className="flex cursor-pointer text-sm bg-rose-500 text-rose-500 hover:bg-rose-600 text-white font-medium"
                             >
-                                {isSubmitting && <LoaderCircle className="w-4 h-4 animate-spin" />}
+                                {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                                 {isSubmitting ? t('profileEdit.saving') : t('profileEdit.saveChange')}
                             </Button>
                         </div>

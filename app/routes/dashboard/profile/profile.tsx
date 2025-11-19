@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Forward, LoaderCircle, Plus, Settings, Upload, UserRoundPen, X } from 'lucide-react';
+import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Forward, Loader, Plus, Settings, Upload, UserRoundPen, X } from 'lucide-react';
 import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
@@ -273,7 +273,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                 <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : ""}
+                    {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : ""}
                     <p className="text-gray-600">{t('profile.processing')}</p>
                 </div>
             </div>
@@ -307,7 +307,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
                 {isUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg pointer-events-none z-10">
                         <div className="flex flex-col items-center gap-2 text-white">
-                            <LoaderCircle className="w-8 h-8 animate-spin" />
+                            <Loader className="w-8 h-8 animate-spin" />
                             <p className="text-sm font-medium">{t('profile.uploading')}</p>
                         </div>
                     </div>
@@ -335,7 +335,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
     if (isLoading) {
         return (
             <div className="h-11/12 flex justify-center items-center min-h-[200px]">
-                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profile.processing')}
+                <Loader className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profile.processing')}
             </div>
         )
     }
@@ -349,7 +349,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
                             {/* <UserPlus className="w-5 h-5 text-gray-500 cursor-pointer" /> */}
                         </div>
                         <div className="flex items-start gap-4">
-                            <Forward className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/dashboard/profile-share/userid")} />
+                            {/* <Forward className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/dashboard/profile-share/userid")} /> */}
                             <Settings className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/dashboard/setting")} />
                         </div>
                     </div>

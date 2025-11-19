@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/wallet.topup";
 import { Form, redirect, useActionData, useNavigate, useNavigation } from "react-router";
-import { AlertCircle, ArrowLeft, Building2, Check, CheckCircle, Clock, Copy, Download, LoaderCircle, QrCode, Upload } from "lucide-react";
+import { AlertCircle, ArrowLeft, Building2, Check, CheckCircle, Clock, Copy, Download, Loader, QrCode, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // components
@@ -487,7 +487,7 @@ export default function WalletTopUpPage() {
                                 disabled={!canProceed()}
                                 className="flex items-center justify-center text-sm cursor-pointer px-6 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                             >
-                                {step === 3 && isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />}
+                                {step === 3 && isSubmitting && <Loader className="w-4 h-4 mr-2 animate-spin" />}
                                 {step === 3 ? isSubmitting ? t('wallet.topup.submitting') : t('wallet.topup.submit') : t('wallet.topup.continue')}
                             </button>
                         ) : (

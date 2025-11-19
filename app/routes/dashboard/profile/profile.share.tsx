@@ -9,7 +9,7 @@ import {
     Instagram,
     MessageCircle,
     ChevronLeft,
-    LoaderCircle,
+    Loader,
 } from 'lucide-react';
 import * as QRCode from 'qrcode.react';
 import { useNavigate, useNavigation, type LoaderFunction } from 'react-router';
@@ -129,7 +129,7 @@ export default function ShareProfilePage({ loaderData }: TransactionProps) {
     if (isLoading) {
         return (
             <div className="h-11/12 flex justify-center items-center min-h-[200px]">
-                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profileShare.loading')}
+                <Loader className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profileShare.loading')}
             </div>
         )
     }

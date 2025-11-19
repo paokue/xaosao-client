@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import type { Route } from "./+types/register"
 import { useTranslation } from "react-i18next"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
-import { AlertCircle, ArrowLeft, Eye, EyeOff, LoaderCircle, User, UserPlus } from "lucide-react"
+import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader, User, UserPlus } from "lucide-react"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -356,7 +356,7 @@ export default function SignUpPage() {
                         disabled={isAcceptTerms === false || isSubmitting}
                         className={`w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium my-4 uppercase ${isAcceptTerms === false ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
-                        {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                        {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                         {isSubmitting ? t('register.registering') : t('register.registerButton')}
                     </Button>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Route } from './+types/profile';
 import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
-import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, LoaderCircle, Book, BriefcaseBusiness, Heart } from 'lucide-react';
+import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, Loader, Book, BriefcaseBusiness, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 // components
@@ -151,7 +151,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
+                    {isSubmitting ? <Loader className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
                     <p className="text-rose-600">{t('profile.processing')}</p>
                 </div>
             </div>

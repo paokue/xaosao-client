@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, LoaderCircle } from "lucide-react"
+import { AlertCircle, ArrowLeft, Loader } from "lucide-react"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { useState, useEffect } from "react"
 import type { Route } from "./+types/reset-password"
@@ -151,7 +151,7 @@ export default function ResetPasswordPage() {
                             type="submit"
                             className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300 uppercase"
                         >
-                            {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                            {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                             {isSubmitting ? t('resetPassword.reseting') : t('resetPassword.reset')}
                         </Button>
                     </Form>

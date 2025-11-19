@@ -10,7 +10,7 @@ import {
     UserPlus,
     ChevronLeft,
     ChevronRight,
-    LoaderCircle,
+    Loader,
     MessageSquareText,
 } from "lucide-react";
 import type { Route } from "./+types/discover";
@@ -258,7 +258,7 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
+                    {isSubmitting ? <Loader className="w-4 h-4 text-rose-500 animate-spin" /> : ""}
                     <p className="text-rose-600">{t('discover.processing')}</p>
                 </div>
             </div>

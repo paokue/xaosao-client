@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
-import { AlertCircle, ArrowLeft, LoaderCircle, LockIcon } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader, LockIcon } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -202,7 +202,7 @@ export default function ForgotPasswordPage() {
                                 type="submit"
                                 className="w-full border border-rose-500 bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300"
                             >
-                                {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                                {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                                 {isSubmitting ? t('forgotPassword.processing') : t('forgotPassword.getOtpButton')}
                             </Button>
                         </Form>
@@ -259,7 +259,7 @@ export default function ForgotPasswordPage() {
                                 className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 font-medium shadow-lg transition-all duration-300 uppercase"
                                 disabled={otp.some((digit) => !digit)}
                             >
-                                {isSubmitting ? <LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> : ""}
+                                {isSubmitting ? <Loader className="w-4 h-4 mr-1 animate-spin" /> : ""}
                                 {isSubmitting ? t('forgotPassword.verifying') : t('forgotPassword.verify')}
                             </Button>
                         </Form>

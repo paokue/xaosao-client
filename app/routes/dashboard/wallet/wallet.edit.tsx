@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import type { Route } from "./+types/wallet.edit"
-import { AlertCircle, ArrowLeft, FileText, LoaderCircle, Upload } from "lucide-react"
+import { AlertCircle, ArrowLeft, FileText, Loader, Upload } from "lucide-react"
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type LoaderFunctionArgs } from "react-router"
 import { useTranslation } from "react-i18next"
 
@@ -301,7 +301,7 @@ export default function TransactionEdit() {
                   variant="outline"
                   className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                >
-                  {isSubmitting && <LoaderCircle className="w-4 h-4 animate-spin" />}
+                  {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                   {isSubmitting ? t('wallet.edit.saving') : t('wallet.edit.saveChange')}
                </Button>
             </div>

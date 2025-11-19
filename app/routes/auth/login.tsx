@@ -2,7 +2,7 @@ import type { Route } from "./+types/login";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
-import { ArrowLeft, Eye, EyeOff, LoaderCircle, User, AlertCircle } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader, User, AlertCircle } from "lucide-react";
 
 // Components
 import { Label } from "~/components/ui/label";
@@ -212,11 +212,11 @@ export default function SignInPage() {
 
         // Check if we're on a secure context (HTTPS or localhost)
         const isSecureContext = window.isSecureContext ||
-                                window.location.protocol === 'https:' ||
-                                window.location.hostname === 'localhost' ||
-                                window.location.hostname === '127.0.0.1' ||
-                                window.location.hostname.startsWith('192.168.') ||
-                                window.location.hostname.startsWith('10.');
+            window.location.protocol === 'https:' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname.startsWith('192.168.') ||
+            window.location.hostname.startsWith('10.');
 
         if (!isSecureContext) {
             console.warn("Geolocation requires HTTPS. Current URL:", window.location.href);
@@ -319,7 +319,7 @@ export default function SignInPage() {
                     <div className="flex items-center justify-between pt-2">
                         {locationStatus === 'loading' && (
                             <p className="text-xs text-yellow-300 flex items-center">
-                                <LoaderCircle className="w-3 h-3 mr-1 animate-spin" />
+                                <Loader className="w-3 h-3 mr-1 animate-spin" />
                                 Getting your location...
                             </p>
                         )}
@@ -445,7 +445,7 @@ export default function SignInPage() {
                         className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/50 disabled:cursor-not-allowed text-white py-3 font-medium uppercase transition-colors"
                         aria-busy={isSubmitting}
                     >
-                        {isSubmitting && <LoaderCircle className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
+                        {isSubmitting && <Loader className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
                         {isSubmitting ? t('login.loggingIn') : t('login.loginButton')}
                     </Button>
 

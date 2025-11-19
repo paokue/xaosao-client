@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Route } from "./+types/setting";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
-import { User, Lock, Shield, Bell, Globe, Moon, Sun, Flag, Trash2, LogOut, Eye, EyeOff, ChevronLeft, ChevronRight, LoaderCircle, AlertCircle } from "lucide-react";
+import { User, Lock, Shield, Bell, Globe, Moon, Sun, Flag, Trash2, LogOut, Eye, EyeOff, ChevronLeft, ChevronRight, Loader, AlertCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 // components
@@ -309,7 +309,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                 <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
-                    {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : ""}
+                    {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : ""}
                     <p className="text-gray-600">{t('settings.common.processing')}</p>
                 </div>
             </div>

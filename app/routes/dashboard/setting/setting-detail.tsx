@@ -1,6 +1,6 @@
 import React from "react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from "react-router";
-import { AlertCircle, ArrowLeft, Bell, Eye, EyeOff, Flag, Globe, LoaderCircle, Lock, Moon, Shield, Sun, Trash2, User } from "lucide-react";
+import { AlertCircle, ArrowLeft, Bell, Eye, EyeOff, Flag, Globe, Loader, Lock, Moon, Shield, Sun, Trash2, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // component
@@ -273,7 +273,7 @@ export default function SettingPage({ loaderData }: TransactionProps) {
       return (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
             <div className="flex items-center justify-center bg-white p-6 rounded-xl shadow-md gap-2">
-               {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : ""}
+               {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : ""}
                <p className="text-gray-600">{t('settings.basic.processing')}</p>
             </div>
          </div>

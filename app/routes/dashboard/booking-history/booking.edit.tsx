@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
-import { AlertCircle, Calendar1, CalendarIcon, LoaderCircle } from "lucide-react"
+import { AlertCircle, Calendar1, CalendarIcon, Loader } from "lucide-react"
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router"
 
 // components:
@@ -329,7 +329,7 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
                      variant="outline"
                      className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                   >
-                     {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Calendar1 />}
+                     {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : <Calendar1 />}
                      {isSubmitting ? t('booking.edit.saving') : t('booking.edit.saveChange')}
                   </Button>
                </div>
