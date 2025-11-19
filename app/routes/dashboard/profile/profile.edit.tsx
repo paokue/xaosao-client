@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Route } from "./+types/profile.edit";
 import { AlertCircle, Camera, ChevronLeft, LoaderCircle, X } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
+import { useTranslation } from 'react-i18next';
 
 // components
 import Modal from "~/components/ui/model";
@@ -93,6 +94,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function ProfileEditPage({ loaderData }: TransactionProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate()
     const navigation = useNavigation()
     const actionData = useActionData<typeof action>()
@@ -142,7 +144,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
     if (isLoading) {
         return (
             <div className="h-11/12 flex justify-center items-center min-h-[200px]">
-                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; Loading...
+                <LoaderCircle className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t('profileEdit.loading')}
             </div>
         )
     }
@@ -154,7 +156,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                     <div className="flex items-center" onClick={() => navigate("/dashboard/profile")}>
                         <ChevronLeft />
                     </div>
-                    <p className="text-md">Edit profile</p>
+                    <p className="text-md">{t('profileEdit.editProfile')}</p>
                     <div></div>
                 </div>
 
@@ -176,12 +178,12 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                 </div>
 
                 <div className="px-4 rounded-md">
-                    <h1>Basic information:</h1>
+                    <h1>{t('profileEdit.basicInfo')}</h1>
                     <div className="space-y-4 sm:space-y-6 mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="firstName" className="text-gray-500 text-sm">
-                                    First name<span className="text-rose-500">*</span>
+                                    {t('profileEdit.firstName')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -189,13 +191,13 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                     id="firstName"
                                     name="firstName"
                                     defaultValue={customerData.firstName}
-                                    placeholder="Enter your first name...."
+                                    placeholder={t('profileEdit.firstNamePlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="lastName" className="text-gray-500 text-sm">
-                                    Last name<span className="text-rose-500">*</span>
+                                    {t('profileEdit.lastName')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -203,13 +205,13 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                     id="lastName"
                                     name="lastName"
                                     defaultValue={customerData.lastName}
-                                    placeholder="Enter your last name...."
+                                    placeholder={t('profileEdit.lastNamePlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="dob" className="text-gray-500 text-sm">
-                                    Date of birth<span className="text-rose-500">*</span>
+                                    {t('profileEdit.dateOfBirth')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -222,40 +224,40 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="dob" className="text-gray-500 text-sm mb-1">
-                                    Gender<span className="text-rose-500">*</span>
+                                    {t('profileEdit.gender')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Select name="gender" required defaultValue={customerData.gender}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                        <SelectValue placeholder="Select gender" />
+                                        <SelectValue placeholder={t('profileEdit.selectGender')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="male">Men</SelectItem>
-                                        <SelectItem value="female">Women</SelectItem>
-                                        <SelectItem value="nonbinary">Non-binary</SelectItem>
-                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="male">{t('profileEdit.men')}</SelectItem>
+                                        <SelectItem value="female">{t('profileEdit.women')}</SelectItem>
+                                        <SelectItem value="nonbinary">{t('profileEdit.nonBinary')}</SelectItem>
+                                        <SelectItem value="all">{t('profileEdit.all')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="dob" className="text-gray-500 text-sm mb-1">
-                                    Relationship Status<span className="text-rose-500">*</span>
+                                    {t('profileEdit.relationshipStatus')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Select name="relationshipStatus" required defaultValue={customerData.relationshipStatus ?? "single"}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                        <SelectValue placeholder="Select gender" />
+                                        <SelectValue placeholder={t('profileEdit.selectGender')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Single">Single</SelectItem>
-                                        <SelectItem value="Married">Married</SelectItem>
-                                        <SelectItem value="Relationship">In a Relationship</SelectItem>
-                                        <SelectItem value="Divorced">Divorced</SelectItem>
-                                        <SelectItem value="Widowed">Widowed</SelectItem>
+                                        <SelectItem value="Single">{t('profileEdit.single')}</SelectItem>
+                                        <SelectItem value="Married">{t('profileEdit.married')}</SelectItem>
+                                        <SelectItem value="Relationship">{t('profileEdit.inRelationship')}</SelectItem>
+                                        <SelectItem value="Divorced">{t('profileEdit.divorced')}</SelectItem>
+                                        <SelectItem value="Widowed">{t('profileEdit.widowed')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                    Whatsapp<span className="text-rose-500">*</span>
+                                    {t('profileEdit.whatsapp')}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -263,51 +265,51 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                     type="number"
                                     name="whatsapp"
                                     defaultValue={customerData.whatsapp}
-                                    placeholder="Enter your whatsapp number...."
+                                    placeholder={t('profileEdit.whatsappPlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="bio" className="text-gray-500 text-sm">
-                                    BIO
+                                    {t('profileEdit.bio')}
                                 </Label>
                                 <Input
                                     id="bio"
                                     type="text"
                                     name="bio"
                                     defaultValue={customerData.bio || ""}
-                                    placeholder="Enter your bio...."
+                                    placeholder={t('profileEdit.bioPlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="career" className="text-gray-500 text-sm">
-                                    Career
+                                    {t('profileEdit.career')}
                                 </Label>
                                 <Input
                                     id="career"
                                     type="text"
                                     name="career"
                                     defaultValue={customerData.career || ""}
-                                    placeholder="Enter your career...."
+                                    placeholder={t('profileEdit.careerPlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="education" className="text-gray-500 text-sm">
-                                    Education
+                                    {t('profileEdit.education')}
                                 </Label>
                                 <Input
                                     id="education"
                                     type="text"
                                     name="education"
                                     defaultValue={customerData.education || ""}
-                                    placeholder="Enter your education...."
+                                    placeholder={t('profileEdit.educationPlaceholder')}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div>
-                                <p>Interests:</p>
+                                <p>{t('profileEdit.interests')}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     {interests.map((interest, index) => (
                                         <div
@@ -329,7 +331,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                 <div className="flex items-center gap-2">
                                     <Input
                                         type="text"
-                                        placeholder="Add a new interest..."
+                                        placeholder={t('profileEdit.addInterestPlaceholder')}
                                         value={newInterest}
                                         onChange={(e) => setNewInterest(e.target.value)}
                                         className="text-sm border-gray-200 text-gray-700 placeholder-gray-400 focus:border-pink-500"
@@ -339,7 +341,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                         onClick={addInterest}
                                         className="bg-rose-100 border border-rose-200 text-rose-500 hover:bg-rose-300 flex items-center space-x-1"
                                     >
-                                        <span>Add</span>
+                                        <span>{t('profileEdit.add')}</span>
                                     </Button>
                                 </div>
                                 <input type="hidden" name="interests" value={JSON.stringify(interests)} />
@@ -362,7 +364,7 @@ export default function ProfileEditPage({ loaderData }: TransactionProps) {
                                 className="flex cursor-pointer text-sm bg-rose-500 text-rose-500 hover:bg-rose-600 text-white font-medium"
                             >
                                 {isSubmitting && <LoaderCircle className="w-4 h-4 animate-spin" />}
-                                {isSubmitting ? "Saving...." : "Save change"}
+                                {isSubmitting ? t('profileEdit.saving') : t('profileEdit.saveChange')}
                             </Button>
                         </div>
                     </div>
