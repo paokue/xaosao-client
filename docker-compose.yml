@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   xaosao-client:
+    container_name: xaosao-client
     build:
       context: .
     restart: always

@@ -212,11 +212,11 @@ export default function SignInPage() {
 
         // Check if we're on a secure context (HTTPS or localhost)
         const isSecureContext = window.isSecureContext ||
-                                window.location.protocol === 'https:' ||
-                                window.location.hostname === 'localhost' ||
-                                window.location.hostname === '127.0.0.1' ||
-                                window.location.hostname.startsWith('192.168.') ||
-                                window.location.hostname.startsWith('10.');
+            window.location.protocol === 'https:' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname.startsWith('192.168.') ||
+            window.location.hostname.startsWith('10.');
 
         if (!isSecureContext) {
             console.warn("Geolocation requires HTTPS. Current URL:", window.location.href);
