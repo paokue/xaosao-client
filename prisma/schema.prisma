@@ -3,8 +3,13 @@ generator client {
   binaryTargets = ["native", "linux-musl"]
 }
 
+// IMPORTANT: Using Prisma 6.19.0 (MongoDB not yet supported in Prisma 7)
+// The IDE warning below is from VS Code extension detecting v7 syntax
+// This 'url' property is REQUIRED and CORRECT for Prisma 6
+// Ignore the red squiggle - your runtime Prisma version is 6.19.0
 datasource db {
   provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 enum InteractionAction {
@@ -277,7 +282,7 @@ model subscription {
   status        String   @default("active") // active, expired, canceled
   autoRenew     Boolean  @default(true)
   paymentMethod String? // e.g. wallet, credit_card, paypal
-  transactionId String  @db.ObjectId // optional link to transaction_history
+  transactionId String   @db.ObjectId // optional link to transaction_history
   notes         String?
 
   createdAt DateTime @default(now())

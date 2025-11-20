@@ -7,24 +7,12 @@ declare global {
 let prisma: PrismaClient;
 
 if (process.env.NODE_ENV === "production") {
-  prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL
-      }
-    }
-  });
-  prisma.$connect();
+  prisma = new PrismaClient();
+  // No $connect() needed - Prisma connects automatically on first query
 } else {
   if (!global.__db) {
-    global.__db = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    });
-    global.__db.$connect();
+    global.__db = new PrismaClient();
+    // No $connect() needed - Prisma connects automatically on first query
   }
   prisma = global.__db;
 }
