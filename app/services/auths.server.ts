@@ -200,6 +200,10 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
       },
       body: JSON.stringify(userData),
     });
+
+    // Log status and URL for debugging
+    console.log("loginOnChat URL:", url, "Status:", response.status);
+
     const data = await response.json();
 
     if (!data.success) {
