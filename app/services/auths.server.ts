@@ -174,7 +174,7 @@ export async function createUserSession(
   ];
 
   if (isProduction) {
-    cookieParts.push(`Domain=.xaosao.com`);
+    cookieParts.push(`Domain=.okardcare.com`);
     cookieParts.push(`Secure`);
   }
 
@@ -302,8 +302,10 @@ export async function customerLogin({
 
   const chatLogin = await loginOnChat(userData);
 
+  console.log("Chat login DATA::", chatLogin)
+
   if (chatLogin.success) {
-    // console.log("Chat login token:::", chatLogin.token);
+    console.log("Chat login token:::", chatLogin.token);
 
     return createUserSession(
       chatLogin.token,
