@@ -48,12 +48,15 @@ export default function PricingPage({ loaderData }: TransactionProps) {
       <div className="sm:min-h-screen relative overflow-hidden px-3 sm:px-0">
          <nav className="relative z-10 p-6">
             <div className="container mx-auto flex items-center justify-between">
-               <Link to="/dashboard/packages" className="flex items-center space-x-2 group">
+               <button
+                  onClick={() => navigate(-1)}
+                  className="flex items-center space-x-2 group"
+               >
                   <ArrowLeft className="h-5 w-5 text-rose-500 group-hover:-translate-x-1 transition-transform" />
                   <span className="text-sm font-light text-gray-600 group-hover:text-rose-500 transition-colors">
-                     {t('packages.list.back')}
+                     Back
                   </span>
-               </Link>
+               </button>
                <Link
                   to="/dashboard/subscription-history"
                   className="flex items-center space-x-2 px-4 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition-colors"
@@ -213,11 +216,10 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                   size="lg"
                   onClick={() => navigate(`/dashboard/payment/${selectedPlan.id}`)}
                   disabled={selectedPlan.current}
-                  className={`w-full py-3 rounded-md transition-all duration-300 ${
-                     selectedPlan.current
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-rose-500 text-white hover:shadow-lg hover:bg-rose-600"
-                  }`}
+                  className={`w-full py-3 rounded-md transition-all duration-300 ${selectedPlan.current
+                     ? "bg-gray-400 text-white cursor-not-allowed"
+                     : "bg-rose-500 text-white hover:shadow-lg hover:bg-rose-600"
+                     }`}
                   variant={"outline"}
                >
                   {selectedPlan.current ? t('packages.list.currentPlan') : t('packages.list.continue')}
