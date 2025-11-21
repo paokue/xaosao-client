@@ -200,6 +200,9 @@ async function loginOnChat(userData: UserLogin): Promise<LoginResponse> {
       },
       body: JSON.stringify(userData),
     });
+    // Log status and URL for debugging
+    console.log("loginOnChat URL:", url, "Status:", response.status);
+
     const data = await response.json();
 
     if (!data.success) {
@@ -302,7 +305,7 @@ export async function customerLogin({
 
   const chatLogin = await loginOnChat(userData);
 
-  console.log("Chat login DATA::", chatLogin)
+  console.log("Chat login DATA::", chatLogin);
 
   if (chatLogin.success) {
     console.log("Chat login token:::", chatLogin.token);
