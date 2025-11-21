@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Forward, Loader, Plus, Settings, Upload, UserRoundPen, X } from 'lucide-react';
-import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Loader, Settings, Upload, UserRoundPen, X } from 'lucide-react';
+import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
 
 // components
 import { Badge } from '~/components/ui/badge';

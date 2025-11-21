@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import type { Route } from "./+types/setting";
 import { useTranslation } from 'react-i18next';
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
-import { User, Lock, Shield, Bell, Globe, Flag, Trash2, LogOut, Eye, EyeOff, ChevronLeft, ChevronRight, Loader, AlertCircle } from "lucide-react";
+import { User, Lock, Bell, Globe, Flag, Trash2, LogOut, Eye, EyeOff, ChevronLeft, ChevronRight, Loader, AlertCircle, Boxes } from "lucide-react";
 
 // components
 import { Label } from "~/components/ui/label";
@@ -317,18 +317,34 @@ export default function SettingPage({ loaderData }: TransactionProps) {
                             </div>
                         );
                     })}
-                    <div className="px-8 sm:px-0">
-                        <Form method="post" action="/logout">
-                            <button
-                                type="submit"
-                                className="w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 text-rose-500 border border-rose-300 cursor-pointer hover:bg-rose-100 mt-4"
-                            >
-                                <LogOut size={16} />
-                                <span className="text-sm font-medium">{t('settings.common.logout')}</span>
-                            </button>
-                        </Form>
-                    </div>
+
                 </nav>
+                <div className="flex items-center justify-start gap-2 mt-8 sm:mt-0">
+                    <ChevronLeft onClick={() => navigate("/dashboard/profile")} className="block sm:hidden cursor-pointer" />
+                    <h2 className="text-lg font-semibold text-gray-800">{t('navigation.packages')}</h2>
+                </div>
+                <div
+                    onClick={() => navigate("/dashboard/packages")}
+                    className={`cursor-pointer w-full flex items-center justify-between sm:justify-start gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800`}
+                >
+                    <div className="flex items-start gap-2">
+                        <Boxes size={16} />
+                        <span className="text-sm font-medium">{t('navigation.packages')}</span>
+                    </div>
+                    <ChevronRight size={16} className="block sm:hidden" />
+                </div>
+
+                <div className="px-8 sm:px-0 mt-4">
+                    <Form method="post" action="/logout">
+                        <button
+                            type="submit"
+                            className="w-full flex items-center justify-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 text-rose-500 border border-rose-300 cursor-pointer hover:bg-rose-100 mt-4"
+                        >
+                            <LogOut size={16} />
+                            <span className="text-sm font-medium">{t('settings.common.logout')}</span>
+                        </button>
+                    </Form>
+                </div>
             </div>
 
             {/* Main Content */}

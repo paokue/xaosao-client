@@ -45,7 +45,7 @@ export default function Dashboard({ loaderData }: TransactionProps) {
         { title: t('navigation.match'), url: "/dashboard/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/dashboard/realtime-chat", icon: MessageCircle },
         { title: t('navigation.datingHistory'), url: "/dashboard/dates-history", icon: HandHeart },
-        { title: t('navigation.packages'), url: "/dashboard/packages", icon: Boxes },
+        // { title: t('navigation.packages'), url: "/dashboard/packages", icon: Boxes },
         { title: t('navigation.wallet'), url: "/dashboard/wallets", icon: Wallet },
         { title: t('navigation.myProfile'), url: "/dashboard/profile", icon: User },
         { title: t('navigation.setting'), url: "/dashboard/setting", icon: Settings },
