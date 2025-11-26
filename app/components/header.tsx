@@ -74,6 +74,13 @@ export function Header() {
                         >
                             Login
                         </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => navigate("/model-auth/login")}
+                            className="cursor-pointer border border-rose-500 bg-white text-rose-500 hover:bg-rose-500 hover:text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                        >
+                            Companion Login
+                        </Button>
                     </div>
                 </div>
             </div>

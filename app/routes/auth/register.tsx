@@ -89,7 +89,7 @@ export async function action({ request }: Route.ActionArgs) {
             console.log("RES::", res);
             if (res.success) {
 
-                return redirect("/dashboard")
+                return redirect("/customer")
             }
         } catch (error: any) {
             console.log("Failed:", error)

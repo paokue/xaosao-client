@@ -920,3 +920,951 @@ export async function getModelsByInteraction(
     throw error;
   }
 }
+
+// ==================== MODEL-SIDE FUNCTIONS ====================
+// These functions are for models to query their own data
+
+/**
+ * Get model by ID with all related data (for model's own profile)
+ */
+export async function getModelDashboardData(modelId: string) {
+  return await prisma.model.findUnique({
+    where: { id: modelId },
+    include: {
+      Images: {
+        where: { status: "active" },
+        select: { id: true, name: true },
+      },
+      Wallet: {
+        select: {
+          totalBalance: true,
+          totalRecharge: true,
+          totalDeposit: true,
+          status: true,
+        },
+      },
+      Review: {
+        include: {
+          customer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profile: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 10,
+      },
+      ModelService: {
+        where: { status: "active" },
+        include: {
+          service: true,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Get booking requests for a model
+ */
+export async function getModelBookingRequests(
+  modelId: string,
+  status?: string
+) {
+  const where: any = {
+    modelId: modelId,
+  };
+
+  if (status) {
+    where.status = status;
+  }
+
+  return await prisma.service_booking.findMany({
+    where,
+    include: {
+      customer: {
+        select: {
+          id: true,
+          number: true,
+          firstName: true,
+          lastName: true,
+          profile: true,
+          gender: true,
+          dob: true,
+          bio: true,
+        },
+      },
+      modelService: {
+        include: {
+          service: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+/**
+ * Get model sessions/calls
+ */
+export async function getModelSessions(modelId: string, limit = 20) {
+  return await prisma.session.findMany({
+    where: {
+      modelId: modelId,
+    },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          profile: true,
+        },
+      },
+      modelService: {
+        include: {
+          service: true,
+        },
+      },
+    },
+    orderBy: {
+      sessionStart: "desc",
+    },
+    take: limit,
+  });
+}
+
+/**
+ * Get model earnings summary
+ */
+export async function getModelEarnings(modelId: string) {
+  const wallet = await prisma.wallet.findFirst({
+    where: { modelId: modelId },
+  });
+
+  const transactions = await prisma.transaction_history.findMany({
+    where: {
+      modelId: modelId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 50,
+  });
+
+  // Calculate total earnings from sessions
+  const sessions = await prisma.session.findMany({
+    where: {
+      modelId: modelId,
+      paymentStatus: "paid",
+    },
+    select: {
+      totalCost: true,
+    },
+  });
+
+  const totalEarnings = sessions.reduce(
+    (sum, session) => sum + session.totalCost,
+    0
+  );
+
+  // Calculate pending earnings
+  const pendingSessions = await prisma.session.findMany({
+    where: {
+      modelId: modelId,
+      paymentStatus: "pending",
+    },
+    select: {
+      totalCost: true,
+    },
+  });
+
+  const pendingEarnings = pendingSessions.reduce(
+    (sum, session) => sum + session.totalCost,
+    0
+  );
+
+  return {
+    wallet,
+    transactions,
+    totalEarnings,
+    pendingEarnings,
+    balance: wallet?.totalBalance || 0,
+  };
+}
+
+/**
+ * Get model conversations/messages
+ */
+export async function getModelConversations(modelId: string) {
+  return await prisma.conversation.findMany({
+    where: {
+      modelId: modelId,
+      status: "active",
+    },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          profile: true,
+        },
+      },
+      messages: {
+        orderBy: {
+          sendAt: "desc",
+        },
+        take: 1,
+      },
+    },
+    orderBy: {
+      lastMessage: "desc",
+    },
+  });
+}
+
+/**
+ * Get customers who liked the model
+ */
+export async function getCustomersWhoLikedModel(modelId: string) {
+  return await prisma.customer_interactions.findMany({
+    where: {
+      modelId: modelId,
+      action: "LIKE",
+    },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          number: true,
+          firstName: true,
+          lastName: true,
+          profile: true,
+          gender: true,
+          dob: true,
+          bio: true,
+          Images: {
+            where: { status: "active" },
+            select: { id: true, name: true },
+            take: 3,
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+/**
+ * Update model availability status
+ */
+export async function updateModelAvailability(
+  modelId: string,
+  availableStatus: string
+) {
+  return await prisma.model.update({
+    where: { id: modelId },
+    data: {
+      available_status: availableStatus,
+    },
+  });
+}
+
+/**
+ * Update model profile
+ */
+export async function updateModelProfile(
+  modelId: string,
+  data: {
+    bio?: string;
+    hourly_rate_talking?: number;
+    hourly_rate_video?: number;
+    interests?: any;
+    relationshipStatus?: string;
+    career?: string;
+    education?: string;
+    defaultLanguage?: string;
+    defaultTheme?: string;
+    firstName?: string;
+    lastName?: string;
+    profile?: string;
+  }
+) {
+  return await prisma.model.update({
+    where: { id: modelId },
+    data,
+  });
+}
+
+/**
+ * Update booking status (accept/reject)
+ */
+export async function updateBookingStatus(
+  bookingId: string,
+  status: string,
+  modelId?: string
+) {
+  // Verify the booking belongs to the model if modelId is provided
+  if (modelId) {
+    const booking = await prisma.service_booking.findFirst({
+      where: {
+        id: bookingId,
+        modelId: modelId,
+      },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found or does not belong to this model");
+    }
+  }
+
+  return await prisma.service_booking.update({
+    where: { id: bookingId },
+    data: { status },
+  });
+}
+
+/**
+ * Get model dashboard statistics
+ */
+export async function getModelDashboardStats(modelId: string) {
+  // Total bookings
+  const totalBookings = await prisma.service_booking.count({
+    where: { modelId: modelId },
+  });
+
+  // Pending bookings
+  const pendingBookings = await prisma.service_booking.count({
+    where: {
+      modelId: modelId,
+      status: "pending",
+    },
+  });
+
+  // Total sessions
+  const totalSessions = await prisma.session.count({
+    where: { modelId: modelId },
+  });
+
+  // Total likes
+  const totalLikes = await prisma.customer_interactions.count({
+    where: {
+      modelId: modelId,
+      action: "LIKE",
+    },
+  });
+
+  // Average rating
+  const model = await prisma.model.findUnique({
+    where: { id: modelId },
+    select: {
+      rating: true,
+      total_review: true,
+    },
+  });
+
+  // Recent sessions (last 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const recentSessions = await prisma.session.count({
+    where: {
+      modelId: modelId,
+      sessionStart: {
+        gte: sevenDaysAgo,
+      },
+    },
+  });
+
+  // Earnings this month
+  const firstDayOfMonth = new Date();
+  firstDayOfMonth.setDate(1);
+  firstDayOfMonth.setHours(0, 0, 0, 0);
+
+  const monthlyEarnings = await prisma.session.aggregate({
+    where: {
+      modelId: modelId,
+      sessionStart: {
+        gte: firstDayOfMonth,
+      },
+      paymentStatus: "paid",
+    },
+    _sum: {
+      totalCost: true,
+    },
+  });
+
+  return {
+    totalBookings,
+    pendingBookings,
+    totalSessions,
+    totalLikes,
+    rating: model?.rating || 0,
+    totalReviews: model?.total_review || 0,
+    recentSessions,
+    monthlyEarnings: monthlyEarnings._sum.totalCost || 0,
+  };
+}
+
+/**
+ * Get model reviews
+ */
+export async function getModelReviews(modelId: string, limit = 20) {
+  return await prisma.review.findMany({
+    where: {
+      modelId: modelId,
+    },
+    include: {
+      customer: {
+        select: {
+          firstName: true,
+          lastName: true,
+          profile: true,
+        },
+      },
+      session: {
+        select: {
+          sessionStart: true,
+          duration: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: limit,
+  });
+}
+
+/**
+ * Get model's friend contacts
+ */
+export async function getModelFriendContacts(modelId: string) {
+  return await prisma.friend_contacts.findMany({
+    where: {
+      modelId: modelId,
+    },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          profile: true,
+          gender: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+/**
+ * Update model images
+ */
+export async function addModelImage(modelId: string, imageName: string) {
+  return await prisma.images.create({
+    data: {
+      name: imageName,
+      status: "active",
+      modelId: modelId,
+    },
+  });
+}
+
+/**
+ * Delete model image
+ */
+export async function deleteModelImage(imageId: string, modelId: string) {
+  const image = await prisma.images.findFirst({
+    where: {
+      id: imageId,
+      modelId: modelId,
+    },
+  });
+
+  if (!image) {
+    throw new Error("Image not found or does not belong to this model");
+  }
+
+  return await prisma.images.delete({
+    where: { id: imageId },
+  });
+}
+
+// ========================================
+// Model-Side Matches Functions (For viewing customers)
+// ========================================
+
+/**
+ * Get "For You" customers for a model (customers who haven't interacted with the model yet)
+ */
+export async function getForYouCustomers(
+  modelId: string,
+  options: {
+    page?: number;
+    perPage?: number;
+    maxDistance?: number;
+    ageRange?: [number, number];
+    minRating?: number;
+    gender?: string;
+    location?: string;
+    relationshipStatus?: string;
+    modelLat?: number;
+    modelLng?: number;
+  } = {}
+) {
+  const {
+    page = 1,
+    perPage = 20,
+    maxDistance,
+    ageRange,
+    minRating,
+    gender,
+    location,
+    relationshipStatus,
+    modelLat,
+    modelLng,
+  } = options;
+
+  const skip = (page - 1) * perPage;
+
+  // Get customers that the model has already interacted with
+  const interactedCustomers = await prisma.model_interactions.findMany({
+    where: { modelId },
+    select: { customerId: true },
+  });
+
+  const interactedCustomerIds = interactedCustomers.map((i) => i.customerId);
+
+  // Build the where clause
+  const whereClause: any = {
+    status: "active",
+    id: {
+      notIn: interactedCustomerIds,
+    },
+  };
+
+  // Apply filters
+  if (gender) {
+    whereClause.gender = gender;
+  }
+
+  if (location) {
+    whereClause.location = location;
+  }
+
+  if (relationshipStatus) {
+    whereClause.relationshipStatus = relationshipStatus;
+  }
+
+  // Age range filter
+  if (ageRange) {
+    const today = new Date();
+    const maxDate = new Date(
+      today.getFullYear() - ageRange[0],
+      today.getMonth(),
+      today.getDate()
+    );
+    const minDate = new Date(
+      today.getFullYear() - ageRange[1],
+      today.getMonth(),
+      today.getDate()
+    );
+    whereClause.dob = {
+      gte: minDate,
+      lte: maxDate,
+    };
+  }
+
+  // Get total count for pagination
+  const totalCount = await prisma.customer.count({ where: whereClause });
+
+  // Get customers with their interactions
+  const customers = await prisma.customer.findMany({
+    where: whereClause,
+    include: {
+      Images: {
+        where: { status: "active" },
+        select: {
+          id: true,
+          name: true,
+        },
+        take: 5,
+      },
+      model_interactions: {
+        where: { modelId },
+        select: {
+          action: true,
+        },
+      },
+    },
+    orderBy: [{ createdAt: "desc" }],
+    skip,
+    take: perPage,
+  });
+
+  // Calculate distance if coordinates provided
+  let customersWithDistance = customers;
+  if (maxDistance && modelLat && modelLng) {
+    customersWithDistance = customers.filter((customer) => {
+      if (!customer.latitude || !customer.longitude) return false;
+      const distance = calculateDistance(
+        Number(customer.latitude),
+        Number(customer.longitude),
+        modelLat,
+        modelLng
+      );
+      return distance <= maxDistance;
+    });
+  }
+
+  const totalPages = Math.ceil(totalCount / perPage);
+
+  return {
+    customers: customersWithDistance,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit: perPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
+
+/**
+ * Get customers who liked this model
+ */
+export async function getCustomersWhoLikedMe(
+  modelId: string,
+  page: number = 1,
+  perPage: number = 20
+) {
+  const skip = (page - 1) * perPage;
+
+  const totalCount = await prisma.customer_interactions.count({
+    where: {
+      modelId,
+      action: "LIKE",
+    },
+  });
+
+  const interactions = await prisma.customer_interactions.findMany({
+    where: {
+      modelId,
+      action: "LIKE",
+    },
+    include: {
+      customer: {
+        include: {
+          Images: {
+            where: { status: "active" },
+            select: {
+              id: true,
+              name: true,
+            },
+            take: 5,
+          },
+          model_interactions: {
+            where: { modelId },
+            select: {
+              action: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip,
+    take: perPage,
+  });
+
+  const customers = interactions.map((i) => i.customer);
+
+  const totalPages = Math.ceil(totalCount / perPage);
+
+  return {
+    customers,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit: perPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
+
+/**
+ * Get customers by model's interaction type (LIKE or PASS)
+ */
+export async function getCustomersByModelInteraction(
+  modelId: string,
+  action: "LIKE" | "PASS",
+  page: number = 1,
+  perPage: number = 20
+) {
+  const skip = (page - 1) * perPage;
+
+  const totalCount = await prisma.model_interactions.count({
+    where: {
+      modelId,
+      action,
+    },
+  });
+
+  const interactions = await prisma.model_interactions.findMany({
+    where: {
+      modelId,
+      action,
+    },
+    include: {
+      customer: {
+        include: {
+          Images: {
+            where: { status: "active" },
+            select: {
+              id: true,
+              name: true,
+            },
+            take: 5,
+          },
+          model_interactions: {
+            where: { modelId },
+            select: {
+              action: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip,
+    take: perPage,
+  });
+
+  const customers = interactions.map((i) => i.customer);
+
+  const totalPages = Math.ceil(totalCount / perPage);
+
+  return {
+    customers,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit: perPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
+
+/**
+ * Create model interaction with customer (like/pass)
+ */
+export async function createModelInteraction(
+  modelId: string,
+  customerId: string,
+  action: "LIKE" | "PASS"
+) {
+  // Check if interaction already exists
+  const existingInteraction = await prisma.model_interactions.findFirst({
+    where: {
+      modelId,
+      customerId,
+    },
+  });
+
+  if (existingInteraction) {
+    // Update existing interaction
+    await prisma.model_interactions.update({
+      where: { id: existingInteraction.id },
+      data: { action },
+    });
+
+    return {
+      success: true,
+      message: `Successfully ${action === "LIKE" ? "liked" : "passed"} customer`,
+    };
+  }
+
+  // Create new interaction
+  await prisma.model_interactions.create({
+    data: {
+      modelId,
+      customerId,
+      action,
+    },
+  });
+
+  return {
+    success: true,
+    message: `Successfully ${action === "LIKE" ? "liked" : "passed"} customer`,
+  };
+}
+
+// ========================================
+// Model Services Management
+// ========================================
+
+/**
+ * Get all available services
+ */
+export async function getAllServices() {
+  return await prisma.service.findMany({
+    where: {
+      status: "active",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+/**
+ * Get services with model's application status
+ */
+export async function getServicesForModel(modelId: string) {
+  const services = await prisma.service.findMany({
+    where: {
+      status: "active",
+    },
+    include: {
+      ModelService: {
+        where: {
+          modelId: modelId,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return services.map((service) => ({
+    ...service,
+    hasApplied: service.ModelService.length > 0,
+    modelService: service.ModelService[0] || null,
+  }));
+}
+
+/**
+ * Apply for a service (create model_service)
+ */
+export async function applyForService(
+  modelId: string,
+  serviceId: string,
+  data: {
+    customRate: number;
+    isAvailable?: boolean;
+    minSessionDuration?: number;
+    maxSessionDuration?: number;
+    notes?: string;
+  }
+) {
+  // Check if model already applied for this service
+  const existingApplication = await prisma.model_service.findFirst({
+    where: {
+      modelId,
+      serviceId,
+    },
+  });
+
+  if (existingApplication) {
+    // Update existing application
+    return await prisma.model_service.update({
+      where: {
+        id: existingApplication.id,
+      },
+      data: {
+        customRate: data.customRate,
+        isAvailable: data.isAvailable ?? true,
+        minSessionDuration: data.minSessionDuration ?? 0,
+        maxSessionDuration: data.maxSessionDuration ?? 0,
+        notes: data.notes,
+        status: "active",
+      },
+    });
+  }
+
+  // Create new application
+  return await prisma.model_service.create({
+    data: {
+      modelId,
+      serviceId,
+      customRate: data.customRate,
+      isAvailable: data.isAvailable ?? true,
+      minSessionDuration: data.minSessionDuration ?? 0,
+      maxSessionDuration: data.maxSessionDuration ?? 0,
+      notes: data.notes,
+      status: "active",
+    },
+  });
+}
+
+/**
+ * Get model's applied services
+ */
+export async function getModelAppliedServices(modelId: string) {
+  return await prisma.model_service.findMany({
+    where: {
+      modelId,
+      status: "active",
+    },
+    include: {
+      service: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+/**
+ * Update model service availability
+ */
+export async function updateModelServiceAvailability(
+  modelServiceId: string,
+  isAvailable: boolean,
+  modelId: string
+) {
+  // Verify the model_service belongs to the model
+  const modelService = await prisma.model_service.findFirst({
+    where: {
+      id: modelServiceId,
+      modelId,
+    },
+  });
+
+  if (!modelService) {
+    throw new Error("Service not found or does not belong to this model");
+  }
+
+  return await prisma.model_service.update({
+    where: {
+      id: modelServiceId,
+    },
+    data: {
+      isAvailable,
+    },
+  });
+}

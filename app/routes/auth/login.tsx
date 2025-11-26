@@ -1,7 +1,7 @@
 import type { Route } from "./+types/login";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Eye, EyeOff, Loader, User, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Loader, User, AlertCircle } from "lucide-react";
 import { Form, Link, useActionData, useNavigate, useNavigation } from "react-router";
 
 // Components

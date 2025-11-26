@@ -314,7 +314,7 @@ export async function customerLogin({
       chatLogin.token,
       existingUser.id,
       rememberMe,
-      "/dashboard"
+      "/customer"
     );
   } else {
     // If MySQL login fails, log the error

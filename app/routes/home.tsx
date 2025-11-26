@@ -3,15 +3,15 @@ import type { Route } from "./+types/home";
 
 // components
 import { Header } from "~/components/header";
-import { Footer } from "~/components/footer";
+// import { Footer } from "~/components/footer";
 import { Button } from "~/components/ui/button";
 import { DynamicSlogan } from "~/components/dynamic-slogan";
 import { HeroBackground } from "~/components/hero-background";
-import { AboutUsSection } from "~/components/about-us-section";
-import { MatchingSection } from "~/components/matching-section";
-import { TestimonialSection } from "~/components/testimonial-section";
-import { HowItWorksSection } from "~/components/how-it-works-section";
-import { OurServicesSection } from "~/components/our-services-section";
+// import { AboutUsSection } from "~/components/about-us-section";
+// import { MatchingSection } from "~/components/matching-section";
+// import { TestimonialSection } from "~/components/testimonial-section";
+// import { HowItWorksSection } from "~/components/how-it-works-section";
+// import { OurServicesSection } from "~/components/our-services-section";
 import { useNavigate } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
