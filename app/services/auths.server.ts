@@ -305,10 +305,10 @@ export async function customerLogin({
 
   const chatLogin = await loginOnChat(userData);
 
-  console.log("Chat login DATA::", chatLogin);
+  // console.log("Chat login DATA::", chatLogin);
 
   if (chatLogin.success) {
-    console.log("Chat login token:::", chatLogin.token);
+    // console.log("Chat login token:::", chatLogin.token);
 
     return createUserSession(
       chatLogin.token,
