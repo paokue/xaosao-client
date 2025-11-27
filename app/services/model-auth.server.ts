@@ -31,8 +31,11 @@ export interface IModelSignupCredentials {
   gender: "male" | "female" | "other";
   whatsapp: number;
   bio: string;
-  hourly_rate_talking?: number;
-  hourly_rate_video?: number;
+  profile: string;
+  address: string;
+  career?: string;
+  education?: string;
+  interests?: string[];
 }
 
 type TelbizResult = {
@@ -428,6 +431,8 @@ export async function modelRegister(
       nextNumber = `XSM-${incremented}`;
     }
 
+    console.log("Input data:::", modelData);
+
     const model = await prisma.model.create({
       data: {
         firstName: modelData.firstName,
@@ -437,14 +442,19 @@ export async function modelRegister(
         gender: modelData.gender,
         password: passwordHash,
         bio: modelData.bio,
+        profile: modelData.profile,
+        address: modelData.address,
+        career: modelData.career,
+        education: modelData.education,
+        interests: modelData.interests,
         latitude: +locationDetails.latitude,
         longitude: +locationDetails.longitude,
         location: locationDetails,
         status: "pending", // Models start as pending approval
         whatsapp: modelData.whatsapp,
         available_status: "unavailable",
-        hourly_rate_talking: modelData.hourly_rate_talking || 0,
-        hourly_rate_video: modelData.hourly_rate_video || 0,
+        hourly_rate_talking: 0,
+        hourly_rate_video: 0,
         resetToken: randomUUID(),
         resetTokenVerified: false,
         resetTokenExpiry: null,

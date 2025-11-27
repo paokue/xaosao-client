@@ -59,8 +59,8 @@ export default function ModelLogin() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-md shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-4 sm:p-8 rounded-md shadow-xl">
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />
@@ -96,7 +96,7 @@ export default function ModelLogin() {
                 required
                 maxLength={10}
                 placeholder="2012345678"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
               />
             </div>
 
@@ -111,7 +111,7 @@ export default function ModelLogin() {
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                 />
                 <button
                   type="button"
@@ -138,7 +138,7 @@ export default function ModelLogin() {
                   id="rememberMe"
                   name="rememberMe"
                   type="checkbox"
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
                   Remember me

@@ -42,8 +42,8 @@ export default function ModelForgotPassword() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-4 sm:p-8 rounded-lg shadow-xl">
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />
@@ -73,7 +73,7 @@ export default function ModelForgotPassword() {
               name="whatsapp"
               maxLength={10}
               placeholder="2012345678"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
             />
           </div>
 
@@ -90,7 +90,7 @@ export default function ModelForgotPassword() {
           <div className="text-center">
             <Link
               to="/model-auth/login"
-              className="font-medium text-pink-600 hover:text-pink-500 text-sm"
+              className="font-medium text-rose-600 hover:text-rose-500 text-sm"
             >
               ← Back to login
             </Link>

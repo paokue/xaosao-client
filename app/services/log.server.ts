@@ -17,6 +17,7 @@ export async function createAuditLogs(data: IAuditLogsCreate) {
     });
   } catch (error) {
     console.error("CREATE_AUDIT_LOGS_FAILED", error);
-    throw new Error("Failed to create audit logs!");
+    // Don't throw - just log the error to avoid breaking the main flow
+    return null;
   }
 }

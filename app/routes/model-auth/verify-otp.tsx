@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import { modelVerifyResetToken, modelForgotPassword } from "~/services/model-auth.server";
+import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 
 export const meta: MetaFunction = () => {
   return [
@@ -120,8 +120,8 @@ export default function ModelVerifyOTP() {
   const otpValue = otp.join("");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-2 sm:p-8 rounded-lg shadow-xl">
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />

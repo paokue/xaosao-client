@@ -73,7 +73,7 @@ export default function ModelResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
+      <div className="max-w-md w-full space-y-8 bg-white p-4 sm:p-8 rounded-lg shadow-xl">
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />
