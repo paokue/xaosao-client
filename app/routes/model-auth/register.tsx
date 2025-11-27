@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { modelRegister } from "~/services/model-auth.server";
-import { Eye, EyeOff, Camera, X, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Camera, X, Loader } from "lucide-react";
 import { uploadFileToBunnyServer } from "~/services/upload.server";
 import type { ActionFunctionArgs, MetaFunction } from "react-router";
 import type { IModelSignupCredentials } from "~/services/model-auth.server";
 import { Form, Link, useActionData, useNavigation, useNavigate } from "react-router";
+import { validateModelSignUpInputs } from "~/services/model-validation.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,6 +15,13 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Only allow POST requests
+  if (request.method !== "POST") {
+    return {
+      error: "Invalid request method",
+    };
+  }
+
   const formData = await request.formData();
 
   const firstName = formData.get("firstName");
@@ -31,35 +39,77 @@ export async function action({ request }: ActionFunctionArgs) {
   const interestsJson = formData.get("interests");
   const newProfile = formData.get("newProfile") as File | null;
 
-  // Validation
+  // Basic required fields validation
   if (!firstName || !username || !password || !dob || !gender || !whatsapp || !bio || !address) {
     return {
-      error: "Please fill in all required fields (First Name, Username, Password, DOB, Gender, WhatsApp, Bio, Address, and Profile Image)",
+      error: "Please fill in all required fields (First Name, Username, Password, DOB, Gender, Phone Number, Bio, and Address)",
     };
   }
 
+  // Profile image validation
   if (!newProfile || !(newProfile instanceof File) || newProfile.size === 0) {
     return {
       error: "Profile image is required",
     };
   }
 
+  // File size validation (max 5MB)
+  if (newProfile.size > 5 * 1024 * 1024) {
+    return {
+      error: "Profile image must be less than 5MB",
+    };
+  }
+
+  // File type validation
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(newProfile.type)) {
+    return {
+      error: "Profile image must be JPG, JPEG, PNG, or WebP format",
+    };
+  }
+
+  // Password confirmation validation
   if (password !== confirmPassword) {
     return {
       error: "Passwords do not match",
     };
   }
 
-  if (String(password).length < 8) {
-    return {
-      error: "Password must be at least 8 characters",
-    };
-  }
-
   try {
+    // Parse interests
+    let interests: string[] | undefined;
+    if (interestsJson) {
+      try {
+        const parsed = JSON.parse(String(interestsJson));
+        interests = Array.isArray(parsed) ? parsed : undefined;
+      } catch {
+        interests = undefined;
+      }
+    }
+
     // Upload profile image to Bunny CDN
     const buffer = Buffer.from(await newProfile.arrayBuffer());
     const profileUrl = await uploadFileToBunnyServer(buffer, newProfile.name, newProfile.type);
+
+    // Prepare model data for validation
+    const modelData: IModelSignupCredentials = {
+      firstName: String(firstName).trim(),
+      lastName: lastName ? String(lastName).trim() : undefined,
+      username: String(username).trim(),
+      password: String(password),
+      dob: String(dob),
+      gender: String(gender) as "male" | "female" | "other",
+      whatsapp: Number(whatsapp),
+      bio: String(bio).trim(),
+      profile: profileUrl,
+      address: String(address).trim(),
+      career: career ? String(career).trim() : undefined,
+      education: education ? String(education).trim() : undefined,
+      interests,
+    };
+
+    // Validate all inputs against SQL injection and business rules
+    validateModelSignUpInputs(modelData);
 
     // Get client IP
     const ip = request.headers.get("x-forwarded-for") ||
@@ -67,32 +117,6 @@ export async function action({ request }: ActionFunctionArgs) {
       "127.0.0.1";
 
     const accessKey = process.env.APIIP_API_KEY || "";
-
-    // Parse interests
-    let interests: string[] | undefined;
-    if (interestsJson) {
-      try {
-        interests = JSON.parse(String(interestsJson));
-      } catch {
-        interests = undefined;
-      }
-    }
-
-    const modelData: IModelSignupCredentials = {
-      firstName: String(firstName),
-      lastName: lastName ? String(lastName) : undefined,
-      username: String(username),
-      password: String(password),
-      dob: String(dob),
-      gender: String(gender) as "male" | "female" | "other",
-      whatsapp: Number(whatsapp),
-      bio: String(bio),
-      profile: profileUrl,
-      address: String(address),
-      career: career ? String(career) : undefined,
-      education: education ? String(education) : undefined,
-      interests,
-    };
 
     const result = await modelRegister(modelData, ip.split(",")[0], accessKey);
 
@@ -105,6 +129,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return { error: result.message };
   } catch (error: any) {
+    // Handle validation errors
+    if (error && typeof error === "object" && !error.message) {
+      const validationError = Object.values(error)[0];
+      return {
+        error: String(validationError),
+      };
+    }
+
     return {
       error: error.message || "Registration failed. Please try again.",
     };
@@ -433,7 +465,7 @@ export default function ModelRegister() {
                 disabled={isSubmitting}
                 className="cursor-pointer w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                 {isSubmitting ? "Creating Account..." : "Register"}
               </button>
             </div>

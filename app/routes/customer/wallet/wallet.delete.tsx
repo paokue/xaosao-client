@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertCircle, AlertTriangle, Loader } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useParams, type ActionFunctionArgs } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -80,7 +80,7 @@ export default function CustomersDeleted() {
                   {t('wallet.delete.cancel')}
                </Button>
                <Button type="submit" variant="destructive" disabled={isSubmitting} className="text-white bg-rose-500">
-                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {isSubmitting && <Loader className="h-4 w-4 mr-2 animate-spin" />}
                   {isSubmitting ? t('wallet.delete.deleting') : t('wallet.delete.delete')}
                </Button>
             </div>

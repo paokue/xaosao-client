@@ -1,6 +1,8 @@
 import { modelForgotPassword } from "~/services/model-auth.server";
 import type { ActionFunctionArgs, MetaFunction } from "react-router";
 import { Form, Link, redirect, useActionData, useNavigation } from "react-router";
+import { validateModelForgotPasswordInputs } from "~/services/model-validation.server";
+import { Loader } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,17 +12,37 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const whatsapp = formData.get("whatsapp");
-
-  if (!whatsapp) {
+  // Only allow POST requests
+  if (request.method !== "POST") {
     return {
-      error: "Please provide your WhatsApp number",
+      error: "Invalid request method",
+    };
+  }
+
+  const formData = await request.formData();
+  const whatsappRaw = formData.get("whatsapp");
+
+  if (!whatsappRaw) {
+    return {
+      error: "Please provide your phone number",
     };
   }
 
   try {
-    const result = await modelForgotPassword(Number(whatsapp));
+    // Parse and validate phone number
+    const whatsapp = Number(whatsappRaw);
+
+    // Check if phone number is valid number
+    if (isNaN(whatsapp) || whatsapp <= 0) {
+      return {
+        error: "Invalid phone number format. Please enter digits only.",
+      };
+    }
+
+    // Validate against injection and business rules
+    validateModelForgotPasswordInputs({ whatsapp });
+
+    const result = await modelForgotPassword(whatsapp);
 
     if (result.success) {
       return redirect(`/model-auth/verify-otp?whatsapp=${whatsapp}`);
@@ -30,6 +52,14 @@ export async function action({ request }: ActionFunctionArgs) {
       error: result.message || "Failed to send OTP",
     };
   } catch (error: any) {
+    // Handle validation errors
+    if (error && typeof error === "object" && !error.message) {
+      const validationError = Object.values(error)[0];
+      return {
+        error: String(validationError),
+      };
+    }
+
     return {
       error: error.message || "Something went wrong. Please try again.",
     };
@@ -67,10 +97,13 @@ export default function ModelForgotPassword() {
               Phone number <span className="text-rose-500">*</span>
             </label>
             <input
-              type="tel"
-              required
               id="whatsapp"
               name="whatsapp"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              required
+              minLength={10}
               maxLength={10}
               placeholder="2012345678"
               className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
@@ -81,8 +114,9 @@ export default function ModelForgotPassword() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="cursor-pointer group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-sm text-white bg-rose-500"
+              className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-sm text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
+              {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Sending OTP..." : "Send OTP"}
             </button>
           </div>

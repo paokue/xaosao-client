@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { modelVerifyResetToken, modelForgotPassword } from "~/services/model-auth.server";
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Loader } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -22,15 +23,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Only allow POST requests
+  if (request.method !== "POST") {
+    return {
+      error: "Invalid request method",
+    };
+  }
+
   const formData = await request.formData();
   const intent = formData.get("intent");
   const whatsapp = formData.get("whatsapp");
   const otp = formData.get("otp");
 
+  // Handle resend OTP
   if (intent === "resend") {
     if (!whatsapp) {
       return {
-        error: "WhatsApp number is required",
+        error: "Phone number is required",
       };
     }
 
@@ -38,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
       await modelForgotPassword(Number(whatsapp));
       return {
         success: true,
-        message: "OTP has been resent to your WhatsApp number",
+        message: "OTP has been resent to your phone number",
       };
     } catch (error: any) {
       return {
@@ -47,25 +56,50 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
+  // Validate OTP submission
   if (!otp || !whatsapp) {
     return {
       error: "Please enter the OTP code",
     };
   }
 
+  // Validate OTP format
+  const otpString = String(otp).trim();
+
+  // Must be exactly 6 characters
+  if (otpString.length !== 6) {
+    return {
+      error: "OTP must be exactly 6 characters",
+    };
+  }
+
+  // Must contain only uppercase hexadecimal characters (A-F, 0-9)
+  if (!/^[A-F0-9]{6}$/.test(otpString)) {
+    return {
+      error: "Invalid OTP format. Please enter the code from your SMS",
+    };
+  }
+
+  // Check for injection attempts
+  if (/<|>|\.\.\/|\\|javascript:|script|eval\(/.test(otpString)) {
+    return {
+      error: "Invalid characters detected in OTP",
+    };
+  }
+
   try {
-    const result = await modelVerifyResetToken(String(otp));
+    const result = await modelVerifyResetToken(otpString);
 
     if (result.isValid) {
-      return redirect(`/model-auth/reset-password?token=${otp}`);
+      return redirect(`/model-auth/reset-password?token=${otpString}`);
     }
 
     return {
-      error: "Invalid or expired OTP code",
+      error: "Invalid or expired OTP code. Please request a new one",
     };
   } catch (error: any) {
     return {
-      error: error.message || "Failed to verify OTP",
+      error: error.message || "Failed to verify OTP. Please try again",
     };
   }
 }
@@ -80,8 +114,11 @@ export default function ModelVerifyOTP() {
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
-  // Countdown timer for resend
-  useState(() => {
+  // Countdown timer for resend - starts on mount and restarts on successful resend
+  useEffect(() => {
+    setCanResend(false);
+    setCountdown(60);
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -94,17 +131,35 @@ export default function ModelVerifyOTP() {
     }, 1000);
 
     return () => clearInterval(timer);
-  });
+  }, [actionData?.success]); // Restart countdown when OTP is resent successfully
 
   const handleOtpChange = (index: number, value: string) => {
+    // Prevent pasting multiple characters
     if (value.length > 1) return;
 
     const newOtp = [...otp];
-    newOtp[index] = value;
+
+    // If empty (backspace/delete), allow it
+    if (value === "") {
+      newOtp[index] = "";
+      setOtp(newOtp);
+      return;
+    }
+
+    // Convert to uppercase and validate
+    const upperValue = value.toUpperCase();
+
+    // Only allow hexadecimal characters (0-9, A-F)
+    if (!/^[A-F0-9]$/.test(upperValue)) {
+      return; // Reject invalid characters
+    }
+
+    // Update the OTP array
+    newOtp[index] = upperValue;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
@@ -163,8 +218,10 @@ export default function ModelVerifyOTP() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent uppercase"
                   autoFocus={index === 0}
+                  autoComplete="off"
+                  inputMode="text"
                 />
               ))}
             </div>
@@ -174,8 +231,9 @@ export default function ModelVerifyOTP() {
             <button
               type="submit"
               disabled={isSubmitting || otpValue.length !== 6}
-              className="cursor-pointer group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-rose-500"
+              className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
+              {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Verifying..." : "Verify OTP"}
             </button>
           </div>
@@ -193,18 +251,16 @@ export default function ModelVerifyOTP() {
           <Form method="post">
             <input type="hidden" name="intent" value="resend" />
             <input type="hidden" name="whatsapp" value={whatsapp} />
-            {canResend ? (
-              <button
-                type="submit"
-                className="font-medium text-rose-600 hover:text-rose-500 text-sm cursor-pointer"
-              >
-                Resend OTP
-              </button>
-            ) : (
-              <p className="text-sm text-gray-500">
-                Resend OTP in <span className="font-medium text-rose-600">{countdown}s</span>
-              </p>
-            )}
+            <button
+              type="submit"
+              disabled={!canResend}
+              className={`text-sm font-medium transition-colors ${canResend
+                ? "text-rose-600 hover:text-rose-500 cursor-pointer"
+                : "text-gray-400 cursor-not-allowed"
+                }`}
+            >
+              {canResend ? "Resend OTP" : `Resend OTP in ${countdown}s`}
+            </button>
           </Form>
         </div>
 

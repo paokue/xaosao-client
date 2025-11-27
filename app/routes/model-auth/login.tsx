@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Loader } from "lucide-react";
 
 // services
 import { modelLogin } from "~/services/model-auth.server";
 import type { IModelSigninCredentials } from "~/services/model-auth.server";
+import { validateModelSignInInputs } from "~/services/model-validation.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,27 +25,67 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Only allow POST requests
+  if (request.method !== "POST") {
+    return {
+      error: "Invalid request method",
+    };
+  }
+
   const formData = await request.formData();
 
-  const whatsapp = formData.get("whatsapp");
-  const password = formData.get("password");
-  const rememberMe = formData.get("rememberMe") === "on";
+  const whatsappRaw = formData.get("whatsapp");
+  const passwordRaw = formData.get("password");
+  const rememberMeRaw = formData.get("rememberMe");
 
-  if (!whatsapp || !password) {
+  // Basic validation
+  if (!whatsappRaw || !passwordRaw) {
     return {
-      error: "Please provide both WhatsApp number and password",
+      error: "Phone number and password are required",
     };
   }
 
   try {
+    // Parse and sanitize inputs
+    const whatsapp = Number(whatsappRaw);
+
+    // Check if phone number is valid number
+    if (isNaN(whatsapp) || whatsapp <= 0) {
+      return {
+        error: "Invalid phone number format. Please enter digits only.",
+      };
+    }
+
     const credentials: IModelSigninCredentials = {
-      whatsapp: Number(whatsapp),
-      password: String(password),
-      rememberMe,
+      whatsapp,
+      password: String(passwordRaw),
+      rememberMe: rememberMeRaw === "on",
     };
 
+    // Validate inputs against injection and business rules
+    validateModelSignInInputs(credentials);
+
+    // Attempt login
     return await modelLogin(credentials);
   } catch (error: any) {
+    // Handle validation errors
+    if (error && typeof error === "object" && !error.message) {
+      const validationError = Object.values(error)[0];
+      return {
+        error: String(validationError),
+      };
+    }
+
+    // Handle authentication errors
+    if (error && typeof error === "object" && "status" in error) {
+      const httpError = error as { status: number; message?: string };
+      if (httpError.status === 401) {
+        return {
+          error: httpError.message || "Invalid phone number or password",
+        };
+      }
+    }
+
     return {
       error: error.message || "Login failed. Please check your credentials.",
     };
@@ -93,7 +135,10 @@ export default function ModelLogin() {
                 id="whatsapp"
                 name="whatsapp"
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
                 required
+                minLength={10}
                 maxLength={10}
                 placeholder="2012345678"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
@@ -158,8 +203,9 @@ export default function ModelLogin() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 bg-rose-500 text-sm font-medium rounded-sm text-white"
+              className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium rounded-sm text-white transition-colors"
             >
+              {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
           </div>
