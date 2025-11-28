@@ -1444,7 +1444,7 @@ export async function getForYouCustomers(
   const passedCustomers = await prisma.model_interactions.findMany({
     where: {
       modelId,
-      action: "PASS"  // Only exclude customers the model passed on
+      action: "PASS", // Only exclude customers the model passed on
     },
     select: { customerId: true },
   });
@@ -1455,7 +1455,7 @@ export async function getForYouCustomers(
   const whereClause: any = {
     status: "active",
     id: {
-      notIn: passedCustomerIds,  // Exclude only passed customers, keep liked ones
+      notIn: passedCustomerIds, // Exclude only passed customers, keep liked ones
     },
   };
 
@@ -1761,87 +1761,6 @@ export async function getAllServices() {
     },
     orderBy: {
       createdAt: "desc",
-    },
-  });
-}
-
-/**
- * Get services with model's application status
- */
-export async function getServicesForModel(modelId: string) {
-  const services = await prisma.service.findMany({
-    where: {
-      status: "active",
-    },
-    include: {
-      ModelService: {
-        where: {
-          modelId: modelId,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return services.map((service) => ({
-    ...service,
-    hasApplied: service.ModelService.length > 0,
-    modelService: service.ModelService[0] || null,
-  }));
-}
-
-/**
- * Apply for a service (create model_service)
- */
-export async function applyForService(
-  modelId: string,
-  serviceId: string,
-  data: {
-    customRate: number;
-    isAvailable?: boolean;
-    minSessionDuration?: number;
-    maxSessionDuration?: number;
-    notes?: string;
-  }
-) {
-  // Check if model already applied for this service
-  const existingApplication = await prisma.model_service.findFirst({
-    where: {
-      modelId,
-      serviceId,
-    },
-  });
-
-  if (existingApplication) {
-    // Update existing application
-    return await prisma.model_service.update({
-      where: {
-        id: existingApplication.id,
-      },
-      data: {
-        customRate: data.customRate,
-        isAvailable: data.isAvailable ?? true,
-        minSessionDuration: data.minSessionDuration ?? 0,
-        maxSessionDuration: data.maxSessionDuration ?? 0,
-        notes: data.notes,
-        status: "active",
-      },
-    });
-  }
-
-  // Create new application
-  return await prisma.model_service.create({
-    data: {
-      modelId,
-      serviceId,
-      customRate: data.customRate,
-      isAvailable: data.isAvailable ?? true,
-      minSessionDuration: data.minSessionDuration ?? 0,
-      maxSessionDuration: data.maxSessionDuration ?? 0,
-      notes: data.notes,
-      status: "active",
     },
   });
 }

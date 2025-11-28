@@ -54,7 +54,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         { title: t('navigation.datingHistory'), url: "/model/dates-history", icon: HandHeart },
         { title: t('navigation.wallet'), url: "/model/wallets", icon: Wallet },
         { title: t('navigation.myProfile'), url: "/model/profile", icon: User },
-        { title: t('navigation.setting'), url: "/model/setting", icon: Settings },
+        { title: t('navigation.setting'), url: "/model/settings", icon: Settings },
     ], [t, i18n.language]);
 
     const mobileNavigationItems = useMemo(() => [

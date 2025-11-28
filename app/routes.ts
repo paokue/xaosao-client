@@ -26,7 +26,15 @@ export default [
     index("./routes/model/dashboard.tsx"),
     route("requests", "./routes/model/requests.tsx"),
     route("matches", "./routes/model/matches/matches.tsx"),
-    route("services", "./routes/model/services/page.tsx"),
+
+    // Settings with nested routes
+    route("settings", "./routes/model/settings.tsx", [
+      route("services", "./routes/model/settings/services.tsx"),
+      route("wallet", "./routes/model/settings/wallet.tsx"),
+      route("password", "./routes/model/settings/password.tsx"),
+      route("report", "./routes/model/settings/report.tsx"),
+      route("delete-account", "./routes/model/settings/delete-account.tsx"),
+    ]),
 
     // your new chat route
     route("realtime-chat", "./routes/model/chat/chat-wrapper.tsx"),
