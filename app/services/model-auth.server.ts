@@ -222,7 +222,7 @@ async function loginModelOnChat(modelData: ModelLogin): Promise<LoginResponse> {
       body: JSON.stringify(modelData),
     });
 
-    console.log("loginModelOnChat URL:", url, "Status:", response.status);
+    // console.log("loginModelOnChat URL:", url, "Status:", response.status);
 
     const data = await response.json();
 
@@ -277,7 +277,7 @@ export async function modelLogin({
     throw error;
   }
 
-  console.log("Existing::::", existingModel);
+  // console.log("Existing::::", existingModel);
 
   if (existingModel.status !== "active") {
     const error = new Error(

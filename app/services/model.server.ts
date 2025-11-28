@@ -1440,19 +1440,22 @@ export async function getForYouCustomers(
 
   const skip = (page - 1) * perPage;
 
-  // Get customers that the model has already interacted with
-  const interactedCustomers = await prisma.model_interactions.findMany({
-    where: { modelId },
+  // Get customers that the model has PASSED (exclude only PASS, not LIKE)
+  const passedCustomers = await prisma.model_interactions.findMany({
+    where: {
+      modelId,
+      action: "PASS"  // Only exclude customers the model passed on
+    },
     select: { customerId: true },
   });
 
-  const interactedCustomerIds = interactedCustomers.map((i) => i.customerId);
+  const passedCustomerIds = passedCustomers.map((i) => i.customerId);
 
-  // Build the where clause
+  // Build the where clause - only exclude PASSED customers
   const whereClause: any = {
     status: "active",
     id: {
-      notIn: interactedCustomerIds,
+      notIn: passedCustomerIds,  // Exclude only passed customers, keep liked ones
     },
   };
 
@@ -1509,6 +1512,18 @@ export async function getForYouCustomers(
           action: true,
         },
       },
+      friend_contacts: {
+        where: {
+          // adderType: "MODEL",
+          modelId: modelId,
+          // contactType: "CUSTOMER",
+        },
+        select: {
+          id: true,
+          customerId: true,
+          contactType: true,
+        },
+      },
     },
     orderBy: [{ createdAt: "desc" }],
     skip,
@@ -1530,10 +1545,20 @@ export async function getForYouCustomers(
     });
   }
 
+  // Add derived fields (isContact, modelAction)
+  const enhancedCustomers = customersWithDistance.map((customer) => ({
+    ...customer,
+    isContact: customer.friend_contacts.length > 0,
+    modelAction:
+      customer.model_interactions.length > 0
+        ? customer.model_interactions[0].action
+        : null,
+  }));
+
   const totalPages = Math.ceil(totalCount / perPage);
 
   return {
-    customers: customersWithDistance,
+    customers: enhancedCustomers,
     pagination: {
       currentPage: page,
       totalPages,

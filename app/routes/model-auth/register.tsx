@@ -154,27 +154,55 @@ export default function ModelRegister() {
   const [image, setImage] = useState<string>("");
   const [interests, setInterests] = useState<string[]>([]);
   const [newInterest, setNewInterest] = useState("");
+  const [profileError, setProfileError] = useState<string>("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (actionData?.success) {
       const timer = setTimeout(() => {
-        navigate("/model-auth/login");
-      }, 2000);
+        navigate(
+          "/model-auth/login?toastMessage=Registration successful! Please login with your credentials.&toastType=success&toastDuration=5000"
+        );
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [actionData, navigate]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setImage(result);
-      };
-      reader.readAsDataURL(file);
+    // Clear previous errors
+    setProfileError("");
+
+    if (!e.target.files || !e.target.files[0]) {
+      setProfileError("Please select a profile image");
+      return;
     }
+
+    const file = e.target.files[0];
+
+    // File size validation (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileError("Profile image must be less than 5MB");
+      setImage("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // File type validation
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setProfileError("Profile image must be JPG, JPEG, PNG, or WebP format");
+      setImage("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // Valid file - show preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setImage(result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const removeInterest = (index: number) => {
@@ -188,10 +216,21 @@ export default function ModelRegister() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // Check if profile image is uploaded before submission
+    if (!image) {
+      e.preventDefault();
+      setProfileError("Profile image is required. Please upload a photo.");
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4 py-2">
       <div className="max-w-2xl w-full space-y-8 bg-white px-2 sm:px-8 py-4 rounded-lg shadow-xl">
-        <Form method="post" encType="multipart/form-data" className="mt-8 space-y-6">
+        <Form method="post" encType="multipart/form-data" className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {actionData?.error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {actionData.error}
@@ -206,7 +245,8 @@ export default function ModelRegister() {
               <img
                 src={image || "/images/default-image.png"}
                 alt="Profile Preview"
-                className="w-full h-full rounded-full object-cover shadow-md border-2 border-rose-200"
+                className={`w-full h-full rounded-full object-cover shadow-md border-2 ${profileError ? "border-red-500" : "border-rose-200"
+                  }`}
               />
               <label className="absolute bottom-1 right-1 bg-rose-500 p-2 rounded-full cursor-pointer shadow-md hover:bg-rose-600">
                 <Camera className="w-5 h-5 text-white" />
@@ -217,10 +257,12 @@ export default function ModelRegister() {
                   ref={fileInputRef}
                   className="hidden"
                   onChange={onFileChange}
-                  required
                 />
               </label>
             </div>
+            {profileError && (
+              <p className="text-sm text-red-600 mt-1 text-center">{profileError}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

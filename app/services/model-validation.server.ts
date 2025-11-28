@@ -215,9 +215,7 @@ const modelSignUpSchema = z
         }
       ),
     gender: z.enum(["male", "female", "other"], {
-      errorMap: () => ({
-        message: "Gender must be one of: male, female, or other.",
-      }),
+      message: "Gender must be one of: male, female, or other.",
     }),
     whatsapp: phoneNumberSchema,
     bio: refineSafe(

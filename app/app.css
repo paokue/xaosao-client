@@ -239,3 +239,8 @@
   -webkit-text-stroke: 1px white;
   color: rgb(232, 0, 81);
 }
+
+/* Text shadow utility */
+.text-shadow-lg {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}

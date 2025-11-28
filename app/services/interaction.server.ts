@@ -172,6 +172,72 @@ export async function customerAddFriend(
   }
 }
 
+export async function modelAddFriend(
+  adderId: string,
+  contactId: string,
+  token: string
+) {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: {
+        id: contactId,
+      },
+    });
+
+    const existing = await prisma.friend_contacts.findUnique({
+      where: {
+        modelId_customerId: {
+          customerId: contactId,
+          modelId: adderId,
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        error: true,
+        message: "This customer is already a friend!",
+      };
+    }
+
+    const res = await prisma.friend_contacts.create({
+      data: {
+        adderType: "MODEL",
+        contactType: "CUSTOMER",
+        customerId: contactId,
+        modelId: adderId,
+      },
+    });
+
+    if (res.id) {
+      const inputData: ChatInputCredentials = {
+        phone_number: String(customer?.number),
+        full_name: customer?.firstName + " " + customer?.lastName,
+        user_id: contactId,
+        added_by_me: adderId,
+      };
+
+      const contactRes = await createContact(inputData, token);
+
+      if (contactRes.success) {
+        return {
+          success: true,
+          error: false,
+          message: "Add friend success!",
+        };
+      }
+    }
+  } catch (error: any) {
+    console.log("MODEL_ADD_FRIEND:", error);
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: error.message || "Failed to add friend!",
+    });
+  }
+}
+
 export async function deleteCustomerInteraction(
   customerId: string,
   modelId: string,
