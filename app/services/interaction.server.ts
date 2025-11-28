@@ -212,22 +212,40 @@ export async function modelAddFriend(
 
     if (res.id) {
       const inputData: ChatInputCredentials = {
-        phone_number: String(customer?.number),
+        phone_number: String(customer?.whatsapp),
         full_name: customer?.firstName + " " + customer?.lastName,
         user_id: contactId,
         added_by_me: adderId,
       };
 
-      const contactRes = await createContact(inputData, token);
+      try {
+        const contactRes = await createContact(inputData, token);
 
-      if (contactRes.success) {
+        if (contactRes.success) {
+          return {
+            success: true,
+            error: false,
+            message: "Add friend success!",
+          };
+        }
+      } catch (contactError: any) {
+        console.error("Create chat contact failed:", contactError);
+        // Friend is already added to database, just chat contact creation failed
+        // Return success anyway
         return {
           success: true,
           error: false,
-          message: "Add friend success!",
+          message: "Friend added successfully! (Chat contact pending)",
         };
       }
     }
+
+    // If we get here, something went wrong
+    return {
+      success: false,
+      error: true,
+      message: "Failed to add friend!",
+    };
   } catch (error: any) {
     console.log("MODEL_ADD_FRIEND:", error);
     throw new FieldValidationError({

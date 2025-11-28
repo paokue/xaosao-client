@@ -14,7 +14,10 @@ export default [
   // Model authentication routes
   route("model-auth/login", "./routes/model-auth/login.tsx"),
   route("model-auth/register", "./routes/model-auth/register.tsx"),
-  route("model-auth/forgot-password", "./routes/model-auth/forgot-password.tsx"),
+  route(
+    "model-auth/forgot-password",
+    "./routes/model-auth/forgot-password.tsx"
+  ),
   route("model-auth/verify-otp", "./routes/model-auth/verify-otp.tsx"),
   route("model-auth/reset-password", "./routes/model-auth/reset-password.tsx"),
 
@@ -24,6 +27,11 @@ export default [
     route("requests", "./routes/model/requests.tsx"),
     route("matches", "./routes/model/matches/matches.tsx"),
     route("services", "./routes/model/services/page.tsx"),
+
+    // your new chat route
+    route("realtime-chat", "./routes/model/chat/chat-wrapper.tsx"),
+    route("chat", "./routes/model/chat/single-chat-wrapper.tsx"),
+
     // route("profile", "./routes/model/profile.tsx"),      // Not yet created
     // route("earnings", "./routes/model/earnings.tsx"),    // Not yet created
     // route("messages", "./routes/model/messages.tsx"),    // Not yet created
@@ -41,10 +49,7 @@ export default [
 
     // profile
     route("profile", "./routes/customer/profile/profile.tsx"),
-    route(
-      "profile-edit/:userId",
-      "./routes/customer/profile/profile.edit.tsx"
-    ),
+    route("profile-edit/:userId", "./routes/customer/profile/profile.edit.tsx"),
     route(
       "profile-share/:userId",
       "./routes/customer/profile/profile.share.tsx"

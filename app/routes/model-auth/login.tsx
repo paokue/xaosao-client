@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Form, Link, useActionData, useLoaderData, useNavigate, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { Loader } from "lucide-react";
 
@@ -93,18 +93,21 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ModelLogin() {
-  const { showResetSuccess } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const navigate = useNavigate();
   const navigation = useNavigation();
+  const actionData = useActionData<typeof action>();
+  const { showResetSuccess } = useLoaderData<typeof loader>();
   const isSubmitting = navigation.state === "submitting";
-
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-4 sm:p-8 rounded-md shadow-xl">
         <div className="text-center">
-          <div className="flex justify-center mb-4">
+          <div
+            className="flex justify-center mb-4"
+            onClick={() => navigate("/")}
+          >
             <img src="/images/logo-pink.png" className="w-30 h-10" />
           </div>
           <p className="mt-2 text-sm text-gray-600">

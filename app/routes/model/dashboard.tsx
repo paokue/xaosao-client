@@ -56,15 +56,22 @@ export async function action({ request }: ActionFunctionArgs) {
   const addFriend = formData.get("isFriend") === "true";
   const customerId = formData.get("customerId") as string;
 
+  // Check if token exists
+  if (!token) {
+    return redirect(`/model?toastMessage=Authentication+error.+Please+login+again&toastType=error`);
+  }
+
   if (request.method === "POST") {
     if (addFriend === true) {
       try {
         const res = await modelAddFriend(modelId, customerId, token);
         if (res?.success) {
           return redirect(`/model?toastMessage=Add+friend+successfully!&toastType=success`);
+        } else {
+          return redirect(`/model?toastMessage=${encodeURIComponent(res?.message || 'Failed to add friend')}&toastType=error`);
         }
       } catch (error: any) {
-        return redirect(`/model?toastMessage=${error.message}&toastType=error`);
+        return redirect(`/model?toastMessage=${encodeURIComponent(error.message || 'Failed to add friend')}&toastType=error`);
       }
     } else {
       if (like === false && pass === false) {

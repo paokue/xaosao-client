@@ -54,6 +54,7 @@ interface ModelRegistrationData {
   last_name: string;
   user_name: string;
   gender: "male" | "female" | "other";
+  profile_image?: string;
 }
 
 interface ModelLogin {
@@ -164,7 +165,7 @@ export async function destroyModelSession(request: Request) {
     headers: {
       "Set-Cookie": [
         await modelSessionStorage.destroySession(session),
-        `whoxa_model_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+        `whoxa_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
       ].join(", "),
     },
   });
@@ -186,7 +187,7 @@ export async function createModelSession(
 
   // Build cookie header manually to avoid encoding
   const cookieParts = [
-    `whoxa_model_auth_token=${token}`,
+    `whoxa_auth_token=${token}`,
     `Path=/`,
     `Max-Age=${maxAge}`,
     `SameSite=Lax`,
@@ -431,8 +432,6 @@ export async function modelRegister(
       nextNumber = `XSM-${incremented}`;
     }
 
-    console.log("Input data:::", modelData);
-
     const model = await prisma.model.create({
       data: {
         firstName: modelData.firstName,
@@ -498,26 +497,29 @@ export async function modelRegister(
         last_name: modelData.lastName || "",
         user_name: modelData.username,
         gender: modelData.gender,
+        profile_image: modelData.profile || "",
       };
 
       const chatRes = await registerModelWithoutOTP(modelChatData);
 
       // If chat registration fails, rollback MongoDB data
       if (!chatRes.success) {
+        // Create audit log BEFORE deleting the model
+        await createAuditLogs({
+          action: "MODEL_REGISTER",
+          model: model.id,
+          description: `Chat registration failed for model ${model.id}. Rolling back MongoDB data. Error: ${chatRes.message}`,
+          status: "failed",
+          onError: chatRes.error,
+        });
+
+        // Now delete wallet and model
         await prisma.wallet.deleteMany({
           where: { modelId: model.id },
         });
 
         await prisma.model.delete({
           where: { id: model.id },
-        });
-
-        await createAuditLogs({
-          action: "MODEL_REGISTER",
-          model: model.id,
-          description: `Chat registration failed for model ${model.id}. Rolled back MongoDB data. Error: ${chatRes.message}`,
-          status: "failed",
-          onError: chatRes.error,
         });
 
         throw new Error(
