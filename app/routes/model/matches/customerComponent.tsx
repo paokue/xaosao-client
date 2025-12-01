@@ -30,7 +30,7 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                 <Swiper
                     modules={[Pagination]}
                     pagination={{ clickable: true }}
-                    className="w-full h-full custom-swiper z-999999"
+                    className="w-full h-full custom-swiper"
                 >
                     {customer.Images?.length ? (
                         customer.Images.map((img: any, index: number) => (
@@ -61,14 +61,14 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                     )}
                 </Swiper>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-[1] pointer-events-none"></div>
                 <div className="absolute top-3 right-3 flex gap-2 z-10">
                     <Form method="post">
                         <input type="hidden" name="customerId" value={customer.id} />
                         {customer?.isContact ?
                             <button
                                 type="button"
-                                className="cursor-pointer bg-pink-100 text-pink-500 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm p-1.5 rounded-full hover:bg-pink-500 hover:text-white"
+                                className="cursor-pointer bg-rose-100 text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm p-1.5 rounded-full hover:bg-rose-500 hover:text-white"
                                 onClick={() => navigate(`/model/chat?id=${customer.firstName}`)}
                             >
                                 <MessageSquareText className="w-4 h-4" />
@@ -78,7 +78,7 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                                 type="submit"
                                 name="isFriend"
                                 value="true"
-                                className="cursor-pointer bg-white/20 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm p-1.5 rounded-full hover:bg-pink-500 hover:text-white"
+                                className="cursor-pointer bg-white/20 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm p-1.5 rounded-full hover:bg-rose-500 hover:text-white"
                             >
                                 <UserPlus className="w-4 h-4" />
                             </button>
@@ -104,34 +104,33 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                         {customer.model_interactions?.some((interaction: any) => interaction.action === "PASS") ? "" :
                             <button
                                 type="submit"
-                                className={`cursor-pointer backdrop-blur-sm p-1.5 rounded-full hover:bg-pink-500 hover:text-white ${customer.model_interactions?.some((interaction: any) => interaction.action === "LIKE") ? 'bg-pink-500 text-white' : "sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/20"}`}
+                                className={`cursor-pointer backdrop-blur-sm p-1.5 rounded-full hover:bg-rose-500 hover:text-white ${customer.model_interactions?.some((interaction: any) => interaction.action === "LIKE") ? 'bg-rose-500 text-white' : "sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/20"}`}
                             >
                                 <Heart size={14} />
                             </button>
                         }
                     </Form>
                 </div>
-            </div>
 
-            <div className="absolute bottom-4 left-0 right-0 p-4 text-white z-10">
-                <h3 className="text-lg">
-                    {customer.firstName} {customer.lastName},{" "}
-                    <span className="text-sm">{calculateAgeFromDOB(customer.dob)} {t('matches.yearsOld')}</span>
-                </h3>
-                <p className="text-sm text-white/90 leading-tight">{customer.bio}</p>
-                <div className="flex items-center gap-1 mt-1">
-                    <MapPin size={14} className="text-pink-500" />
-                    <span className="text-sm font-medium">
-                        {modelLatitude && modelLongitude && customer?.latitude && customer?.longitude
-                            ? `${calculateDistance(
-                                Number(customer.latitude),
-                                Number(customer.longitude),
-                                Number(modelLatitude),
-                                Number(modelLongitude)
-                              ).toFixed(1)} ${t('matches.km')}`
-                            : `-- ${t('matches.km')}`
-                        }
-                    </span>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-10">
+                    <h3 className="text-md drop-shadow-lg">
+                        {customer.firstName} {customer.lastName},{" "}
+                        <span className="text-sm font-normal">{calculateAgeFromDOB(customer.dob)} {t('matches.yearsOld')}</span>
+                    </h3>
+                    <div className="flex items-center gap-1 mt-1">
+                        <MapPin size={14} />
+                        <span className="text-sm font-medium drop-shadow-lg">
+                            {modelLatitude && modelLongitude && customer?.latitude && customer?.longitude
+                                ? `${calculateDistance(
+                                    Number(customer.latitude),
+                                    Number(customer.longitude),
+                                    Number(modelLatitude),
+                                    Number(modelLongitude)
+                                ).toFixed(1)} ${t('matches.km')}`
+                                : `-- ${t('matches.km')}`
+                            }
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

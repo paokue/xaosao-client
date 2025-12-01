@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useNavigate, useNavigation, useSearchParams, redirect, useFetcher } from 'react-router';
-import { BadgeCheck, Settings, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, Pencil, Book, BriefcaseBusiness, Trash2, Upload, Loader, Info, Building2, Plus, CreditCard, UserRoundPen, MoreVertical } from 'lucide-react';
+import { BadgeCheck, Settings, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, Pencil, Book, BriefcaseBusiness, Trash2, Upload, Loader, Info, Building2, Plus, CreditCard, UserRoundPen, MoreVertical, UserPen } from 'lucide-react';
 
 // components
 import {
@@ -530,17 +530,19 @@ export default function ModelProfilePage() {
                                 <Button
                                     size="sm"
                                     type="button"
-                                    className="cursor-pointer hidden sm:block border border-rose-500 text-rose-500 bg-white hover:bg-rose-500 hover:text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                                    className="cursor-pointer hidden sm:flex border border-rose-500 text-rose-500 bg-white hover:bg-rose-500 hover:text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                     onClick={() => navigate('/model/profile/edit')}
                                 >
+                                    <UserPen />
                                     Edit Profile
                                 </Button>
                                 <Button
                                     size="sm"
                                     type="button"
-                                    className="cursor-pointer hidden sm:block bg-gray-600 text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
+                                    className="cursor-pointer hidden sm:flex bg-gray-600 text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                                     onClick={() => navigate('/model/settings')}
                                 >
+                                    <Settings />
                                     Settings
                                 </Button>
                             </div>

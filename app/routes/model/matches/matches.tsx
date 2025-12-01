@@ -391,8 +391,8 @@ export default function ModelMatchesPage() {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2">
-                    <Loader className="w-4 h-4 text-pink-500 animate-spin" />
-                    <p className="text-pink-600">{t('matches.processing')}</p>
+                    <Loader className="w-4 h-4 text-rose-500 animate-spin" />
+                    <p className="text-rose-600">{t('matches.processing')}</p>
                 </div>
             </div>
         );
@@ -470,7 +470,7 @@ export default function ModelMatchesPage() {
                         <div className="flex items-center justify-between mb-4 px-4">
                             <p className="text-sm sm:text-md font-bold text-gray-700">{t('matches.filter')}</p>
                             <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-                                <DrawerTrigger className="flex items-center justify-start gap-2 p-2 rounded-md cursor-pointer bg-pink-100 text-pink-500">
+                                <DrawerTrigger className="flex items-center justify-start gap-2 p-2 rounded-md cursor-pointer bg-rose-100 text-rose-500">
                                     <SlidersHorizontal className="w-4 h-4" />
                                 </DrawerTrigger>
                                 <DrawerContent className="space-y-2 sm:space-y-4">
@@ -510,7 +510,7 @@ export default function ModelMatchesPage() {
                                         }}
                                     >
                                         <div className="hidden sm:flex items-center justify-between px-6 py-2 border-b">
-                                            <h2 className="text-lg font-bold text-pink-500">{t('matches.filterOptions')}</h2>
+                                            <h2 className="text-lg font-bold text-rose-500">{t('matches.filterOptions')}</h2>
                                             <DrawerClose>
                                                 <button
                                                     type="button"
@@ -531,7 +531,7 @@ export default function ModelMatchesPage() {
                                                     max={500}
                                                     defaultValue={searchParams.get("distance") || ""}
                                                     placeholder="10 km"
-                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                                                 />
                                             </div>
 
@@ -563,7 +563,7 @@ export default function ModelMatchesPage() {
                                                 <label className="block text-gray-700 font-medium">{t('matches.gender')}</label>
                                                 <select
                                                     name="gender"
-                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                                                     defaultValue={searchParams.get("gender") || ""}
                                                 >
                                                     <option value="">{t('matches.all')}</option>
@@ -577,7 +577,7 @@ export default function ModelMatchesPage() {
                                                 <label className="block text-gray-700 font-medium">{t('matches.location')}</label>
                                                 <select
                                                     name="location"
-                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                                                     defaultValue={searchParams.get("location") || ""}
                                                 >
                                                     <option value="">{t('matches.anyLocation')}</option>
@@ -598,7 +598,7 @@ export default function ModelMatchesPage() {
                                                             name="relationshipStatus"
                                                             value="Single"
                                                             defaultChecked={searchParams.get("relationshipStatus") === "Single"}
-                                                            className="mr-2 cursor-pointer text-pink-500"
+                                                            className="mr-2 cursor-pointer text-rose-500"
                                                         />
                                                         {t('matches.single')}
                                                     </label>
@@ -608,7 +608,7 @@ export default function ModelMatchesPage() {
                                                             name="relationshipStatus"
                                                             value="Divorced"
                                                             defaultChecked={searchParams.get("relationshipStatus") === "Divorced"}
-                                                            className="mr-2 cursor-pointer text-pink-500"
+                                                            className="mr-2 cursor-pointer text-rose-500"
                                                         />
                                                         {t('matches.divorced')}
                                                     </label>
@@ -618,7 +618,7 @@ export default function ModelMatchesPage() {
                                                             name="relationshipStatus"
                                                             value="Widowed"
                                                             defaultChecked={searchParams.get("relationshipStatus") === "Widowed"}
-                                                            className="mr-2 cursor-pointer text-pink-500"
+                                                            className="mr-2 cursor-pointer text-rose-500"
                                                         />
                                                         {t('matches.widowed')}
                                                     </label>
@@ -628,7 +628,7 @@ export default function ModelMatchesPage() {
                                                             name="relationshipStatus"
                                                             value="Separated"
                                                             defaultChecked={searchParams.get("relationshipStatus") === "Separated"}
-                                                            className="mr-2 cursor-pointer text-pink-500"
+                                                            className="mr-2 cursor-pointer text-rose-500"
                                                         />
                                                         {t('matches.separated')}
                                                     </label>
@@ -652,7 +652,7 @@ export default function ModelMatchesPage() {
                                                 {t('matches.resetFilters')}
                                             </button>
 
-                                            <button type="submit" className="w-full bg-pink-500 text-white py-2 rounded-md hover:bg-pink-600 transition-colors font-medium">
+                                            <button type="submit" className="w-full bg-rose-500 text-white py-2 rounded-md hover:bg-rose-600 transition-colors font-medium">
                                                 {t('matches.applyFilters')}
                                             </button>
                                         </div>
@@ -663,7 +663,7 @@ export default function ModelMatchesPage() {
 
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <Loader className="w-6 h-6 animate-spin text-pink-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : foryouCustomers.length > 0 ? (
@@ -702,7 +702,7 @@ export default function ModelMatchesPage() {
                     <TabsContent value="likeme">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <Loader className="w-6 h-6 animate-spin text-pink-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : likeMeCustomers.length > 0 ? (
@@ -742,7 +742,7 @@ export default function ModelMatchesPage() {
                     <TabsContent value="favourite">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <Loader className="w-6 h-6 animate-spin text-pink-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myFavouriteCustomers.length > 0 ? (
@@ -782,7 +782,7 @@ export default function ModelMatchesPage() {
                     <TabsContent value="passed">
                         {isLoading ? (
                             <div className="flex justify-center items-center min-h-[200px]">
-                                <Loader className="w-6 h-6 animate-spin text-pink-500" />
+                                <Loader className="w-6 h-6 animate-spin text-rose-500" />
                                 &nbsp; {t('matches.loading')}
                             </div>
                         ) : myPassCustomers.length > 0 ? (
