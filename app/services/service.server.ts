@@ -160,3 +160,54 @@ export async function cancelServiceApplication(
     });
   }
 }
+
+// Update service application (edit custom rate)
+export async function updateServiceApplication(
+  modelId: string,
+  serviceId: string,
+  modelServiceId: string,
+  customRate: number
+) {
+  try {
+    // Verify the model service exists and belongs to this model
+    const modelService = await prisma.model_service.findFirst({
+      where: {
+        id: modelServiceId,
+        modelId,
+        serviceId,
+        status: "active",
+      },
+    });
+
+    if (!modelService) {
+      return {
+        success: false,
+        error: true,
+        message: "Service application not found!",
+      };
+    }
+
+    // Update the custom rate
+    await prisma.model_service.update({
+      where: {
+        id: modelServiceId,
+      },
+      data: {
+        customRate: customRate,
+      },
+    });
+
+    return {
+      success: true,
+      error: false,
+      message: "Service rate updated successfully!",
+    };
+  } catch (error: any) {
+    console.error("UPDATE_SERVICE_APPLICATION_ERROR:", error);
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: error.message || "Failed to update service rate!",
+    });
+  }
+}

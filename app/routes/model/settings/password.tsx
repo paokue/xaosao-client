@@ -1,7 +1,16 @@
-import { useState } from "react";
-import { ArrowLeft, Lock, Eye, EyeOff, Shield } from "lucide-react";
-import { Link } from "react-router";
-import type { MetaFunction } from "react-router";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Lock, Eye, EyeOff, Shield, Loader } from "lucide-react";
+import { Link, Form, useNavigation, useSearchParams, redirect } from "react-router";
+import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+
+// components:
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Button } from "~/components/ui/button";
+
+// service:
+import { updateModelPassword } from "~/services/model.server";
+import { requireModelSession } from "~/services/model-auth.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,20 +19,134 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireModelSession(request);
+  return null;
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const formData = await request.formData();
+
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  // Validation
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return redirect(
+      `/model/settings/password?error=${encodeURIComponent("All fields are required!")}`
+    );
+  }
+
+  if (newPassword !== confirmPassword) {
+    return redirect(
+      `/model/settings/password?error=${encodeURIComponent("New passwords do not match!")}`
+    );
+  }
+
+  if (newPassword.length < 8) {
+    return redirect(
+      `/model/settings/password?error=${encodeURIComponent("Password must be at least 8 characters long!")}`
+    );
+  }
+
+  try {
+    const result = await updateModelPassword(modelId, currentPassword, newPassword);
+
+    if (result?.success) {
+      return redirect(
+        `/model/settings/password?success=${encodeURIComponent(result.message)}`
+      );
+    } else {
+      return redirect(
+        `/model/settings/password?error=${encodeURIComponent("Failed to update password!")}`
+      );
+    }
+  } catch (error: any) {
+    return redirect(
+      `/model/settings/password?error=${encodeURIComponent(error.message || "Failed to update password!")}`
+    );
+  }
+}
+
+// Password strength checker
+const checkPasswordStrength = (password: string): { strength: 'weak' | 'medium' | 'strong'; score: number } => {
+  let score = 0;
+
+  if (!password) return { strength: 'weak', score: 0 };
+
+  // Length check
+  if (password.length >= 8) score += 1;
+  if (password.length >= 10) score += 1;
+  if (password.length >= 12) score += 1;
+
+  // Character variety checks
+  if (/[a-z]/.test(password)) score += 1; // lowercase
+  if (/[A-Z]/.test(password)) score += 1; // uppercase
+  if (/[0-9]/.test(password)) score += 1; // numbers
+  if (/[^a-zA-Z0-9]/.test(password)) score += 1; // special characters
+
+  // Determine strength
+  if (score <= 3) return { strength: 'weak', score };
+  if (score <= 5) return { strength: 'medium', score };
+  return { strength: 'strong', score };
+};
+
 export default function PasswordSettings() {
+  const navigation = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSubmitting = navigation.state === "submitting";
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState<{ strength: 'weak' | 'medium' | 'strong'; score: number }>({ strength: 'weak', score: 0 });
+
+  const successMessage = searchParams.get("success");
+  const errorMessage = searchParams.get("error");
+
+  // Check password strength when new password changes
+  useEffect(() => {
+    const result = checkPasswordStrength(newPassword);
+    setPasswordStrength(result);
+  }, [newPassword]);
+
+  // Clear password fields on success and clear messages after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      // Clear all password states on success
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      const timeout = setTimeout(() => {
+        searchParams.delete("success");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+
+    if (errorMessage) {
+      const timeout = setTimeout(() => {
+        searchParams.delete("error");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [successMessage, errorMessage, searchParams, setSearchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-purple-50 p-4">
-      {/* Mobile Header */}
-      <div className="mb-6">
+    <div className="p-4 lg:p-0 space-y-4">
+      <div className="mb-6 lg:hidden">
         <Link
           to="/model/settings"
           className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 cursor-pointer" />
           <span>Back to Settings</span>
         </Link>
 
@@ -40,13 +163,158 @@ export default function PasswordSettings() {
         </div>
       </div>
 
-      {/* Security Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">{successMessage}</p>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{errorMessage}</p>
+        </div>
+      )}
+
+      <div className="bg-white rounded-sm p-6 border">
+        <Form method="post" className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">
+              Current Password <span className="text-rose-500">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type={showCurrentPassword ? "text" : "password"}
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showCurrentPassword ? (
+                  <Eye className="w-4 h-4 cursor-pointer" />
+                ) : (
+                  <EyeOff className="w-4 h-4 cursor-pointer" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">
+              New Password <span className="text-rose-500">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={8}
+                disabled={isSubmitting}
+                className="text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showNewPassword ? (
+                  <Eye className="w-4 h-4 cursor-pointer" />
+                ) : (
+                  <EyeOff className="w-4 h-4 cursor-pointer" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">
+              Confirm New Password <span className="text-rose-500">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                disabled={isSubmitting}
+                className="text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? (
+                  <Eye className="w-4 h-4 cursor-pointer" />
+                ) : (
+                  <EyeOff className="w-4 h-4 cursor-pointer" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {newPassword && (
+            <div className="space-y-2">
+              <div className="flex gap-1">
+                <div className={`h-1.5 flex-1 rounded-full transition-colors ${passwordStrength.score >= 1
+                  ? passwordStrength.strength === 'weak' ? 'bg-red-500'
+                    : passwordStrength.strength === 'medium' ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                  : 'bg-gray-200'
+                  }`}></div>
+                <div className={`h-1.5 flex-1 rounded-full transition-colors ${passwordStrength.score >= 3
+                  ? passwordStrength.strength === 'medium' ? 'bg-yellow-500'
+                    : passwordStrength.strength === 'strong' ? 'bg-green-500'
+                      : 'bg-gray-200'
+                  : 'bg-gray-200'
+                  }`}></div>
+                <div className={`h-1.5 flex-1 rounded-full transition-colors ${passwordStrength.score >= 6 ? 'bg-green-500' : 'bg-gray-200'
+                  }`}></div>
+              </div>
+              <p className={`text-xs font-medium ${passwordStrength.strength === 'weak' ? 'text-red-600'
+                : passwordStrength.strength === 'medium' ? 'text-yellow-600'
+                  : 'text-green-600'
+                }`}>
+                Password strength: {passwordStrength.strength === 'weak' ? 'Weak'
+                  : passwordStrength.strength === 'medium' ? 'Medium'
+                    : 'Strong'}
+              </p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-auto bg-rose-500 text-white hover:bg-rose-600"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <Loader size={18} className="animate-spin" /> : null}
+            {isSubmitting ? "Updating..." : "Update Password"}
+          </Button>
+        </Form>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-6">
         <div className="flex items-start gap-3">
-          <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <Shield className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-blue-900 font-medium mb-1">Password Security Tips</p>
-            <ul className="text-xs text-blue-700 space-y-1">
+            <p className="text-md text-blue-700 font-medium mb-1">Password security tips:</p>
+            <ul className="text-sm text-blue-700 space-y-1">
               <li>• Use at least 8 characters</li>
               <li>• Include uppercase and lowercase letters</li>
               <li>• Add numbers and special characters</li>
@@ -54,104 +322,6 @@ export default function PasswordSettings() {
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* Password Change Form */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <form className="space-y-4">
-          {/* Current Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Password <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showCurrentPassword ? "text" : "password"}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                placeholder="Enter current password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                {showCurrentPassword ? (
-                  <Eye className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* New Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Password <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                placeholder="Enter new password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                {showNewPassword ? (
-                  <Eye className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm New Password <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                placeholder="Confirm new password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                {showConfirmPassword ? (
-                  <Eye className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-rose-500 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-rose-600 hover:to-purple-700 transition-all"
-          >
-            Update Password
-          </button>
-        </form>
-      </div>
-
-      {/* Forgot Password Link */}
-      <div className="text-center mt-4">
-        <Link
-          to="/model-auth/forgot-password"
-          className="text-sm text-rose-600 hover:text-rose-700"
-        >
-          Forgot your password?
-        </Link>
       </div>
     </div>
   );

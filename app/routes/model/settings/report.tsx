@@ -1,7 +1,24 @@
-import { useState } from "react";
-import { ArrowLeft, AlertCircle, Send } from "lucide-react";
-import { Link } from "react-router";
-import type { MetaFunction } from "react-router";
+import { useState, useEffect } from "react";
+import { ArrowLeft, AlertCircle, Send, Loader } from "lucide-react";
+import { Link, Form, useNavigation, useSearchParams, redirect } from "react-router";
+import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+
+// components:
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
+
+// services:
+import { createModelReport } from "~/services/model.server";
+import { requireModelSession } from "~/services/model-auth.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,19 +27,89 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireModelSession(request);
+  return null;
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const formData = await request.formData();
+
+  const title = formData.get("title") as string;
+  const issueType = formData.get("issueType") as string;
+  const description = formData.get("description") as string;
+
+  // Validation
+  if (!issueType || !title || !description) {
+    return redirect(
+      `/model/settings/report?error=${encodeURIComponent("All fields are required!")}`
+    );
+  }
+
+  try {
+    const result = await createModelReport(modelId, issueType, title, description);
+
+    if (result?.success) {
+      return redirect(
+        `/model/settings/report?success=${encodeURIComponent(result.message)}`
+      );
+    } else {
+      return redirect(
+        `/model/settings/report?error=${encodeURIComponent("Failed to submit report!")}`
+      );
+    }
+  } catch (error: any) {
+    return redirect(
+      `/model/settings/report?error=${encodeURIComponent(error.message || "Failed to submit report!")}`
+    );
+  }
+}
+
 export default function ReportSettings() {
+  const navigation = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSubmitting = navigation.state === "submitting";
+
+  const [title, setTitle] = useState("");
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
 
+  const errorMessage = searchParams.get("error");
+  const successMessage = searchParams.get("success");
+
+  // Clear form fields on success and clear messages after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      // Clear all form fields on success
+      setIssueType("");
+      setTitle("");
+      setDescription("");
+
+      const timeout = setTimeout(() => {
+        searchParams.delete("success");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+
+    if (errorMessage) {
+      const timeout = setTimeout(() => {
+        searchParams.delete("error");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [successMessage, errorMessage, searchParams, setSearchParams]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-purple-50 p-4">
-      {/* Mobile Header */}
-      <div className="mb-6">
+    <div className="p-4 lg:p-0 space-y-4">
+      <div className="mb-6 lg:hidden">
         <Link
           to="/model/settings"
           className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 cursor-pointer" />
           <span>Back to Settings</span>
         </Link>
 
@@ -39,76 +126,100 @@ export default function ReportSettings() {
         </div>
       </div>
 
-      {/* Report Form */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <form className="space-y-4">
-          {/* Issue Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">{successMessage}</p>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{errorMessage}</p>
+        </div>
+      )}
+
+      <div className="bg-white rounded-sm p-6 border">
+        <Form method="post" className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="issueType">
               Issue Type <span className="text-rose-500">*</span>
-            </label>
-            <select
+            </Label>
+            <Select
+              name="issueType"
               value={issueType}
-              onChange={(e) => setIssueType(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              onValueChange={setIssueType}
+              required
+              disabled={isSubmitting}
             >
-              <option value="">Select an issue type</option>
-              <option value="technical">Technical Problem</option>
-              <option value="payment">Payment Issue</option>
-              <option value="account">Account Problem</option>
-              <option value="chat">Chat/Messaging Issue</option>
-              <option value="profile">Profile Issue</option>
-              <option value="other">Other</option>
-            </select>
+              <SelectTrigger id="issueType" className="w-full">
+                <SelectValue placeholder="Select an issue type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="technical">Technical Problem</SelectItem>
+                <SelectItem value="payment">Payment Issue</SelectItem>
+                <SelectItem value="account">Account Problem</SelectItem>
+                <SelectItem value="chat">Chat/Messaging Issue</SelectItem>
+                <SelectItem value="profile">Profile Issue</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Subject */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <Label htmlFor="title">
               Subject <span className="text-rose-500">*</span>
-            </label>
-            <input
+            </Label>
+            <Input
+              id="title"
+              name="title"
               type="text"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               placeholder="Brief description of the issue"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              disabled={isSubmitting}
+              className="text-sm"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <Label htmlFor="description">
               Description <span className="text-rose-500">*</span>
-            </label>
-            <textarea
+            </Label>
+            <Textarea
+              id="description"
+              name="description"
+              rows={6}
+              placeholder="Please provide detailed information about the issue you're experiencing..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-              placeholder="Please provide detailed information about the issue you're experiencing..."
+              required
+              maxLength={500}
+              disabled={isSubmitting}
+              className="resize-none text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500">
               {description.length}/500 characters
             </p>
           </div>
 
-          {/* Submit Button */}
-          <button
+          <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-rose-500 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-rose-600 hover:to-purple-700 transition-all flex items-center justify-center gap-2"
+            className="w-auto bg-rose-500 text-white hover:bg-rose-600"
+            disabled={isSubmitting}
           >
-            <Send className="w-4 h-4" />
-            Submit Report
-          </button>
-        </form>
+            {isSubmitting ? <Loader size={18} className="animate-spin" /> : <Send className="w-4 h-4" />}
+            {isSubmitting ? "Submitting..." : "Submit Report"}
+          </Button>
+        </Form>
       </div>
 
-      {/* Help Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-blue-900 font-medium mb-1">Need immediate help?</p>
-            <p className="text-xs text-blue-700">
+            <p className="text-md text-blue-700 font-medium mb-1">Need immediate help?</p>
+            <p className="text-sm text-blue-700">
               For urgent issues, please contact our support team directly at{" "}
               <a href="mailto:support@xaosao.com" className="underline font-medium">
                 support@xaosao.com

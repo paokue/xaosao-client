@@ -1,6 +1,9 @@
 import { prisma } from "./database.server";
 import { differenceInYears } from "date-fns";
 import { FieldValidationError } from "./base.server";
+import { default as bcrypt } from "bcryptjs";
+import { createAuditLogs } from "./log.server";
+const { compare, hash } = bcrypt;
 
 interface ForYouFilters {
   gender?: string;
@@ -1811,4 +1814,305 @@ export async function updateModelServiceAvailability(
       isAvailable,
     },
   });
+}
+
+// Update model password
+export async function updateModelPassword(
+  modelId: string,
+  oldPassword: string,
+  newPassword: string
+) {
+  if (!modelId || !oldPassword || !newPassword) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Invalid credentials inputs!",
+    });
+  }
+
+  const auditBase = {
+    action: "UPDATE_MODEL_PASSWORD",
+    model: modelId,
+  };
+
+  try {
+    const existingModel = await prisma.model.findUnique({
+      where: {
+        id: modelId,
+      },
+    });
+
+    if (!existingModel) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Model does not exist!",
+      });
+    }
+
+    const passwordCorrect = await compare(oldPassword, existingModel.password);
+    if (!passwordCorrect) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Password change failed, old password incorrect!`,
+        status: "failed",
+        onError: "Old password does not match the password from database!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Your old password is incorrect!",
+      });
+    }
+
+    const passwordHash = await hash(newPassword, 12);
+
+    const updatedModel = await prisma.model.update({
+      where: {
+        id: existingModel.id,
+      },
+      data: {
+        password: passwordHash,
+      },
+    });
+
+    if (updatedModel.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Update model: ${updatedModel.id} password successfully.`,
+        status: "success",
+        onSuccess: updatedModel,
+      });
+    }
+
+    return {
+      success: true,
+      message: "Password updated successfully!",
+    };
+  } catch (error: any) {
+    console.error("UPDATE_MODEL_PASSWORD_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Update model password failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to update password!",
+    });
+  }
+}
+
+export async function createModelReport(
+  modelId: string,
+  type: string,
+  title: string,
+  description: string
+) {
+  const auditBase = {
+    action: "CREATE_MODEL_REPORT",
+    model: modelId,
+  };
+
+  try {
+    // Validation
+    if (!modelId || !type || !title || !description) {
+      await createAuditLogs({
+        ...auditBase,
+        description: "Report creation failed - missing required fields!",
+        status: "failed",
+        onError: "Missing required fields!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "All fields are required!",
+      });
+    }
+
+    // Verify model exists
+    const existingModel = await prisma.model.findUnique({
+      where: { id: modelId },
+      select: { id: true, firstName: true, lastName: true },
+    });
+
+    if (!existingModel) {
+      await createAuditLogs({
+        ...auditBase,
+        description: "Report creation failed - model not found!",
+        status: "failed",
+        onError: "Model not found!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Model not found!",
+      });
+    }
+
+    // Create report
+    const report = await prisma.reports.create({
+      data: {
+        type,
+        title,
+        description,
+        modelId,
+      },
+    });
+
+    if (report.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Model ${existingModel.firstName} ${existingModel.lastName || ""} submitted a report: ${title}`,
+        status: "success",
+        onSuccess: report,
+      });
+    }
+
+    return {
+      success: true,
+      message: "Report submitted successfully! We'll review it as soon as possible.",
+      data: report,
+    };
+  } catch (error: any) {
+    console.error("CREATE_MODEL_REPORT_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: "Report creation failed!",
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to submit report!",
+    });
+  }
+}
+
+export async function deleteModelAccount(
+  modelId: string,
+  password: string,
+  reason?: string
+) {
+  const auditBase = {
+    action: "DELETE_MODEL_ACCOUNT",
+    model: modelId,
+  };
+
+  try {
+    // Validation
+    if (!modelId || !password) {
+      await createAuditLogs({
+        ...auditBase,
+        description: "Account deletion failed - missing required fields!",
+        status: "failed",
+        onError: "Missing required fields!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Password is required!",
+      });
+    }
+
+    // Verify model exists and get password
+    const existingModel = await prisma.model.findUnique({
+      where: { id: modelId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        password: true,
+        username: true,
+      },
+    });
+
+    if (!existingModel) {
+      await createAuditLogs({
+        ...auditBase,
+        description: "Account deletion failed - model not found!",
+        status: "failed",
+        onError: "Model not found!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Model not found!",
+      });
+    }
+
+    // Verify password
+    const passwordCorrect = await compare(password, existingModel.password);
+    if (!passwordCorrect) {
+      await createAuditLogs({
+        ...auditBase,
+        description: "Account deletion failed - incorrect password!",
+        status: "failed",
+        onError: "Incorrect password!",
+      });
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Incorrect password! Please try again.",
+      });
+    }
+
+    // Mark account as deleted (soft delete)
+    const deletedModel = await prisma.model.update({
+      where: { id: existingModel.id },
+      data: {
+        status: "deleted",
+        username: `deleted_${existingModel.username}_${Date.now()}`, // Prevent username conflicts
+      },
+    });
+
+    // Log successful deletion
+    await createAuditLogs({
+      ...auditBase,
+      description: `Model ${existingModel.firstName} ${existingModel.lastName || ""} (${existingModel.username}) deleted their account${reason ? `. Reason: ${reason}` : ""}`,
+      status: "success",
+      onSuccess: {
+        modelId: deletedModel.id,
+        username: existingModel.username,
+        deletedAt: new Date(),
+        reason: reason || "Not provided",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Your account has been permanently deleted.",
+    };
+  } catch (error: any) {
+    console.error("DELETE_MODEL_ACCOUNT_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: "Account deletion failed!",
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to delete account!",
+    });
+  }
 }

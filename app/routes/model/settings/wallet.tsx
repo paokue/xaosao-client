@@ -1,91 +1,507 @@
-import { ArrowLeft, Wallet, DollarSign, TrendingUp, Clock } from "lucide-react";
-import { Link } from "react-router";
-import type { MetaFunction } from "react-router";
+import React, { useState } from "react";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import {
+  Eye,
+  Trash,
+  EyeOff,
+  Wallet,
+  Search,
+  Loader,
+  EyeIcon,
+  DollarSign,
+  FilePenLine,
+  MoreVertical,
+  ArrowDownToLine,
+} from "lucide-react";
+import {
+  Link,
+  Form,
+  useNavigate,
+  useNavigation,
+  useSearchParams,
+  useLoaderData,
+  Outlet,
+  redirect,
+} from "react-router";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "Wallet - Model Settings" },
-    { name: "description", content: "Manage your wallet and transactions" },
+// Services and Utils
+import { formatCurrency } from "~/utils";
+import type { IWalletResponse } from "~/interfaces";
+import { capitalize } from "~/utils/functions/textFormat";
+import type { PaginationProps } from "~/interfaces/pagination";
+import type { ITransactionResponse } from "~/interfaces/transaction";
+import { requireModelSession } from "~/services/model-auth.server";
+import {
+  getModelTransactions,
+  getWalletByModelId,
+  withdrawFunds,
+} from "~/services/wallet.server";
+
+// components
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import Pagination from "~/components/ui/pagination";
+
+interface LoaderReturn {
+  wallet: IWalletResponse;
+  transactions: ITransactionResponse[];
+  pagination: PaginationProps;
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page") || 1);
+  const take = 10;
+
+  const wallet = await getWalletByModelId(modelId);
+
+  const { transactions, pagination } = await getModelTransactions(
+    modelId,
+    page,
+    take
+  );
+  return { wallet, transactions, pagination };
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const formData = await request.formData();
+
+  const actionType = formData.get("actionType") as string;
+
+  if (actionType === "withdraw") {
+    const amount = parseFloat(formData.get("amount") as string);
+    const bankAccount = formData.get("bankAccount") as string;
+
+    const result = await withdrawFunds(modelId, amount, bankAccount);
+
+    if (result?.success) {
+      return redirect(
+        `/model/settings/wallet?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+      );
+    } else {
+      return redirect(
+        `/model/settings/wallet?toastMessage=${encodeURIComponent(result?.message || "Failed to process withdrawal")}&toastType=error`
+      );
+    }
+  }
+
+  return null;
+}
+
+export default function ModelWalletPage() {
+  const navigate = useNavigate();
+  const navigation = useNavigation();
+  const [searchParams] = useSearchParams();
+  const { wallet, transactions, pagination } = useLoaderData<LoaderReturn>();
+  const isLoading = navigation.state === "loading";
+
+  // For toast messages
+  const toastMessage = searchParams.get("toastMessage");
+  const toastType = searchParams.get("toastType");
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" = "success",
+    duration = 3000
+  ) => {
+    searchParams.set("toastMessage", message);
+    searchParams.set("toastType", type);
+    searchParams.set("toastDuration", String(duration));
+    navigate({ search: searchParams.toString() }, { replace: true });
+  };
+  React.useEffect(() => {
+    if (toastMessage) {
+      showToast(toastMessage, toastType as any);
+    }
+  }, [toastMessage, toastType]);
+
+  const [isBalanceVisible, setIsBalanceVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("All");
+  const [withdrawModal, setWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+  const [selectedBank, setSelectedBank] = useState<string>("");
+
+  const tabs = [
+    { key: "All", label: "All" },
+    { key: "Approved", label: "Approved" },
+    { key: "Pending", label: "Pending" },
+    { key: "Failed", label: "Failed" },
   ];
-};
 
-export default function WalletSettings() {
+  // Close withdraw modal when form submission starts
+  React.useEffect(() => {
+    if (isLoading) {
+      setWithdrawModal(false);
+    }
+  }, [isLoading]);
+  
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesTab =
+      activeTab === "All" ||
+      (activeTab === "Approved" && transaction.status === "approved") ||
+      (activeTab === "Failed" && transaction.status === "rejected") ||
+      (activeTab === "Pending" && transaction.status === "pending");
+    return matchesTab;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+        <div className="flex items-center justify-center gap-2">
+          <Loader className="w-4 h-4 text-rose-500 animate-spin" />
+          <p className="text-rose-600">Loading....</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-purple-50 p-4">
-      {/* Mobile Header */}
-      <div className="mb-6">
-        <Link
-          to="/model/settings"
-          className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Settings</span>
-        </Link>
+    <>
+      <div className="p-4 lg:p-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="bg-gradient-to-r from-rose-600 to-rose-400 rounded-md py-4 px-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -translate-x-10 translate-y-10"></div>
+              <div className="relative z-10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wallet size={24} />
+                    <span className="font-medium">Total Balance</span>
+                  </div>
+                  <button
+                    onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                    className="p-1 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                  >
+                    {isBalanceVisible ? (
+                      <Eye size={20} />
+                    ) : (
+                      <EyeOff size={20} />
+                    )}
+                  </button>
+                </div>
 
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-rose-100 rounded-lg">
-            <Wallet className="w-6 h-6 text-rose-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent">
-              Wallet Management
-            </h1>
-            <p className="text-sm text-gray-600">Track your earnings and balance</p>
-          </div>
-        </div>
-      </div>
+                <div className="flex items-start justify-start gap-6">
+                  <div>
+                    <h2 className="text-lg">
+                      {isBalanceVisible
+                        ? formatCurrency(wallet.totalBalance)
+                        : "******"}
+                    </h2>
+                    <p className="text-white/80 text-sm">Available Balance</p>
+                  </div>
 
-      {/* Balance Card */}
-      <div className="bg-gradient-to-br from-rose-500 to-purple-600 rounded-xl shadow-lg p-6 mb-6 text-white">
-        <p className="text-rose-100 text-sm mb-2">Total Balance</p>
-        <h2 className="text-4xl font-bold mb-4">$0.00</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4" />
-              <p className="text-xs text-rose-100">Total Earned</p>
+                  <div className="">
+                    <p className="text-lg">
+                      {isBalanceVisible
+                        ? formatCurrency(wallet.totalDeposit)
+                        : "******"}
+                    </p>
+                    <p className="text-white/80 text-sm">Total Earnings</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-lg font-semibold">$0.00</p>
+            <button
+              onClick={() => setWithdrawModal(true)}
+              className="cursor-pointer flex items-center justify-center border border-rose-500 rounded-md gap-2 hover:bg-rose-50"
+            >
+              <ArrowDownToLine className="text-gray-500" size={18} />
+              <span className="text-gray-500">Withdraw Funds</span>
+            </button>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4" />
-              <p className="text-xs text-rose-100">Pending</p>
+
+          <div className="bg-white rounded-md overflow-hidden">
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-md sm:text-md font-normal text-gray-600">
+                  Withdrawal History
+                </h3>
+              </div>
+
+              <div className="space-y-4 flex flex-col sm:flex-row items-start justify-between">
+                <div className="flex gap-2 overflow-x-auto">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`cursor-pointer px-4 py-1 rounded-full whitespace-nowrap font-medium text-sm transition-colors ${activeTab === tab.key
+                        ? "bg-rose-100 text-rose-600 border border-rose-300"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                        }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <p className="text-lg font-semibold">$0.00</p>
+
+            <div className="divide-y divide-gray-100 cursor-pointer">
+              {filteredTransactions && filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction, index: number) => (
+                  <div
+                    key={transaction.id}
+                    className="p-4 hover:bg-gray-50 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-start space-x-8">
+                        <p className="text-gray-500">{index + 1}</p>
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`hidden sm:block p-3 rounded-md ${transaction.status === "approved"
+                              ? "bg-green-100"
+                              : transaction.status === "rejected"
+                                ? "bg-red-100"
+                                : "bg-orange-100"
+                              }`}
+                          >
+                            <DollarSign
+                              size={18}
+                              className={
+                                transaction.status === "approved"
+                                  ? "text-green-600"
+                                  : transaction.status === "rejected"
+                                    ? "text-red-600"
+                                    : "text-orange-600"
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium text-gray-900">
+                              {capitalize(transaction.identifier)}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500">
+                                {transaction.createdAt.toDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center space-y-1 space-x-4 mt-2">
+                          <p
+                            className={`font-semibold ${transaction.identifier === "withdrawal"
+                              ? "text-red-600"
+                              : "text-green-600"
+                              }`}
+                          >
+                            {transaction.identifier === "withdrawal"
+                              ? "-"
+                              : "+"}
+                            {formatCurrency(transaction.amount)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={`text-center text-xs px-2 py-1 rounded-sm ${transaction.status === "approved"
+                            ? "bg-green-100 text-green-600"
+                            : transaction.status === "rejected"
+                              ? "bg-red-100 text-red-600"
+                              : "bg-orange-100 text-orange-600"
+                            }`}
+                        >
+                          {capitalize(transaction.status)}
+                        </p>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-gray-500 h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                              <span className="sr-only">More</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="w-48"
+                            align="end"
+                            forceMount
+                          >
+                            <DropdownMenuItem className="text-gray-500 text-sm">
+                              <Link
+                                to={`/model/settings/wallet/detail/${transaction.id}`}
+                                className="flex space-x-2 w-full"
+                              >
+                                <EyeIcon className="mr-2 h-3 w-3" />
+                                <span>View Details</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            {transaction.status === "pending" && (
+                              <DropdownMenuItem className="text-sm">
+                                <Link
+                                  to={`/model/settings/wallet/edit/${transaction.id}`}
+                                  className="text-gray-500 flex space-x-2 w-full"
+                                >
+                                  <FilePenLine className="mr-2 h-3 w-3" />
+                                  <span>Edit</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            {transaction.status === "pending" && (
+                              <DropdownMenuItem className="text-sm">
+                                <Link
+                                  to={`/model/settings/wallet/delete/${transaction.id}`}
+                                  className="text-gray-500 flex space-x-2 w-full"
+                                >
+                                  <Trash className="mr-2 h-3 w-3" />
+                                  <span>Delete</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search size={24} className="text-gray-400" />
+                  </div>
+                  <h4 className="text-gray-900 font-medium mb-2">
+                    No Transactions Found
+                  </h4>
+                  <p className="text-gray-600 text-sm">
+                    Your withdrawal history will appear here
+                  </p>
+                </div>
+              )}
+              {pagination.totalPages > 1 && (
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalCount={pagination.totalCount}
+                  limit={pagination.limit}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPreviousPage={pagination.hasPreviousPage}
+                  baseUrl=""
+                  searchParams={searchParams}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <button className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow">
-          <div className="p-2 bg-green-100 rounded-lg w-fit mb-2">
-            <DollarSign className="w-5 h-5 text-green-600" />
-          </div>
-          <p className="font-medium text-gray-900">Withdraw</p>
-          <p className="text-xs text-gray-500 mt-1">Cash out earnings</p>
-        </button>
-        <button className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow">
-          <div className="p-2 bg-blue-100 rounded-lg w-fit mb-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-          </div>
-          <p className="font-medium text-gray-900">History</p>
-          <p className="text-xs text-gray-500 mt-1">View transactions</p>
-        </button>
-      </div>
+      <Dialog open={withdrawModal} onOpenChange={setWithdrawModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-md font-normal">Withdraw Funds</DialogTitle>
+          </DialogHeader>
 
-      {/* Recent Transactions */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Recent Transactions</h3>
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 mb-1">No transactions yet</p>
-          <p className="text-sm text-gray-500">
-            Your transaction history will appear here
-          </p>
-        </div>
-      </div>
-    </div>
+          <div className="mb-4 p-4 bg-rose-50 rounded-lg">
+            <p className="text-sm text-gray-600 mb-1">Available Balance</p>
+            <h3 className="text-lg font-bold text-rose-600 flex items-center gap-1">
+              <DollarSign className="w-4 h-4" />
+              {formatCurrency(wallet.totalBalance)}
+            </h3>
+          </div>
+
+          <Form method="post" className="space-y-6">
+            <input type="hidden" name="actionType" value="withdraw" />
+
+            <div className="space-y-2">
+              <Label htmlFor="bankAccount">
+                Bank Account <span className="text-rose-500">*</span>
+              </Label>
+              <Select
+                name="bankAccount"
+                value={selectedBank}
+                onValueChange={setSelectedBank}
+                required
+              >
+                <SelectTrigger id="bankAccount" className="w-full">
+                  <SelectValue placeholder="Select bank account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="account1">Bank Account - ****1234</SelectItem>
+                  <SelectItem value="account2">Bank Account - ****5678</SelectItem>
+                  <SelectItem value="account3">Bank Account - ****9012</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                Select the bank account for transfer
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">
+                Withdrawal Amount <span className="text-rose-500">*</span>
+              </Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="amount"
+                  type="number"
+                  name="amount"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  step="0.01"
+                  min="0.01"
+                  max={wallet.totalBalance}
+                  required
+                  className="pl-10"
+                  placeholder="Enter amount"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-sm">
+              <p className="text-xs text-blue-800">
+                <strong>Note:</strong> Your withdrawal request will be
+                reviewed by the admin. Funds will be transferred to your
+                selected account once approved.
+              </p>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setWithdrawModal(false)}
+              >
+                Close
+              </Button>
+              <Button
+                type="submit"
+                className="bg-rose-500 text-white cursor-pointer hover:bg-rose-600"
+              >
+                Withdraw
+              </Button>
+            </DialogFooter>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Outlet />
+    </>
   );
 }

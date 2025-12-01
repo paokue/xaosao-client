@@ -1,7 +1,28 @@
 import { useState, useEffect } from "react";
-import type { MetaFunction } from "react-router";
-import { Link, Form, useLoaderData, useNavigation } from "react-router";
-import { ArrowLeft, Briefcase, Plus, Check, X, DollarSign, Loader } from "lucide-react";
+import { Link, Form, useLoaderData, useNavigation, redirect } from "react-router";
+import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { ArrowLeft, Briefcase, Check, DollarSign, Loader, SquarePen } from "lucide-react";
+
+// components:
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Button } from "~/components/ui/button";
+
+// services:
+import {
+  getServicesForModel,
+  applyForService,
+  cancelServiceApplication,
+  updateServiceApplication,
+} from "~/services/service.server";
+import { requireModelSession } from "~/services/model-auth.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -27,21 +48,81 @@ interface LoaderData {
   services: Service[];
 }
 
-export { loader, action } from "./services.server";
+export async function loader({ request }: LoaderFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const services = await getServicesForModel(modelId);
+
+  return { services };
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const modelId = await requireModelSession(request);
+  const formData = await request.formData();
+
+  const serviceId = formData.get("serviceId") as string;
+  const actionType = formData.get("actionType") as string;
+
+  if (actionType === "apply") {
+    const customRate = parseFloat(formData.get("customRate") as string);
+    const result = await applyForService(modelId, serviceId, customRate);
+    if (result?.success) {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+      );
+    } else {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to apply")}&toastType=error`
+      );
+    }
+  } else if (actionType === "edit") {
+    const customRate = parseFloat(formData.get("customRate") as string);
+    const modelServiceId = formData.get("modelServiceId") as string;
+    const result = await updateServiceApplication(
+      modelId,
+      serviceId,
+      modelServiceId,
+      customRate
+    );
+    if (result?.success) {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+      );
+    } else {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to update")}&toastType=error`
+      );
+    }
+  } else if (actionType === "cancel") {
+    const result = await cancelServiceApplication(modelId, serviceId);
+    if (result?.success) {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+      );
+    } else {
+      return redirect(
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to cancel")}&toastType=error`
+      );
+    }
+  }
+
+  return null;
+}
 
 export default function ServicesSettings() {
   const { services } = useLoaderData<LoaderData>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const [applyModal, setApplyModal] = useState<Service | null>(null);
-  const [cancelModal, setCancelModal] = useState<Service | null>(null);
   const [customRate, setCustomRate] = useState<string>("");
+  const [applyModal, setApplyModal] = useState<Service | null>(null);
+  const [editModal, setEditModal] = useState<Service | null>(null);
+  const [cancelModal, setCancelModal] = useState<Service | null>(null);
 
   // Close modals when form submission starts
   useEffect(() => {
     if (isSubmitting) {
       setApplyModal(null);
+      setEditModal(null);
       setCancelModal(null);
     }
   }, [isSubmitting]);
@@ -83,7 +164,7 @@ export default function ServicesSettings() {
           {services.map((service) => (
             <div
               key={service.id}
-              className={`rounded-sm shadow-sm overflow-hidden transition-all hover:shadow-lg space-y-2 py-4 ${service.isApplied ? "border border-rose-500" : "bg-white border"
+              className={`rounded-sm overflow-hidden transition-all hover:shadow-lg space-y-2 py-4 ${service.isApplied ? "border border-rose-500" : "bg-white border"
                 }`}
             >
               <div className={`px-4 ${service.isApplied ? "text-rose-500" : ""}`}>
@@ -130,28 +211,40 @@ export default function ServicesSettings() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-center my-6">
+                <div className="w-full flex items-center justify-center my-6">
                   {service.isApplied ? (
-                    <button
-                      type="button"
-                      onClick={() => setCancelModal(service)}
-                      className="cursor-pointer text-sm w-full flex items-center justify-center gap-2 px-6 py-1.5 text-white rounded-md bg-rose-500 hover:bg-red-600 border border-rose-500"
-                    >
-                      <X className="w-4 h-4" />
-                      Cancel Service
-                    </button>
+                    <div className="w-full flex items-center justify-between gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCancelModal(service)}
+                        className="w-1/2 text-gray-500 hover:bg-gray-100"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setEditModal(service);
+                          setCustomRate(service.customRate?.toString() || service.baseRate.toString());
+                        }}
+                        className="w-1/2 bg-rose-500 hover:bg-rose-600 text-white"
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => {
                         setApplyModal(service);
                         setCustomRate(service.baseRate.toString());
                       }}
-                      className="cursor-pointer text-sm w-full flex items-center justify-center gap-2 px-6 py-1.5 rounded-md border border-rose-300 text-rose-500"
+                      className="w-full border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white"
                     >
-                      <Plus className="w-4 h-4" />
                       Apply Now
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -176,21 +269,15 @@ export default function ServicesSettings() {
       </div>
 
       {/* Apply Modal */}
-      {applyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8">
-          <div className="bg-white rounded-md shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-md text-gray-900">Apply for Service</h2>
-                <button
-                  onClick={() => setApplyModal(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      <Dialog open={!!applyModal} onOpenChange={(open) => !open && setApplyModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-md font-normal">Apply for Service</DialogTitle>
+          </DialogHeader>
 
-              <div className="mb-6 p-4 bg-rose-50 rounded-sm">
+          {applyModal && (
+            <>
+              <div className="mb-4 p-4 bg-rose-50 rounded-sm">
                 <h3 className="font-semibold text-rose-600 mb-2">{applyModal.name}</h3>
                 <p className="text-sm text-gray-700 mb-3">
                   {applyModal.description || "No description available"}
@@ -212,18 +299,18 @@ export default function ServicesSettings() {
                 </div>
               </div>
 
-              {/* Custom Rate Input */}
-              <Form method="post">
+              <Form method="post" className="space-y-4">
                 <input type="hidden" name="serviceId" value={applyModal.id} />
                 <input type="hidden" name="actionType" value="apply" />
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="customRate">
                     Your Custom Rate <span className="text-rose-500">*</span>
-                  </label>
+                  </Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
+                    <Input
+                      id="customRate"
                       type="number"
                       name="customRate"
                       value={customRate}
@@ -231,51 +318,141 @@ export default function ServicesSettings() {
                       step="0.01"
                       min="0"
                       required
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="pl-10"
                       placeholder="Enter your rate"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <button
+                <DialogFooter className="gap-2">
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => setApplyModal(null)}
-                    className="cursor-pointer text-sm flex-1 px-4 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
                   >
                     Close
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    className="cursor-pointer text-sm flex-1 px-4 py-1.5 bg-rose-500 text-white rounded-lg"
+                    className="bg-rose-500 hover:bg-rose-600"
+                    disabled={isSubmitting}
                   >
-                    {isSubmitting ? <Loader size={18} /> : null}
-                    {isSubmitting ? "Applying..." : "Save & Apply"}
-                  </button>
-                </div>
+                    {isSubmitting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin mr-2" />
+                        Applying...
+                      </>
+                    ) : (
+                      "Save & Apply"
+                    )}
+                  </Button>
+                </DialogFooter>
               </Form>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Cancel Confirmation Modal */}
-      {cancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-sm shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-md text-gray-900">Cancel Service</h2>
-                <button
-                  onClick={() => setCancelModal(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* Edit Modal */}
+      <Dialog open={!!editModal} onOpenChange={(open) => !open && setEditModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-md font-normal">Edit Service</DialogTitle>
+          </DialogHeader>
+
+          {editModal && (
+            <>
+              <div className="mb-4 p-4 bg-rose-50 rounded-sm">
+                <h3 className="font-semibold text-rose-600 mb-2">{editModal.name}</h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  {editModal.description || "No description available"}
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Base Rate:</span>
+                    <span className="font-semibold flex items-center gap-1">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      {editModal.baseRate.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Commission:</span>
+                    <span className="font-semibold text-rose-600">
+                      {editModal.commission}%
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="mb-6">
-                <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-4">
+              <Form method="post" className="space-y-4">
+                <input type="hidden" name="serviceId" value={editModal.id} />
+                <input type="hidden" name="modelServiceId" value={editModal.modelServiceId || ""} />
+                <input type="hidden" name="actionType" value="edit" />
+
+                <div className="space-y-2">
+                  <Label htmlFor="editCustomRate">
+                    Your Custom Rate <span className="text-rose-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      id="editCustomRate"
+                      type="number"
+                      name="customRate"
+                      value={customRate}
+                      onChange={(e) => setCustomRate(e.target.value)}
+                      step="0.01"
+                      min="0"
+                      required
+                      className="pl-10"
+                      placeholder="Enter your rate"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Update your hourly rate for this service
+                  </p>
+                </div>
+
+                <DialogFooter className="gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditModal(null)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-rose-500 hover:bg-rose-600"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin mr-2" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Rate"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </Form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Modal */}
+      <Dialog open={!!cancelModal} onOpenChange={(open) => !open && setCancelModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-md font-normal">Cancel Service</DialogTitle>
+          </DialogHeader>
+
+          {cancelModal && (
+            <>
+              <div className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-sm p-4">
                   <p className="text-sm text-red-600">
                     Are you sure you want to cancel your application for{" "}
                     <span className="font-semibold">{cancelModal.name}</span>?
@@ -291,27 +468,34 @@ export default function ServicesSettings() {
                 <input type="hidden" name="serviceId" value={cancelModal.id} />
                 <input type="hidden" name="actionType" value="cancel" />
 
-                <div className="flex gap-3">
-                  <button
+                <DialogFooter className="gap-2">
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => setCancelModal(null)}
-                    className="text-sm flex-1 px-4 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
                   >
                     Keep Service
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    className="text-sm flex-1 px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                    className="bg-red-600 hover:bg-red-700"
+                    disabled={isSubmitting}
                   >
-                    {isSubmitting ? <Loader size={18} /> : null}
-                    {isSubmitting ? "Closing..." : "Confirm Cancel"}
-                  </button>
-                </div>
+                    {isSubmitting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin mr-2" />
+                        Canceling...
+                      </>
+                    ) : (
+                      "Confirm Cancel"
+                    )}
+                  </Button>
+                </DialogFooter>
               </Form>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

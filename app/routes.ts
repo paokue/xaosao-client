@@ -30,7 +30,20 @@ export default [
     // Settings with nested routes
     route("settings", "./routes/model/settings.tsx", [
       route("services", "./routes/model/settings/services.tsx"),
-      route("wallet", "./routes/model/settings/wallet.tsx"),
+      route("wallet", "./routes/model/settings/wallet.tsx", [
+        route(
+          "detail/:transactionId",
+          "./routes/model/settings/wallet/detail.$transactionId.tsx"
+        ),
+        route(
+          "edit/:transactionId",
+          "./routes/model/settings/wallet/edit.$transactionId.tsx"
+        ),
+        route(
+          "delete/:transactionId",
+          "./routes/model/settings/wallet/delete.$transactionId.tsx"
+        ),
+      ]),
       route("password", "./routes/model/settings/password.tsx"),
       route("report", "./routes/model/settings/report.tsx"),
       route("delete-account", "./routes/model/settings/delete-account.tsx"),

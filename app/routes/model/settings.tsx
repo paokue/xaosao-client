@@ -24,7 +24,7 @@ export default function ModelSettings() {
 
   const tabs = [
     { id: "services", label: "Services Apply", icon: Briefcase, path: "/model/settings/services", description: "Manage your service offerings" },
-    { id: "wallet", label: "Wallet Management", icon: Wallet, path: "/model/settings/wallet", description: "View balance and transactions" },
+    { id: "wallet", label: "My Wallet", icon: Wallet, path: "/model/settings/wallet", description: "View balance and transactions" },
     { id: "password", label: "Password Change", icon: Lock, path: "/model/settings/password", description: "Update your password" },
     { id: "report", label: "Report an Issue", icon: AlertCircle, path: "/model/settings/report", description: "Report technical issues" },
     { id: "delete", label: "Delete Account", icon: Trash2, path: "/model/settings/delete-account", description: "Permanently delete account" },
@@ -56,7 +56,7 @@ export default function ModelSettings() {
       </div>
 
       <div className="block lg:hidden px-0 sm:px-8">
-        <div className="bg-white rounded-xl overflow-hidden">
+        <div className="bg-white rounded-xl overflow-hidden border border-green-500">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
             return (
@@ -79,7 +79,7 @@ export default function ModelSettings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
+                <ChevronRight className="w-4 h-4 text-gray-400" />
               </button>
             );
           })}
@@ -87,7 +87,7 @@ export default function ModelSettings() {
       </div>
 
       <div className="hidden lg:block px-0 sm:px-8">
-        <div className="bg-white rounded-xl overflow-hidden">
+        <div className="bg-white rounded-xl overflow-hidden px-6">
           <div className="flex border-b border-gray-200">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -96,7 +96,7 @@ export default function ModelSettings() {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${isActive
+                  className={`cursor-pointer flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${isActive
                     ? tab.id === "delete"
                       ? "border-b-2 border-red-500 text-red-600 bg-red-50"
                       : "border-b-2 border-rose-500 text-rose-600"
@@ -110,7 +110,7 @@ export default function ModelSettings() {
             })}
           </div>
 
-          <div className="p-6 min-h-[500px]">
+          <div className="py-6 min-h-[500px]">
             <Outlet />
           </div>
         </div>

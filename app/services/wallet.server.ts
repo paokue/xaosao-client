@@ -396,6 +396,337 @@ export async function getWalletByCustomerId(customerId: string) {
   }
 }
 
+// get model transactions with pagination
+export async function getModelTransactions(
+  modelId: string,
+  page: number = 1,
+  limit: number = 10
+) {
+  if (!modelId) throw new Error("Missing model id!");
+  if (page < 1) page = 1;
+  if (limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+
+  try {
+    const [transactions, totalCount] = await Promise.all([
+      prisma.transaction_history.findMany({
+        where: { modelId },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.transaction_history.count({
+        where: { modelId },
+      }),
+    ]);
+
+    return {
+      transactions,
+      pagination: {
+        currentPage: page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: skip + limit < totalCount,
+        hasPreviousPage: page > 1,
+      },
+    };
+  } catch (error) {
+    console.error("GET_MODEL_TRANSACTIONS_FAILED", error);
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to get model transactions!",
+    });
+  }
+}
+
+// get wallet by model id
+export async function getWalletByModelId(modelId: string) {
+  if (!modelId) throw new Error("Missing model id!");
+
+  try {
+    const wallet = await prisma.wallet.findFirst({
+      where: {
+        modelId,
+        status: "active",
+      },
+    });
+
+    if (!wallet) {
+      const error = new Error("The wallet does not exist!") as any;
+      error.status = 404;
+      throw error;
+    }
+
+    return wallet;
+  } catch (error) {
+    console.error("GET_WALLET_FAILED", error);
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to get wallet!",
+    });
+  }
+}
+
+// get single transaction by id for model
+export async function getModelTransaction(id: string, modelId: string) {
+  try {
+    return await prisma.transaction_history.findFirst({
+      where: { id, modelId: modelId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  } catch (error) {
+    console.error("GET_TRANSACTIONS_FAILED", error);
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to fetch transactions!",
+    });
+  }
+}
+
+// delete transaction by id for model
+export async function deleteModelTransaction(
+  transactionId: string,
+  modelId: string
+) {
+  if (!modelId) throw new Error("Missing model id!");
+  if (!transactionId) throw new Error("Missing transaction id!");
+
+  const auditBase = {
+    action: "DELETE_TRANSACTION",
+    model: modelId,
+  };
+
+  try {
+    const transaction = await prisma.transaction_history.findUnique({
+      where: {
+        id: transactionId,
+      },
+    });
+
+    if (!transaction) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The transaction does not exist!",
+      });
+    }
+
+    if (transaction.modelId !== modelId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to delete this transaction!",
+      });
+    }
+
+    if (
+      transaction.status === "approved" ||
+      transaction.status === "rejected"
+    ) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message:
+          "This transaction can't be deleted. Please contact admin to process!",
+      });
+    }
+
+    const deletedTransaction = await prisma.transaction_history.delete({
+      where: { id: transactionId },
+    });
+
+    if (deletedTransaction.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Delete transaction: ${deletedTransaction.id} successfully.`,
+        status: "success",
+        onSuccess: deletedTransaction,
+      });
+    }
+    return deletedTransaction;
+  } catch (error) {
+    console.error("DELETE_TRANSACTION_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Delete transaction failed!`,
+      status: "failed",
+      onError: error,
+    });
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to delete transaction!",
+    });
+  }
+}
+
+// update transaction by id for model
+export async function updateModelTransaction(
+  transactionId: string,
+  modelId: string,
+  transactionData: ITransactionCredentials
+) {
+  if (!modelId) throw new Error("Missing model id!");
+  if (!transactionId) throw new Error("Missing transaction id!");
+
+  const auditBase = {
+    action: "UPDATE_TRANSACTION",
+    model: modelId,
+  };
+
+  try {
+    const transaction = await prisma.transaction_history.findUnique({
+      where: {
+        id: transactionId,
+      },
+    });
+
+    if (!transaction) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The transaction does not exist!",
+      });
+    }
+
+    if (transaction.modelId !== modelId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to edit this transaction!",
+      });
+    }
+
+    const updateTransaction = await prisma.transaction_history.update({
+      where: { id: transactionId },
+      data: {
+        amount: +transactionData.amount,
+        paymentSlip: transactionData.paymentSlip,
+      },
+    });
+
+    if (updateTransaction.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Edit transaction: ${updateTransaction.id} successfully.`,
+        status: "success",
+        onSuccess: updateTransaction,
+      });
+    }
+    return updateTransaction;
+  } catch (error: any) {
+    console.error("UPDATE_TRANSACTION_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Update transaction failed!`,
+      status: "failed",
+      onError: error,
+    });
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to update withdrawal information!",
+    });
+  }
+}
+
+// withdraw funds for models
+export async function withdrawFunds(
+  modelId: string,
+  amount: number,
+  bankAccount: string
+) {
+  if (!modelId) throw new Error("Missing model id!");
+  if (!amount || amount <= 0) throw new Error("Invalid withdrawal amount!");
+
+  const auditBase = {
+    action: "WITHDRAW_FUNDS",
+    model: modelId,
+  };
+
+  try {
+    // Get model's wallet
+    const wallet = await prisma.wallet.findFirst({
+      where: {
+        modelId,
+        status: "active",
+      },
+    });
+
+    if (!wallet) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Wallet not found!",
+      });
+    }
+
+    // Check if sufficient balance
+    if (wallet.totalBalance < amount) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Insufficient balance!",
+      });
+    }
+
+    // Create withdrawal transaction with pending status
+    const withdrawalTransaction = await prisma.transaction_history.create({
+      data: {
+        identifier: "withdrawal",
+        amount,
+        paymentSlip: null,
+        status: "pending",
+        comission: 0,
+        fee: 0,
+        modelId: modelId,
+        reason: `Withdrawal to bank account: ${bankAccount}`,
+      },
+    });
+
+    if (withdrawalTransaction.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Withdrawal request: ${withdrawalTransaction.id} - ${amount} to ${bankAccount}`,
+        status: "success",
+        onSuccess: withdrawalTransaction,
+      });
+    }
+
+    return {
+      success: true,
+      error: false,
+      message: "Withdrawal request submitted successfully! Awaiting admin approval.",
+    };
+  } catch (error) {
+    console.error("WITHDRAW_FUNDS_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Withdrawal request failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    // Re-throw FieldValidationError as-is
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to process withdrawal request!",
+    });
+  }
+}
+
 // deduct balance from wallet for subscription payment
 export async function deductFromWallet(
   customerId: string,

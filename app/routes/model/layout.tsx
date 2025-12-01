@@ -52,7 +52,6 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         { title: t('navigation.match'), url: "/model/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/model/realtime-chat", icon: MessageCircle },
         { title: t('navigation.datingHistory'), url: "/model/dates-history", icon: HandHeart },
-        { title: t('navigation.wallet'), url: "/model/wallets", icon: Wallet },
         { title: t('navigation.myProfile'), url: "/model/profile", icon: User },
         { title: t('navigation.setting'), url: "/model/settings", icon: Settings },
     ], [t, i18n.language]);
@@ -62,7 +61,6 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         { title: t('navigation.match'), url: "/model/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/model/realtime-chat", icon: MessageCircle },
         { title: t('navigation.dating'), url: "/model/dates-history", icon: HandHeart },
-        { title: t('navigation.wallet'), url: "/model/wallets", icon: Wallet2 },
         { title: t('navigation.profile'), url: "/model/profile", icon: User2Icon },
     ], [t, i18n.language]);
 
