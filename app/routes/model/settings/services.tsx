@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, Form, useLoaderData, useNavigation, redirect } from "react-router";
+import { Briefcase, Check, DollarSign, Loader } from "lucide-react";
+import { Form, useLoaderData, useNavigation, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { ArrowLeft, Briefcase, Check, DollarSign, Loader, SquarePen } from "lucide-react";
 
 // components:
 import {
@@ -51,7 +51,6 @@ interface LoaderData {
 export async function loader({ request }: LoaderFunctionArgs) {
   const modelId = await requireModelSession(request);
   const services = await getServicesForModel(modelId);
-
   return { services };
 }
 
@@ -128,22 +127,14 @@ export default function ServicesSettings() {
   }, [isSubmitting]);
 
   return (
-    <div className="p-4 lg:p-0">
+    <div className="p-2 sm:p-4 lg:p-0">
       <div className="mb-6 lg:hidden">
-        <Link
-          to="/model/settings"
-          className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Settings</span>
-        </Link>
-
         <div className="flex items-center gap-3">
           <div className="p-2 bg-rose-100 rounded-lg">
-            <Briefcase className="w-6 h-6 text-rose-600" />
+            <Briefcase className="w-4 h-4 text-rose-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-md">
               Services Apply
             </h1>
             <p className="text-sm text-gray-600">Apply for services to start earning</p>

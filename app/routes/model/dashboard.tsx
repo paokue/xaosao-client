@@ -148,7 +148,7 @@ export default function ModelDashboard() {
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="mb-8">
-        <h1 className="text-lg sm:text-xl bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent text-shadow-sm">
+        <h1 className="text-lg sm:text-xl text-rose-500 text-shadow-sm">
           Online partners for you
         </h1>
         <p className="text-sm text-gray-600">

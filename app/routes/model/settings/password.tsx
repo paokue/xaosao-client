@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, Eye, EyeOff, Shield, Loader } from "lucide-react";
-import { Link, Form, useNavigation, useSearchParams, redirect } from "react-router";
+import { Lock, Eye, EyeOff, Shield, Loader } from "lucide-react";
+import { Form, useNavigation, useSearchParams, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
 // components:
@@ -81,7 +81,6 @@ const checkPasswordStrength = (password: string): { strength: 'weak' | 'medium' 
   if (password.length >= 10) score += 1;
   if (password.length >= 12) score += 1;
 
-  // Character variety checks
   if (/[a-z]/.test(password)) score += 1; // lowercase
   if (/[A-Z]/.test(password)) score += 1; // uppercase
   if (/[0-9]/.test(password)) score += 1; // numbers
@@ -118,7 +117,6 @@ export default function PasswordSettings() {
   // Clear password fields on success and clear messages after 5 seconds
   useEffect(() => {
     if (successMessage) {
-      // Clear all password states on success
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -140,22 +138,14 @@ export default function PasswordSettings() {
   }, [successMessage, errorMessage, searchParams, setSearchParams]);
 
   return (
-    <div className="p-4 lg:p-0 space-y-4">
+    <div className="p-2 sm:p-4 lg:p-0 space-y-4">
       <div className="mb-6 lg:hidden">
-        <Link
-          to="/model/settings"
-          className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 cursor-pointer" />
-          <span>Back to Settings</span>
-        </Link>
-
         <div className="flex items-center gap-3">
           <div className="p-2 bg-rose-100 rounded-lg">
-            <Lock className="w-6 h-6 text-rose-600" />
+            <Lock className="w-4 h-4 text-rose-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-md">
               Password Change
             </h1>
             <p className="text-sm text-gray-600">Update your account password</p>
@@ -175,8 +165,8 @@ export default function PasswordSettings() {
         </div>
       )}
 
-      <div className="bg-white rounded-sm p-6 border">
-        <Form method="post" className="space-y-6">
+      <div className="bg-white rounded-sm p-4 sm:p-6 border">
+        <Form method="post" className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="currentPassword">
               Current Password <span className="text-rose-500">*</span>
@@ -298,14 +288,16 @@ export default function PasswordSettings() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-auto bg-rose-500 text-white hover:bg-rose-600"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? <Loader size={18} className="animate-spin" /> : null}
-            {isSubmitting ? "Updating..." : "Update Password"}
-          </Button>
+          <div className="w-full flex justify-end sm:justify-start">
+            <Button
+              type="submit"
+              className="w-auto bg-rose-500 text-white hover:bg-rose-600"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader size={18} className="animate-spin" /> : null}
+              {isSubmitting ? "Updating..." : "Update Password"}
+            </Button>
+          </div>
         </Form>
       </div>
 

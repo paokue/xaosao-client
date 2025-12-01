@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useNavigate, useNavigation, useSearchParams, redirect, useFetcher } from 'react-router';
-import { BadgeCheck, Settings, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, Pencil, Book, BriefcaseBusiness, Trash2, Upload, Loader, Info, Building2, Plus, CreditCard, UserRoundPen } from 'lucide-react';
+import { BadgeCheck, Settings, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, Pencil, Book, BriefcaseBusiness, Trash2, Upload, Loader, Info, Building2, Plus, CreditCard, UserRoundPen, MoreVertical } from 'lucide-react';
 
 // components
 import {
@@ -28,14 +28,20 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Separator } from '~/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 // services and utils
 import { requireModelSession } from '~/services/model-auth.server';
-import { getModelOwnProfile, createModelImage, deleteModelImage, updateModelImage, getModelBanks, createModelBank, updateModelBank, deleteModelBank } from '~/services/model-profile.server';
-import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
-import type { IModelOwnProfileResponse, IModelBank } from '~/interfaces/model-profile';
-import { capitalize, getFirstWord, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
 import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
+import type { IModelOwnProfileResponse, IModelBank } from '~/interfaces/model-profile';
+import { deleteFileFromBunny, uploadFileToBunnyServer } from '~/services/upload.server';
+import { capitalize, getFirstWord, extractFilenameFromCDNSafe } from '~/utils/functions/textFormat';
+import { getModelOwnProfile, createModelImage, deleteModelImage, updateModelImage, getModelBanks, createModelBank, updateModelBank, deleteModelBank } from '~/services/model-profile.server';
 
 const MAX_IMAGES = 6;
 
@@ -399,7 +405,6 @@ export default function ModelProfilePage() {
         if (editingBank) {
             formData.append("actionType", "updateBank");
             formData.append("bankId", editingBank.id);
-            // Pass existing QR code URL for update logic
             if (editingBank.qr_code && !qrCodeFile) {
                 formData.append("existing_qr_code", editingBank.qr_code);
             }
@@ -648,11 +653,11 @@ export default function ModelProfilePage() {
                             )}
 
                             {banks.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {banks.map((bank) => {
                                         const isDeleting = deletingBankId === bank.id;
                                         return (
-                                            <Card key={bank.id} className={`py-2 relative border-gray-200 ${isDeleting ? 'opacity-50' : ''}`}>
+                                            <Card key={bank.id} className={`py-4 relative border-gray-200 rounded-sm hover:border-rose-500 hover:bg-rose-50 cursor-pointer ${isDeleting ? 'opacity-50' : ''}`}>
                                                 {isDeleting && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-lg">
                                                         <div className="flex flex-col items-center gap-2">
@@ -661,54 +666,60 @@ export default function ModelProfilePage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                <CardHeader>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="p-2 bg-rose-100 rounded-lg">
-                                                                <Building2 className="w-4 h-4 text-rose-600" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
+
+                                                <div className="absolute top-2 right-2">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
                                                             <button
                                                                 type="button"
-                                                                className="cursor-pointer p-1.5 text-gray-500 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
-                                                                onClick={() => handleOpenEditBankModal(bank)}
+                                                                className="cursor-pointer p-1.5 text-gray-500 hover:text-rose-700 hover:bg-rose-100 rounded-full transition-colors"
                                                                 disabled={isDeleting}
                                                             >
-                                                                <Pencil size={14} />
+                                                                <MoreVertical size={18} />
                                                             </button>
-                                                            <button
-                                                                type="button"
-                                                                className="cursor-pointer p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                                                onClick={() => handleOpenDeleteBankModal(bank)}
-                                                                disabled={isDeleting || isSubmitting}
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem
+                                                                className="cursor-pointer"
+                                                                onClick={() => handleOpenEditBankModal(bank)}
                                                             >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="space-y-2">
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <span className="text-sm">Bank name:&nbsp; {bank.bank_name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <span className="text-sm">Account name:&nbsp; {bank.bank_account_name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <span className="text-sm">Account number:&nbsp;{bank.bank_account_number}</span>
-                                                    </div>
-                                                    <div className='flex items-center justify-center flex-col space-y-2'>
+                                                                <Pencil size={14} className="mr-2" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="cursor-pointer text-red-500 focus:text-red-500"
+                                                                onClick={() => handleOpenDeleteBankModal(bank)}
+                                                                disabled={isSubmitting}
+                                                            >
+                                                                <Trash2 size={14} className="mr-2" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                                <CardContent className="space-y-2 pt-2 flex gap-4">
+                                                    <div className='flex items-center justify-center flex-col space-y-1'>
                                                         {bank.qr_code && (
-                                                            <div className="mt-3">
+                                                            <div className="">
                                                                 <img
                                                                     src={bank.qr_code}
                                                                     alt="QR Code"
-                                                                    className="w-30 h-30 object-contain border rounded"
+                                                                    className="w-20 h-20 object-contain border rounded"
                                                                 />
                                                             </div>
                                                         )}
-                                                        <span className='text-gray-500 text-sm'>Qr Code</span>
+                                                        <span className='text-gray-500 text-sm'>Qr code</span>
+                                                    </div>
+                                                    <div className='space-y-2'>
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <span className="text-sm">Bank name:&nbsp; {bank.bank_name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <span className="text-sm">Account name:&nbsp; {bank.bank_account_name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <span className="text-sm">Account number:&nbsp;{bank.bank_account_number}</span>
+                                                        </div>
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -958,7 +969,6 @@ export default function ModelProfilePage() {
                     </Tabs>
                 </div>
 
-                {/* Bank Create/Edit Modal */}
                 <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
                     <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
@@ -1006,26 +1016,47 @@ export default function ModelProfilePage() {
                                     onChange={handleQrCodeFileChange}
                                 />
                                 {qrCodePreview ? (
-                                    <div className="relative w-32 h-32 border rounded-lg overflow-hidden group">
-                                        <img
-                                            src={qrCodePreview}
-                                            alt="QR Code Preview"
-                                            className="w-full h-full object-contain"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="cursor-pointer relative w-32 h-32 border rounded-lg overflow-hidden group">
+                                            <img
+                                                src={qrCodePreview}
+                                                alt="QR Code Preview"
+                                                className="w-full h-full object-contain"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    className="p-1.5 bg-white rounded-full text-rose-500 hover:bg-rose-50"
+                                                    onClick={() => qrCodeInputRef.current?.click()}
+                                                >
+                                                    <Upload size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="p-1.5 bg-white rounded-full text-red-500 hover:bg-red-50"
+                                                    onClick={handleRemoveQrCode}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex sm:hidden flex-col gap-2">
                                             <button
                                                 type="button"
-                                                className="p-1.5 bg-white rounded-full text-rose-500 hover:bg-rose-50"
+                                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-rose-500 bg-rose-50 border border-rose-200 rounded-md hover:bg-rose-100"
                                                 onClick={() => qrCodeInputRef.current?.click()}
                                             >
-                                                <Upload size={16} />
+                                                <Upload size={14} />
+                                                Change
                                             </button>
                                             <button
                                                 type="button"
-                                                className="p-1.5 bg-white rounded-full text-red-500 hover:bg-red-50"
+                                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
                                                 onClick={handleRemoveQrCode}
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={14} />
+                                                Remove
                                             </button>
                                         </div>
                                     </div>
@@ -1040,7 +1071,7 @@ export default function ModelProfilePage() {
                                 )}
                             </div>
                         </div>
-                        <DialogFooter>
+                        <div className="flex items-center justify-end gap-4">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -1061,14 +1092,13 @@ export default function ModelProfilePage() {
                                         {editingBank ? 'Updating...' : 'Creating...'}
                                     </>
                                 ) : (
-                                    editingBank ? 'Update Bank' : 'Add Bank'
+                                    editingBank ? 'Update' : 'Add Now'
                                 )}
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </DialogContent>
                 </Dialog>
 
-                {/* Delete Bank Confirmation Modal */}
                 <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
                     <DialogContent className="sm:max-w-[500px]">
                         <DialogHeader>
@@ -1094,7 +1124,7 @@ export default function ModelProfilePage() {
                                 </div>
                             </div>
                         )}
-                        <DialogFooter>
+                        <div className="flex items-center justify-end gap-4">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -1110,7 +1140,7 @@ export default function ModelProfilePage() {
                                 <Trash2 className="w-4 h-4" />
                                 Delete Bank
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </DialogContent>
                 </Dialog>
             </div>

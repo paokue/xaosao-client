@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import {
   Eye,
   Trash,
@@ -16,13 +14,15 @@ import {
 import {
   Link,
   Form,
+  Outlet,
+  redirect,
   useNavigate,
   useNavigation,
   useSearchParams,
   useLoaderData,
-  Outlet,
-  redirect,
 } from "react-router";
+import React, { useState } from "react";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
 // Services and Utils
 import { formatCurrency } from "~/utils";
@@ -33,10 +33,11 @@ import type { PaginationProps } from "~/interfaces/pagination";
 import { getModelBanks } from "~/services/model-profile.server";
 import { requireModelSession } from "~/services/model-auth.server";
 import type { ITransactionResponse } from "~/interfaces/transaction";
+
 import {
-  getModelTransactions,
-  getWalletByModelId,
   withdrawFunds,
+  getWalletByModelId,
+  getModelTransactions,
 } from "~/services/wallet.server";
 
 // components
@@ -64,6 +65,7 @@ import {
   DialogFooter,
 } from "~/components/ui/dialog";
 import Pagination from "~/components/ui/pagination";
+import { Separator } from "~/components/ui/separator";
 
 interface LoaderReturn {
   wallet: IWalletResponse;
@@ -158,7 +160,7 @@ export default function ModelWalletPage() {
       setWithdrawModal(false);
     }
   }, [isLoading]);
-  
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesTab =
       activeTab === "All" ||
@@ -181,9 +183,9 @@ export default function ModelWalletPage() {
 
   return (
     <>
-      <div className="p-4 lg:p-0">
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+      <div className="w-full p-0 sm:p-4 lg:p-0">
+        <div className="w-full space-y-2">
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
             <div className="bg-gradient-to-r from-rose-600 to-rose-400 rounded-md py-4 px-6 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -translate-x-10 translate-y-10"></div>
@@ -228,7 +230,7 @@ export default function ModelWalletPage() {
             </div>
             <button
               onClick={() => setWithdrawModal(true)}
-              className="cursor-pointer flex items-center justify-center border border-rose-500 rounded-md gap-2 hover:bg-rose-50"
+              className="hidden cursor-pointer sm:flex items-center justify-center border border-rose-500 rounded-md gap-2 hover:bg-rose-50"
             >
               <ArrowDownToLine className="text-gray-500" size={18} />
               <span className="text-gray-500">Withdraw Funds</span>
@@ -236,7 +238,7 @@ export default function ModelWalletPage() {
           </div>
 
           <div className="bg-white rounded-md overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
+            <div className="py-2 sm:py-4 px-0 sm:px-2">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-md sm:text-md font-normal text-gray-600">
                   Withdrawal History
@@ -249,7 +251,7 @@ export default function ModelWalletPage() {
                     <button
                       key={tab.key}
                       onClick={() => setActiveTab(tab.key)}
-                      className={`cursor-pointer px-4 py-1 rounded-full whitespace-nowrap font-medium text-sm transition-colors ${activeTab === tab.key
+                      className={`cursor-pointer px-4 py-1 rounded-sm whitespace-nowrap font-medium text-sm transition-colors ${activeTab === tab.key
                         ? "bg-rose-100 text-rose-600 border border-rose-300"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                         }`}
@@ -261,15 +263,17 @@ export default function ModelWalletPage() {
               </div>
             </div>
 
+            <Separator />
+
             <div className="divide-y divide-gray-100 cursor-pointer">
               {filteredTransactions && filteredTransactions.length > 0 ? (
                 filteredTransactions.map((transaction, index: number) => (
                   <div
                     key={transaction.id}
-                    className="p-4 hover:bg-gray-50 transition-colors group"
+                    className="p-2 sm:p-4 hover:bg-gray-50 transition-colors group"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-start justify-start space-x-8">
+                      <div className="flex items-center justify-start space-x-8">
                         <p className="text-gray-500">{index + 1}</p>
                         <div className="flex items-center gap-4">
                           <div
@@ -410,11 +414,18 @@ export default function ModelWalletPage() {
               )}
             </div>
           </div>
+
+          <button
+            onClick={() => setWithdrawModal(true)}
+            className="sm:hidden fixed bottom-18 right-4 bg-rose-500 hover:bg-rose-600 text-white rounded-lg py-2 px-4 shadow-lg flex items-center justify-center z-9"
+          >
+            <ArrowDownToLine className="h-4 w-4" /> Withdraw
+          </button>
         </div>
       </div>
 
       <Dialog open={withdrawModal} onOpenChange={setWithdrawModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-md font-normal">Withdraw Funds</DialogTitle>
           </DialogHeader>
@@ -483,7 +494,7 @@ export default function ModelWalletPage() {
                   min="0.01"
                   max={wallet.totalBalance}
                   required
-                  className="pl-10"
+                  className="pl-10 text-sm"
                   placeholder="Enter amount"
                 />
               </div>

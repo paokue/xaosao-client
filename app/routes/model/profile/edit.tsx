@@ -161,8 +161,8 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
     }
 
     return (
-        <Modal onClose={closeHandler} className="w-full sm:w-3/5 h-screen sm:h-auto border">
-            <Form method="patch" encType="multipart/form-data" className="py-2 space-y-4">
+        <Modal onClose={closeHandler} className="w-full sm:w-3/5 h-[100dvh] sm:h-auto border overflow-hidden">
+            <Form method="patch" encType="multipart/form-data" className="py-2 space-y-4 h-full overflow-y-auto">
                 <div className="flex items-center justify-between block sm:hidden">
                     <div className="flex items-center" onClick={() => navigate("/model/profile")}>
                         <ChevronLeft />

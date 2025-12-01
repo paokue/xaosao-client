@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, Form, useNavigation, useSearchParams, redirect } from "react-router";
+import { Trash2, ShieldAlert, Eye, EyeOff, Loader } from "lucide-react";
+import { Form, useNavigation, useSearchParams, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
-import { ArrowLeft, Trash2, AlertCircle, ShieldAlert, Eye, EyeOff, Loader } from "lucide-react";
 
 // components:
 import { Input } from "~/components/ui/input";
@@ -51,10 +51,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = await deleteModelAccount(modelId, password, reason || undefined);
 
     if (result?.success) {
-      // Destroy the session after successful deletion
       await destroyModelSession(request);
 
-      // Redirect to login page with success message
       return redirect(
         `/model/login?message=${encodeURIComponent("Your account has been permanently deleted.")}`
       );
@@ -75,11 +73,9 @@ export default function DeleteAccountSettings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
 
+  const errorMessage = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
 
-  const errorMessage = searchParams.get("error");
-
-  // Clear error messages after 5 seconds
   useEffect(() => {
     if (errorMessage) {
       const timeout = setTimeout(() => {
@@ -91,22 +87,14 @@ export default function DeleteAccountSettings() {
   }, [errorMessage, searchParams, setSearchParams]);
 
   return (
-    <div className="p-4 lg:p-0 space-y-4">
+    <div className="p-2 sm:p-4 lg:p-0 space-y-4">
       <div className="mb-6 lg:hidden">
-        <Link
-          to="/model/settings"
-          className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 cursor-pointer" />
-          <span>Back to Settings</span>
-        </Link>
-
         <div className="flex items-center gap-3">
           <div className="p-2 bg-red-100 rounded-lg">
-            <Trash2 className="w-6 h-6 text-red-600" />
+            <Trash2 className="w-4 h-4 text-red-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+            <h1 className="text-md">
               Delete Account
             </h1>
             <p className="text-sm text-gray-600">Permanently remove your account</p>
@@ -120,8 +108,8 @@ export default function DeleteAccountSettings() {
         </div>
       )}
 
-      <div className="bg-white rounded-sm p-6 border">
-        <Form method="post" className="space-y-6">
+      <div className="bg-white rounded-sm p-3 sm:p-6 border">
+        <Form method="post" className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="confirmText">
               Type <span className="font-bold text-red-600">DELETE</span> to confirm{" "}
@@ -181,14 +169,16 @@ export default function DeleteAccountSettings() {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-auto bg-red-600 text-white hover:bg-red-700"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? <Loader size={18} className="animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            {isSubmitting ? "Deleting Account..." : "Permanently Delete Account"}
-          </Button>
+          <div className="w-full flex justify-end sm:justify-start">
+            <Button
+              type="submit"
+              className="w-auto bg-red-600 text-white hover:bg-red-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader size={18} className="animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {isSubmitting ? "Deleting Account..." : "Permanently Delete Account"}
+            </Button>
+          </div>
         </Form>
       </div>
 

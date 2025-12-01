@@ -5,11 +5,13 @@ import {
   Settings,
   Briefcase,
   AlertCircle,
+  ChevronLeft,
   ChevronRight
 } from "lucide-react";
-import { useNavigate, useLocation, Outlet } from "react-router";
-import type { MetaFunction } from "react-router";
 import { useEffect } from "react";
+import type { MetaFunction } from "react-router";
+import { Separator } from "~/components/ui/separator";
+import { useNavigate, useLocation, Outlet } from "react-router";
 
 export const meta: MetaFunction = () => {
   return [
@@ -30,60 +32,81 @@ export default function ModelSettings() {
     { id: "delete", label: "Delete Account", icon: Trash2, path: "/model/settings/delete-account", description: "Permanently delete account" },
   ];
 
-  // Redirect to first tab if on settings index
+  // Redirect to first tab if on settings index (only on desktop)
   useEffect(() => {
     if (location.pathname === "/model/settings") {
-      navigate("/model/settings/services", { replace: true });
+      const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+      if (isDesktop) {
+        navigate("/model/settings/services", { replace: true });
+      }
     }
   }, [location.pathname, navigate]);
 
   const currentPath = location.pathname;
+  const isChildRouteActive = currentPath !== "/model/settings" && currentPath.startsWith("/model/settings/");
 
   return (
     <div className="min-h-screen py-4 sm:py-6 px-4 sm:px-8">
-      <div className="mb-6 px-0 sm:px-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-rose-100 rounded-lg">
-            <Settings className="w-4 h-4 text-rose-600" />
-          </div>
-          <div>
-            <h1 className="text-md">
-              Settings
-            </h1>
-            <p className="text-gray-600 text-sm">Manage your account and preferences</p>
-          </div>
-        </div>
-      </div>
 
-      <div className="block lg:hidden px-0 sm:px-8">
-        <div className="bg-white rounded-xl overflow-hidden border border-green-500">
-          {tabs.map((tab, index) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => navigate(tab.path)}
-                className={`w-full flex items-center justify-between p-4 hover:bg-rose-50 transition-colors ${index !== tabs.length - 1 ? "border-b border-gray-100" : ""
-                  }`}
+      {!isChildRouteActive && (
+        <>
+          <div className="px-0 sm:px-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className="p-2 bg-rose-100 rounded-lg"
+                onClick={() => navigate("/model/settings")}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${tab.id === "delete" ? "bg-red-100" : "bg-rose-100"
-                    }`}>
-                    <Icon className={`w-4 h-4 ${tab.id === "delete" ? "text-red-600" : "text-rose-600"
-                      }`} />
+                <Settings className="w-4 h-4 text-rose-600" />
+              </div>
+              <div>
+                <h1 className="text-md font-bold">
+                  Settings
+                </h1>
+                <p className="text-gray-600 text-sm">Manage your account and preferences</p>
+              </div>
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Mobile: Show menu list only when on settings index, otherwise show child content */}
+      <div className="block lg:hidden px-0 sm:px-8">
+        {!isChildRouteActive ? (
+          <div className="bg-white rounded-xl overflow-hidden">
+            {tabs.map((tab, index) => {
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => navigate(tab.path)}
+                  className={`cursor-pointer w-full flex items-center justify-between p-4 hover:bg-rose-50 transition-colors ${index !== tabs.length - 1 ? "border-b border-gray-100" : ""
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-left">
+                      <h3 className="font-medium text-gray-900">{tab.label}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {tab.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <h3 className="font-medium text-gray-900">{tab.label}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {tab.description}
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            );
-          })}
-        </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-0 sm:py-4">
+            <button
+              onClick={() => navigate("/model/settings")}
+              className="flex items-center gap-2 text-gray-600 hover:text-rose-500 mb-4 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Settings</span>
+            </button>
+            <Outlet />
+          </div>
+        )}
       </div>
 
       <div className="hidden lg:block px-0 sm:px-8">
