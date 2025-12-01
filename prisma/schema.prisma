@@ -251,6 +251,7 @@ model model {
   reports               reports[]
   friend_contacts       friend_contacts[]
   service_booking       service_booking[]
+  banks                 banks[]
 }
 
 // subscription
@@ -338,6 +339,20 @@ model images {
 
   customer   customer? @relation(fields: [customerId], references: [id])
   customerId String?   @db.ObjectId
+}
+
+model banks {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  bank_name           String
+  bank_account_name   String   @unique
+  bank_account_number Float    @unique
+  qr_code             String?
+  status              String   @default("active")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  model   model?  @relation(fields: [modelId], references: [id])
+  modelId String? @db.ObjectId
 }
 
 // customer like model

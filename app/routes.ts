@@ -26,6 +26,8 @@ export default [
     index("./routes/model/dashboard.tsx"),
     route("requests", "./routes/model/requests.tsx"),
     route("matches", "./routes/model/matches/matches.tsx"),
+    route("profile", "./routes/model/profile/profile.tsx"),
+    route("profile/edit", "./routes/model/profile/edit.tsx"),
 
     // Settings with nested routes
     route("settings", "./routes/model/settings.tsx", [
@@ -52,10 +54,6 @@ export default [
     // your new chat route
     route("realtime-chat", "./routes/model/chat/chat-wrapper.tsx"),
     route("chat", "./routes/model/chat/single-chat-wrapper.tsx"),
-
-    // route("profile", "./routes/model/profile.tsx"),      // Not yet created
-    // route("earnings", "./routes/model/earnings.tsx"),    // Not yet created
-    // route("messages", "./routes/model/messages.tsx"),    // Not yet created
   ]),
 
   route("customer", "./routes/customer/layout.tsx", [

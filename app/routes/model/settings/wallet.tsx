@@ -28,9 +28,11 @@ import {
 import { formatCurrency } from "~/utils";
 import type { IWalletResponse } from "~/interfaces";
 import { capitalize } from "~/utils/functions/textFormat";
+import type { IModelBank } from "~/interfaces/model-profile";
 import type { PaginationProps } from "~/interfaces/pagination";
-import type { ITransactionResponse } from "~/interfaces/transaction";
+import { getModelBanks } from "~/services/model-profile.server";
 import { requireModelSession } from "~/services/model-auth.server";
+import type { ITransactionResponse } from "~/interfaces/transaction";
 import {
   getModelTransactions,
   getWalletByModelId,
@@ -67,6 +69,7 @@ interface LoaderReturn {
   wallet: IWalletResponse;
   transactions: ITransactionResponse[];
   pagination: PaginationProps;
+  banks: IModelBank[];
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -75,14 +78,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const page = Number(url.searchParams.get("page") || 1);
   const take = 10;
 
-  const wallet = await getWalletByModelId(modelId);
+  const [wallet, { transactions, pagination }, banks] = await Promise.all([
+    getWalletByModelId(modelId),
+    getModelTransactions(modelId, page, take),
+    getModelBanks(modelId),
+  ]);
 
-  const { transactions, pagination } = await getModelTransactions(
-    modelId,
-    page,
-    take
-  );
-  return { wallet, transactions, pagination };
+  return { wallet, transactions, pagination, banks };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -115,12 +117,12 @@ export default function ModelWalletPage() {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
-  const { wallet, transactions, pagination } = useLoaderData<LoaderReturn>();
   const isLoading = navigation.state === "loading";
+  const { wallet, transactions, pagination, banks } = useLoaderData<LoaderReturn>();
 
   // For toast messages
-  const toastMessage = searchParams.get("toastMessage");
   const toastType = searchParams.get("toastType");
+  const toastMessage = searchParams.get("toastMessage");
   const showToast = (
     message: string,
     type: "success" | "error" | "warning" = "success",
@@ -442,11 +444,24 @@ export default function ModelWalletPage() {
                   <SelectValue placeholder="Select bank account" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="account1">Bank Account - ****1234</SelectItem>
-                  <SelectItem value="account2">Bank Account - ****5678</SelectItem>
-                  <SelectItem value="account3">Bank Account - ****9012</SelectItem>
+                  {banks.length > 0 ? (
+                    banks.map((bank) => (
+                      <SelectItem key={bank.id} value={bank.id}>
+                        {bank.bank_name} - {bank.bank_account_name} (****{String(bank.bank_account_number).slice(-4)})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No bank accounts found
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
+              {banks.length === 0 && (
+                <p className="text-xs text-orange-500">
+                  Please add a bank account in your profile settings first.
+                </p>
+              )}
               <p className="text-xs text-gray-500">
                 Select the bank account for transfer
               </p>
