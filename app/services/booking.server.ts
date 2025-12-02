@@ -4,6 +4,91 @@ import { FieldValidationError } from "./base.server";
 import type { IServiceBookingCredentials } from "~/interfaces/service";
 
 // ========================================
+// GPS & Location Helper Functions
+// ========================================
+
+/**
+ * Calculate distance between two GPS coordinates using Haversine formula
+ * @returns Distance in kilometers
+ */
+function calculateDistance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Check if user is within acceptable radius of booking location
+ * @param userLat User's current latitude
+ * @param userLng User's current longitude
+ * @param bookingLat Booking location latitude
+ * @param bookingLng Booking location longitude
+ * @param radiusKm Acceptable radius in kilometers (default 0.5km = 500m)
+ */
+export function isWithinCheckInRadius(
+  userLat: number,
+  userLng: number,
+  bookingLat: number,
+  bookingLng: number,
+  radiusKm: number = 0.5
+): { isWithin: boolean; distance: number } {
+  const distance = calculateDistance(userLat, userLng, bookingLat, bookingLng);
+  return {
+    isWithin: distance <= radiusKm,
+    distance: Math.round(distance * 1000), // Convert to meters
+  };
+}
+
+/**
+ * Check if booking time is within check-in window
+ * Can check in from 30 minutes before start time until end of booking
+ */
+export function isWithinCheckInTimeWindow(
+  startDate: Date,
+  endDate?: Date | null
+): { canCheckIn: boolean; message: string } {
+  const now = new Date();
+  const bookingStart = new Date(startDate);
+  const checkInWindowStart = new Date(bookingStart.getTime() - 30 * 60 * 1000); // 30 min before
+
+  if (now < checkInWindowStart) {
+    const minutesUntil = Math.ceil(
+      (checkInWindowStart.getTime() - now.getTime()) / (1000 * 60)
+    );
+    return {
+      canCheckIn: false,
+      message: `Check-in opens ${minutesUntil} minutes before the booking starts.`,
+    };
+  }
+
+  // If there's an end date, check if we're past it
+  if (endDate) {
+    const bookingEnd = new Date(endDate);
+    if (now > bookingEnd) {
+      return {
+        canCheckIn: false,
+        message: "This booking has already ended.",
+      };
+    }
+  }
+
+  return { canCheckIn: true, message: "" };
+}
+
+// ========================================
 // Escrow Payment Helper Functions
 // ========================================
 
@@ -1015,7 +1100,8 @@ export async function deleteModelBooking(id: string, modelId: string) {
 
 /**
  * Complete booking (Model marks the date as completed after service is done)
- * Releases the held payment to model's wallet
+ * Sets status to awaiting_confirmation - customer has 48h to confirm or dispute
+ * Payment is NOT released yet - only after customer confirms or 48h passes
  */
 export async function completeBooking(id: string, modelId: string) {
   if (!id) throw new Error("Missing booking id!");
@@ -1047,11 +1133,12 @@ export async function completeBooking(id: string, modelId: string) {
       });
     }
 
-    if (booking.status !== "confirmed") {
+    // Allow completion from in_progress OR confirmed status
+    if (booking.status !== "in_progress" && booking.status !== "confirmed") {
       throw new FieldValidationError({
         success: false,
         error: true,
-        message: "Only confirmed bookings can be marked as completed!",
+        message: "Only in-progress or confirmed bookings can be marked as completed!",
       });
     }
 
@@ -1066,37 +1153,30 @@ export async function completeBooking(id: string, modelId: string) {
       });
     }
 
-    // Release payment to model if held
-    let releaseTransaction = null;
-    if (booking.paymentStatus === "held" && booking.holdTransactionId) {
-      releaseTransaction = await releasePaymentToModel(
-        modelId,
-        booking.price,
-        booking.id,
-        booking.holdTransactionId
-      );
-    }
+    // Set auto-release time to 48 hours from now
+    const autoReleaseAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
-    const completedBooking = await prisma.service_booking.update({
+    // Update to awaiting_confirmation - DO NOT release payment yet
+    const updatedBooking = await prisma.service_booking.update({
       where: { id },
       data: {
-        status: "completed",
-        paymentStatus: "released",
-        completedAt: new Date(),
-        releaseTransactionId: releaseTransaction?.id || null,
+        status: "awaiting_confirmation",
+        paymentStatus: "pending_release",
+        modelCompletedAt: now,
+        autoReleaseAt: autoReleaseAt,
       },
     });
 
-    if (completedBooking.id) {
+    if (updatedBooking.id) {
       await createAuditLogs({
         ...auditBase,
-        description: `Complete booking: ${completedBooking.id} with payment released successfully.`,
+        description: `Model marked booking ${updatedBooking.id} as complete. Awaiting customer confirmation (auto-release in 48h).`,
         status: "success",
-        onSuccess: completedBooking,
+        onSuccess: updatedBooking,
       });
     }
 
-    return completedBooking;
+    return updatedBooking;
   } catch (error) {
     console.error("COMPLETE_BOOKING_FAILED", error);
     await createAuditLogs({
@@ -1116,4 +1196,537 @@ export async function completeBooking(id: string, modelId: string) {
       message: "Failed to complete booking!",
     });
   }
+}
+
+// ========================================
+// GPS Check-in Functions
+// ========================================
+
+/**
+ * Model checks in at booking location
+ */
+export async function modelCheckIn(
+  id: string,
+  modelId: string,
+  lat: number,
+  lng: number
+) {
+  if (!id) throw new Error("Missing booking id!");
+  if (!modelId) throw new Error("Missing model id!");
+
+  const auditBase = {
+    action: "MODEL_CHECK_IN",
+    model: modelId,
+  };
+
+  try {
+    const booking = await prisma.service_booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The booking does not exist!",
+      });
+    }
+
+    if (booking.modelId !== modelId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to check in for this booking!",
+      });
+    }
+
+    if (booking.status !== "confirmed" && booking.status !== "in_progress") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Can only check in for confirmed bookings!",
+      });
+    }
+
+    if (booking.modelCheckedInAt) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "You have already checked in for this booking!",
+      });
+    }
+
+    // Check time window
+    const timeCheck = isWithinCheckInTimeWindow(booking.startDate, booking.endDate);
+    if (!timeCheck.canCheckIn) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: timeCheck.message,
+      });
+    }
+
+    // Check GPS location if booking has coordinates
+    if (booking.locationLat && booking.locationLng) {
+      const locationCheck = isWithinCheckInRadius(
+        lat,
+        lng,
+        booking.locationLat,
+        booking.locationLng
+      );
+      if (!locationCheck.isWithin) {
+        throw new FieldValidationError({
+          success: false,
+          error: true,
+          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 500m) to check in.`,
+        });
+      }
+    }
+
+    // Determine new status - if customer already checked in, set to in_progress
+    const newStatus = booking.customerCheckedInAt ? "in_progress" : booking.status;
+
+    const updatedBooking = await prisma.service_booking.update({
+      where: { id },
+      data: {
+        modelCheckedInAt: new Date(),
+        modelCheckInLat: lat,
+        modelCheckInLng: lng,
+        status: newStatus,
+      },
+    });
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Model checked in for booking ${id} at coordinates (${lat}, ${lng})`,
+      status: "success",
+      onSuccess: updatedBooking,
+    });
+
+    return updatedBooking;
+  } catch (error) {
+    console.error("MODEL_CHECK_IN_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Model check-in failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to check in!",
+    });
+  }
+}
+
+/**
+ * Customer checks in at booking location
+ */
+export async function customerCheckIn(
+  id: string,
+  customerId: string,
+  lat: number,
+  lng: number
+) {
+  if (!id) throw new Error("Missing booking id!");
+  if (!customerId) throw new Error("Missing customer id!");
+
+  const auditBase = {
+    action: "CUSTOMER_CHECK_IN",
+    customer: customerId,
+  };
+
+  try {
+    const booking = await prisma.service_booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The booking does not exist!",
+      });
+    }
+
+    if (booking.customerId !== customerId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to check in for this booking!",
+      });
+    }
+
+    if (booking.status !== "confirmed" && booking.status !== "in_progress") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Can only check in for confirmed bookings!",
+      });
+    }
+
+    if (booking.customerCheckedInAt) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "You have already checked in for this booking!",
+      });
+    }
+
+    // Check time window
+    const timeCheck = isWithinCheckInTimeWindow(booking.startDate, booking.endDate);
+    if (!timeCheck.canCheckIn) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: timeCheck.message,
+      });
+    }
+
+    // Check GPS location if booking has coordinates
+    if (booking.locationLat && booking.locationLng) {
+      const locationCheck = isWithinCheckInRadius(
+        lat,
+        lng,
+        booking.locationLat,
+        booking.locationLng
+      );
+      if (!locationCheck.isWithin) {
+        throw new FieldValidationError({
+          success: false,
+          error: true,
+          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 500m) to check in.`,
+        });
+      }
+    }
+
+    // Determine new status - if model already checked in, set to in_progress
+    const newStatus = booking.modelCheckedInAt ? "in_progress" : booking.status;
+
+    const updatedBooking = await prisma.service_booking.update({
+      where: { id },
+      data: {
+        customerCheckedInAt: new Date(),
+        customerCheckInLat: lat,
+        customerCheckInLng: lng,
+        status: newStatus,
+      },
+    });
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer checked in for booking ${id} at coordinates (${lat}, ${lng})`,
+      status: "success",
+      onSuccess: updatedBooking,
+    });
+
+    return updatedBooking;
+  } catch (error) {
+    console.error("CUSTOMER_CHECK_IN_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer check-in failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to check in!",
+    });
+  }
+}
+
+// ========================================
+// Customer Confirmation & Dispute Functions
+// ========================================
+
+/**
+ * Customer confirms booking completion - releases payment to model
+ */
+export async function customerConfirmCompletion(id: string, customerId: string) {
+  if (!id) throw new Error("Missing booking id!");
+  if (!customerId) throw new Error("Missing customer id!");
+
+  const auditBase = {
+    action: "CUSTOMER_CONFIRM_COMPLETION",
+    customer: customerId,
+  };
+
+  try {
+    const booking = await prisma.service_booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The booking does not exist!",
+      });
+    }
+
+    if (booking.customerId !== customerId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to confirm this booking!",
+      });
+    }
+
+    if (booking.status !== "awaiting_confirmation") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This booking is not awaiting confirmation!",
+      });
+    }
+
+    // Release payment to model
+    let releaseTransaction = null;
+    if (booking.paymentStatus === "pending_release" && booking.holdTransactionId && booking.modelId) {
+      releaseTransaction = await releasePaymentToModel(
+        booking.modelId,
+        booking.price,
+        booking.id,
+        booking.holdTransactionId
+      );
+    }
+
+    const completedBooking = await prisma.service_booking.update({
+      where: { id },
+      data: {
+        status: "completed",
+        paymentStatus: "released",
+        completedAt: new Date(),
+        releaseTransactionId: releaseTransaction?.id || null,
+      },
+    });
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer confirmed booking ${id} completion. Payment released to model.`,
+      status: "success",
+      onSuccess: completedBooking,
+    });
+
+    return completedBooking;
+  } catch (error) {
+    console.error("CUSTOMER_CONFIRM_COMPLETION_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer confirm completion failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to confirm booking completion!",
+    });
+  }
+}
+
+/**
+ * Customer disputes booking - goes to admin review
+ */
+export async function customerDisputeBooking(
+  id: string,
+  customerId: string,
+  reason: string
+) {
+  if (!id) throw new Error("Missing booking id!");
+  if (!customerId) throw new Error("Missing customer id!");
+  if (!reason || reason.trim().length < 10) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Please provide a detailed reason for the dispute (at least 10 characters).",
+    });
+  }
+
+  const auditBase = {
+    action: "CUSTOMER_DISPUTE_BOOKING",
+    customer: customerId,
+  };
+
+  try {
+    const booking = await prisma.service_booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The booking does not exist!",
+      });
+    }
+
+    if (booking.customerId !== customerId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to dispute this booking!",
+      });
+    }
+
+    if (booking.status !== "awaiting_confirmation") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This booking cannot be disputed at this time!",
+      });
+    }
+
+    const disputedBooking = await prisma.service_booking.update({
+      where: { id },
+      data: {
+        status: "disputed",
+        disputeReason: reason,
+        disputedAt: new Date(),
+      },
+    });
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer disputed booking ${id}. Reason: ${reason}`,
+      status: "success",
+      onSuccess: disputedBooking,
+    });
+
+    return disputedBooking;
+  } catch (error) {
+    console.error("CUSTOMER_DISPUTE_BOOKING_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer dispute booking failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to dispute booking!",
+    });
+  }
+}
+
+// ========================================
+// Auto-Release Function
+// ========================================
+
+/**
+ * Process auto-release for bookings past 48h confirmation window
+ * Call this on page load or via scheduled job
+ */
+export async function processAutoRelease() {
+  const now = new Date();
+
+  try {
+    // Find all bookings awaiting confirmation past their auto-release time
+    const bookingsToRelease = await prisma.service_booking.findMany({
+      where: {
+        status: "awaiting_confirmation",
+        paymentStatus: "pending_release",
+        autoReleaseAt: {
+          lte: now,
+        },
+      },
+    });
+
+    const results = [];
+
+    for (const booking of bookingsToRelease) {
+      try {
+        // Release payment to model
+        let releaseTransaction = null;
+        if (booking.holdTransactionId && booking.modelId) {
+          releaseTransaction = await releasePaymentToModel(
+            booking.modelId,
+            booking.price,
+            booking.id,
+            booking.holdTransactionId
+          );
+        }
+
+        const completedBooking = await prisma.service_booking.update({
+          where: { id: booking.id },
+          data: {
+            status: "completed",
+            paymentStatus: "released",
+            completedAt: now,
+            releaseTransactionId: releaseTransaction?.id || null,
+          },
+        });
+
+        await createAuditLogs({
+          action: "AUTO_RELEASE_PAYMENT",
+          description: `Auto-released payment for booking ${booking.id} after 48h confirmation window.`,
+          status: "success",
+          onSuccess: completedBooking,
+        });
+
+        results.push({ bookingId: booking.id, status: "released" });
+      } catch (error) {
+        console.error(`Failed to auto-release booking ${booking.id}:`, error);
+        results.push({ bookingId: booking.id, status: "failed", error });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("PROCESS_AUTO_RELEASE_FAILED", error);
+    throw error;
+  }
+}
+
+/**
+ * Get booking check-in status for display
+ */
+export function getBookingCheckInStatus(booking: {
+  status: string;
+  modelCheckedInAt?: Date | null;
+  customerCheckedInAt?: Date | null;
+  autoReleaseAt?: Date | null;
+}) {
+  const now = new Date();
+
+  let checkInStatus = {
+    modelCheckedIn: !!booking.modelCheckedInAt,
+    customerCheckedIn: !!booking.customerCheckedInAt,
+    bothCheckedIn: !!booking.modelCheckedInAt && !!booking.customerCheckedInAt,
+    hoursUntilAutoRelease: 0,
+  };
+
+  if (booking.autoReleaseAt) {
+    const autoRelease = new Date(booking.autoReleaseAt);
+    checkInStatus.hoursUntilAutoRelease = Math.max(
+      0,
+      Math.ceil((autoRelease.getTime() - now.getTime()) / (1000 * 60 * 60))
+    );
+  }
+
+  return checkInStatus;
 }

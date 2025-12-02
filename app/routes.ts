@@ -44,6 +44,7 @@ export default [
       route("reject/:id", "./routes/model/dating/dating.reject.tsx"),
       route("complete/:id", "./routes/model/dating/dating.complete.tsx"),
       route("delete/:id", "./routes/model/dating/dating.delete.tsx"),
+      route("checkin/:id", "./routes/model/dating/dating.checkin.tsx"),
     ]),
 
     // Settings with nested routes
@@ -121,6 +122,18 @@ export default [
     route(
       "book-service/cancel/:id",
       "./routes/customer/booking-history/booking.cancel.tsx"
+    ),
+    route(
+      "book-service/checkin/:id",
+      "./routes/customer/booking-history/booking.checkin.tsx"
+    ),
+    route(
+      "book-service/confirm/:id",
+      "./routes/customer/booking-history/booking.confirm.tsx"
+    ),
+    route(
+      "book-service/dispute/:id",
+      "./routes/customer/booking-history/booking.dispute.tsx"
     ),
 
     // setting

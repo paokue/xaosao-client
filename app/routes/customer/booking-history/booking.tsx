@@ -1,6 +1,7 @@
-import { useNavigate, useNavigation, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Info, Shield, Wallet, AlertTriangle } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate, useNavigation, type LoaderFunction } from "react-router"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Info, Shield, Wallet, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 
 // components:
 import { Badge } from "~/components/ui/badge"
@@ -9,22 +10,30 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
 
 // interface and service
-import { requireUserSession } from "~/services/auths.server";
 import { capitalize } from "~/utils/functions/textFormat"
 import type { IServiceBooking } from "~/interfaces/service"
+import { requireUserSession } from "~/services/auths.server";
 import { getAllMyServiceBookings } from "~/services/booking.server"
 import { calculateAgeFromDOB, formatCurrency, formatDate } from "~/utils"
 
-const statusConfig = {
-   completed: {
-      label: "Confirmed",
-      className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-   },
+const statusConfig: Record<string, { label: string; className: string }> = {
    pending: {
       label: "Pending",
       className: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
    },
    confirmed: {
+      label: "Confirmed",
+      className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+   },
+   in_progress: {
+      label: "In Progress",
+      className: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+   },
+   awaiting_confirmation: {
+      label: "Awaiting Your Confirmation",
+      className: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
+   },
+   completed: {
       label: "Completed",
       className: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
    },
@@ -34,7 +43,11 @@ const statusConfig = {
    },
    rejected: {
       label: "Rejected",
-      className: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+      className: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+   },
+   disputed: {
+      label: "Disputed",
+      className: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
    },
 }
 
@@ -59,6 +72,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
    const navigation = useNavigation()
    const { bookInfos } = loaderData
    const isLoading = navigation.state === "loading";
+   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
    if (isLoading) {
       return (
@@ -76,33 +90,49 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
          <div className="flex items-start justify-between bg-rose-100 sm:bg-white w-full p-3 sm:px-0 rounded-md">
             <div className="space-y-1">
                <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">{t('booking.title')}</h1>
-               <p className="text-xs sm:text-sm font-normal text-gray-600">
+               <p className="text-xs sm:text-md font-normal text-gray-600">
                   {t('booking.subtitle')}
                </p>
             </div>
          </div>
 
-         {/* Payment & Cancellation Policy Notice */}
          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-               <Shield className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-               <div className="space-y-2">
+            <button
+               type="button"
+               onClick={() => setIsPolicyOpen(!isPolicyOpen)}
+               className="flex items-center justify-between w-full sm:cursor-default"
+            >
+               <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-amber-600 shrink-0" />
                   <h3 className="text-sm font-semibold text-amber-900">Booking & Payment Policy</h3>
-                  <ul className="text-xs text-amber-800 space-y-1">
-                     <li className="flex items-center gap-2">
-                        <Wallet className="h-3 w-3" />
-                        <span>Payment is held from your wallet when you book a service</span>
-                     </li>
-                     <li className="flex items-center gap-2">
-                        <Info className="h-3 w-3" />
-                        <span>Payment is released to model only after the date is completed</span>
-                     </li>
-                     <li className="flex items-center gap-2">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span className="font-medium">Cancellation not allowed within 2 hours of booking start time</span>
-                     </li>
-                  </ul>
                </div>
+               <div className="sm:hidden">
+                  {isPolicyOpen ? (
+                     <ChevronUp className="h-4 w-4 text-amber-600" />
+                  ) : (
+                     <ChevronDown className="h-4 w-4 text-amber-600" />
+                  )}
+               </div>
+            </button>
+            <div className={`mt-3 pl-8 ${isPolicyOpen ? 'block' : 'hidden'} sm:block`}>
+               <ul className="text-xs text-amber-800 space-y-1">
+                  <li className="flex items-center gap-2">
+                     <Wallet className="h-3 w-3" />
+                     <span>Payment is held from your wallet when you book a service</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <MapPin className="h-3 w-3" />
+                     <span>Both parties must GPS check-in at the location to verify attendance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <Info className="h-3 w-3" />
+                     <span>After model completes, you have 48 hours to confirm or dispute</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <AlertTriangle className="h-3 w-3" />
+                     <span className="font-medium">Cancellation not allowed within 2 hours of booking start time</span>
+                  </li>
+               </ul>
             </div>
          </div>
 
@@ -121,9 +151,9 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                               </h3>
                               <Badge
                                  variant="outline"
-                                 className={statusConfig[booking.status].className}
+                                 className={statusConfig[booking.status]?.className || "bg-gray-500/10 text-gray-700 border-gray-500/20"}
                               >
-                                 {capitalize(booking.status)}
+                                 {statusConfig[booking.status]?.label || capitalize(booking.status)}
                               </Badge>
                            </div>
 
@@ -156,24 +186,59 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                     </DropdownMenuItem>
                                  )}
 
-                                 <DropdownMenuItem
-                                    onClick={() =>
-                                       navigate(`/customer/book-service/edit/${booking.id}`)
-                                    }
-                                    className="cursor-pointer"
-                                 >
-                                    {t('booking.editBooking')}
-                                 </DropdownMenuItem>
+                                 {booking.status === "pending" && (
+                                    <>
+                                       <DropdownMenuItem
+                                          onClick={() =>
+                                             navigate(`/customer/book-service/edit/${booking.id}`)
+                                          }
+                                          className="cursor-pointer"
+                                       >
+                                          {t('booking.editBooking')}
+                                       </DropdownMenuItem>
+                                       <DropdownMenuItem
+                                          className="text-destructive cursor-pointer"
+                                          onClick={() =>
+                                             navigate(`/customer/book-service/cancel/${booking.id}`)
+                                          }
+                                       >
+                                          {t('booking.cancelBooking')}
+                                       </DropdownMenuItem>
+                                    </>
+                                 )}
 
-                                 {(booking.status === "pending" || booking.status === "confirmed") && (
+                                 {booking.status === "confirmed" && (
                                     <DropdownMenuItem
-                                       className="text-destructive cursor-pointer"
                                        onClick={() =>
-                                          navigate(`/customer/book-service/cancel/${booking.id}`)
+                                          navigate(`/customer/book-service/checkin/${booking.id}`)
                                        }
+                                       className="cursor-pointer"
                                     >
-                                       {t('booking.cancelBooking')}
+                                       Check In
                                     </DropdownMenuItem>
+                                 )}
+
+                                 {booking.status === "awaiting_confirmation" && (
+                                    <>
+                                       <DropdownMenuItem
+                                          onClick={() =>
+                                             navigate(`/customer/book-service/confirm/${booking.id}`)
+                                          }
+                                          className="cursor-pointer text-emerald-600"
+                                       >
+                                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                                          Confirm & Release Payment
+                                       </DropdownMenuItem>
+                                       <DropdownMenuItem
+                                          onClick={() =>
+                                             navigate(`/customer/book-service/dispute/${booking.id}`)
+                                          }
+                                          className="cursor-pointer text-red-600"
+                                       >
+                                          <AlertTriangle className="h-4 w-4 mr-2" />
+                                          Dispute
+                                       </DropdownMenuItem>
+                                    </>
                                  )}
 
                                  {["cancelled", "rejected", "completed"].includes(

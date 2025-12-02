@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Loader, Wallet } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader, Wallet, Clock } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useParams, type ActionFunctionArgs } from "react-router";
 
 // components
@@ -20,7 +20,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
       try {
          const res = await completeBooking(id!, modelId);
          if (res.id) {
-            return redirect(`/model/dating?toastMessage=Booking+completed+successfully!+Payment+has+been+released+to+your+wallet.&toastType=success`);
+            return redirect(`/model/dating?toastMessage=Booking+marked+as+completed!+Awaiting+customer+confirmation.&toastType=success`);
          }
       } catch (error: any) {
          if (error?.payload) {
@@ -66,12 +66,22 @@ export default function CompleteBookingModal() {
                </div>
             </div>
 
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+               <div className="flex items-start space-x-2">
+                  <Clock className="h-4 w-4 text-amber-600 mt-0.5" />
+                  <div className="text-sm text-amber-800">
+                     <p className="font-medium">Customer Confirmation Required</p>
+                     <p>The customer will have 48 hours to confirm the service was delivered. If they don't respond, payment is automatically released to you.</p>
+                  </div>
+               </div>
+            </div>
+
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                <div className="flex items-start space-x-2">
                   <Wallet className="h-4 w-4 text-emerald-600 mt-0.5" />
                   <div className="text-sm text-emerald-800">
                      <p className="font-medium">Payment Release</p>
-                     <p>The payment will be released from escrow and deposited into your wallet immediately after completion.</p>
+                     <p>Payment will be released to your wallet after customer confirms or after 48 hours (auto-release).</p>
                   </div>
                </div>
             </div>
@@ -92,7 +102,7 @@ export default function CompleteBookingModal() {
                </Button>
                <Button type="submit" disabled={isSubmitting} className="text-white bg-rose-500 hover:bg-rose-600">
                   {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
-                  Complete & Get Paid
+                  Mark as Completed
                </Button>
             </div>
          </Form>

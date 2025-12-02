@@ -1,6 +1,7 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useNavigation, Outlet, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, MessageSquareText, Eye, Check, X, Info, Shield, Wallet } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, MessageSquareText, Eye, Check, X, Info, Shield, Wallet, ChevronDown, ChevronUp } from "lucide-react"
 
 // components:
 import { Badge } from "~/components/ui/badge"
@@ -24,6 +25,14 @@ const statusConfig: Record<string, { label: string; className: string }> = {
       label: "Pending",
       className: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
    },
+   in_progress: {
+      label: "In Progress",
+      className: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+   },
+   awaiting_confirmation: {
+      label: "Awaiting Confirmation",
+      className: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
+   },
    completed: {
       label: "Completed",
       className: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
@@ -35,6 +44,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
    rejected: {
       label: "Rejected",
       className: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+   },
+   disputed: {
+      label: "Disputed",
+      className: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
    },
 }
 
@@ -90,6 +103,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
    const navigation = useNavigation()
    const { bookings } = loaderData
    const isLoading = navigation.state === "loading";
+   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
    if (isLoading) {
       return (
@@ -106,43 +120,58 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
       <div className="container space-y-2 pt-2 sm:pt-8 px-4 sm:px-10">
          <div className="flex items-start justify-between bg-rose-100 sm:bg-white w-full p-3 sm:px-0 rounded-md">
             <div className="space-y-1">
-               <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">
+               <h1 className="text-sm sm:text-md sm:font-bold text-rose-600 sm:text-gray-800 uppercase text-shadow-md">
                   My Dating Requests
                </h1>
-               <p className="text-sm sm:text-md font-normal text-gray-600">
+               <p className="text-sm sm:text-md font-normal text-rose-600 sm:text-gray-600">
                   Manage your dating and service booking requests from customers
                </p>
             </div>
          </div>
 
-         {/* Payment Policy Notice */}
          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-               <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
-               <div className="space-y-2">
+            <button
+               type="button"
+               onClick={() => setIsPolicyOpen(!isPolicyOpen)}
+               className="flex items-center justify-between w-full sm:cursor-default"
+            >
+               <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-blue-600 shrink-0" />
                   <h3 className="text-sm font-semibold text-blue-900">Secure Payment Policy</h3>
-                  <ul className="text-xs text-blue-800 space-y-1">
-                     <li className="flex items-center gap-2">
-                        <Wallet className="h-3 w-3" />
-                        <span>Payment is held securely when customer books your service</span>
-                     </li>
-                     <li className="flex items-center gap-2">
-                        <Check className="h-3 w-3" />
-                        <span>After completing the date, click "Complete & Get Paid" to receive payment</span>
-                     </li>
-                     <li className="flex items-center gap-2">
-                        <Info className="h-3 w-3" />
-                        <span>If you reject a booking, customer will be automatically refunded</span>
-                     </li>
-                  </ul>
                </div>
+               <div className="sm:hidden">
+                  {isPolicyOpen ? (
+                     <ChevronUp className="h-4 w-4 text-blue-600" />
+                  ) : (
+                     <ChevronDown className="h-4 w-4 text-blue-600" />
+                  )}
+               </div>
+            </button>
+            <div className={`mt-3 pl-8 ${isPolicyOpen ? 'block' : 'hidden'} sm:block`}>
+               <ul className="text-xs text-blue-800 space-y-1">
+                  <li className="flex items-center gap-2">
+                     <Wallet className="h-3 w-3" />
+                     <span>Payment is held securely when customer books your service</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <MapPin className="h-3 w-3" />
+                     <span>Both parties must GPS check-in at the location to verify attendance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <Check className="h-3 w-3" />
+                     <span>After completing, customer has 48 hours to confirm (auto-releases if no response)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                     <Info className="h-3 w-3" />
+                     <span>If you reject a booking, customer will be automatically refunded</span>
+                  </li>
+               </ul>
             </div>
          </div>
 
          {bookings && bookings.length > 0 ? (
             <>
-               {/* Desktop Table View */}
-               <div className="hidden lg:block">
+               {/* <div className="hidden lg:block">
                   <div className="border border-gray-200 rounded-sm overflow-hidden">
                      <Table>
                         <TableHeader>
@@ -245,6 +274,16 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
 
                                           {booking.status === "confirmed" && (
                                              <DropdownMenuItem
+                                                onClick={() => navigate(`/model/dating/checkin/${booking.id}`)}
+                                                className="cursor-pointer text-purple-600"
+                                             >
+                                                <MapPin className="h-4 w-4 mr-2" />
+                                                Check In
+                                             </DropdownMenuItem>
+                                          )}
+
+                                          {booking.status === "in_progress" && (
+                                             <DropdownMenuItem
                                                 onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
                                                 className="cursor-pointer"
                                              >
@@ -262,7 +301,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                              </DropdownMenuItem>
                                           )}
 
-                                          {booking.status === "rejected" && (
+                                          {["cancelled", "rejected", "completed"].includes(booking.status) && (
                                              <DropdownMenuItem
                                                 onClick={() => navigate(`/model/dating/delete/${booking.id}`)}
                                                 className="cursor-pointer text-red-600"
@@ -279,14 +318,13 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                         </TableBody>
                      </Table>
                   </div>
-               </div>
+               </div> */}
 
-               {/* Mobile Card View */}
-               <div className="lg:hidden grid gap-3 md:grid-cols-2">
+               <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
                   {bookings.map((booking) => (
                      <Card
                         key={booking.id}
-                        className="border border-rose-100 hover:shadow-md transition-shadow rounded-sm"
+                        className="border border-rose-100 hover:shadow-md transition-shadow rounded-sm py-8"
                      >
                         <CardHeader>
                            <div className="flex items-start justify-between gap-4">
@@ -339,6 +377,15 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
 
                                     {booking.status === "confirmed" && (
                                        <DropdownMenuItem
+                                          onClick={() => navigate(`/model/dating/checkin/${booking.id}`)}
+                                          className="cursor-pointer"
+                                       >
+                                          Check In
+                                       </DropdownMenuItem>
+                                    )}
+
+                                    {booking.status === "in_progress" && (
+                                       <DropdownMenuItem
                                           onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
                                           className="cursor-pointer text-blue-600"
                                        >
@@ -352,12 +399,11 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                           onClick={() => navigate(`/model/chat?id=${booking.customer.firstName}`)}
                                           className="cursor-pointer"
                                        >
-                                          <MessageSquareText className="h-4 w-4 mr-2" />
                                           Message Customer
                                        </DropdownMenuItem>
                                     )}
 
-                                    {booking.status === "rejected" && (
+                                    {["cancelled", "rejected", "completed"].includes(booking.status) && (
                                        <DropdownMenuItem
                                           className="text-destructive cursor-pointer"
                                           onClick={() => navigate(`/model/dating/delete/${booking.id}`)}
@@ -371,7 +417,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                            </div>
                         </CardHeader>
 
-                        <CardContent className="space-y-2 -mt-3">
+                        <CardContent className="space-y-2">
                            <div className="flex items-start gap-3">
                               <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                               <p className="text-sm text-muted-foreground">

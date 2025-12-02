@@ -60,7 +60,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         { title: t('navigation.discover'), url: "/model", icon: Search },
         { title: t('navigation.match'), url: "/model/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/model/realtime-chat", icon: MessageCircle },
-        { title: t('navigation.dating'), url: "/model/dates-history", icon: HandHeart },
+        { title: t('navigation.dating'), url: "/model/dating", icon: HandHeart },
         { title: t('navigation.profile'), url: "/model/profile", icon: User2Icon },
     ], [t, i18n.language]);
 

@@ -39,4 +39,5 @@ export enum BookingStatus {
   completed = "completed",
   cancelled = "cancelled",
   rejected = "rejected",
+  awaiting_confirmation = "awaiting_confirmation",
 }
