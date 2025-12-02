@@ -42,6 +42,7 @@ export default [
       route("detail/:id", "./routes/model/dating/dating.detail.tsx"),
       route("accept/:id", "./routes/model/dating/dating.accept.tsx"),
       route("reject/:id", "./routes/model/dating/dating.reject.tsx"),
+      route("complete/:id", "./routes/model/dating/dating.complete.tsx"),
       route("delete/:id", "./routes/model/dating/dating.delete.tsx"),
     ]),
 

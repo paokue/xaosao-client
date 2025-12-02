@@ -1,4 +1,4 @@
-import { AlertCircle, Loader } from "lucide-react";
+import { AlertCircle, Loader, AlertTriangle, Wallet } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, type ActionFunctionArgs } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -55,6 +55,29 @@ export default function CancelBookingService() {
          <h1 className="text-md font-bold">{t('booking.cancel.title')}</h1>
          <p className="hidden sm:block text-md text-gray-500 my-2">{t('booking.cancel.description')}</p>
          <Form method="patch" className="space-y-4 mt-4">
+            {/* Policy Notice */}
+            <div className="space-y-3">
+               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+                     <div className="text-sm text-amber-800">
+                        <p className="font-medium">Cancellation Policy</p>
+                        <p>You cannot cancel within 2 hours of the booking start time. Please contact support if you need assistance.</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                     <Wallet className="h-4 w-4 text-emerald-600 mt-0.5" />
+                     <div className="text-sm text-emerald-800">
+                        <p className="font-medium">Refund Policy</p>
+                        <p>If cancelled successfully, your payment will be refunded to your wallet immediately.</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
             <div>
                {actionData?.error && (
                   <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">

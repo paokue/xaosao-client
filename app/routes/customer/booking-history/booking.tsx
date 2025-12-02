@@ -1,5 +1,5 @@
 import { useNavigate, useNavigation, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Info, Shield, Wallet, AlertTriangle } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 // components:
@@ -82,6 +82,30 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
             </div>
          </div>
 
+         {/* Payment & Cancellation Policy Notice */}
+         <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+               <Shield className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+               <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-amber-900">Booking & Payment Policy</h3>
+                  <ul className="text-xs text-amber-800 space-y-1">
+                     <li className="flex items-center gap-2">
+                        <Wallet className="h-3 w-3" />
+                        <span>Payment is held from your wallet when you book a service</span>
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <Info className="h-3 w-3" />
+                        <span>Payment is released to model only after the date is completed</span>
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <AlertTriangle className="h-3 w-3" />
+                        <span className="font-medium">Cancellation not allowed within 2 hours of booking start time</span>
+                     </li>
+                  </ul>
+               </div>
+            </div>
+         </div>
+
          {bookInfos && bookInfos.length > 0 ? (
             <div className="w-full grid gap-3 md:grid-cols-3 lg:grid-cols-4">
                {bookInfos.map((booking) => (
@@ -141,7 +165,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                     {t('booking.editBooking')}
                                  </DropdownMenuItem>
 
-                                 {booking.status === "pending" && (
+                                 {(booking.status === "pending" || booking.status === "confirmed") && (
                                     <DropdownMenuItem
                                        className="text-destructive cursor-pointer"
                                        onClick={() =>

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate, useNavigation, Outlet, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, MessageSquareText, Eye, Check, X } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, MessageSquareText, Eye, Check, X, Info, Shield, Wallet } from "lucide-react"
 
 // components:
 import { Badge } from "~/components/ui/badge"
@@ -115,6 +115,30 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
             </div>
          </div>
 
+         {/* Payment Policy Notice */}
+         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+               <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+               <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-blue-900">Secure Payment Policy</h3>
+                  <ul className="text-xs text-blue-800 space-y-1">
+                     <li className="flex items-center gap-2">
+                        <Wallet className="h-3 w-3" />
+                        <span>Payment is held securely when customer books your service</span>
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <Check className="h-3 w-3" />
+                        <span>After completing the date, click "Complete & Get Paid" to receive payment</span>
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <Info className="h-3 w-3" />
+                        <span>If you reject a booking, customer will be automatically refunded</span>
+                     </li>
+                  </ul>
+               </div>
+            </div>
+         </div>
+
          {bookings && bookings.length > 0 ? (
             <>
                {/* Desktop Table View */}
@@ -206,15 +230,26 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                                    onClick={() => navigate(`/model/dating/accept/${booking.id}`)}
                                                    className="cursor-pointer text-emerald-600"
                                                 >
+                                                   <Check className="h-4 w-4 mr-2" />
                                                    Accept
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                    onClick={() => navigate(`/model/dating/reject/${booking.id}`)}
                                                    className="cursor-pointer text-red-600"
                                                 >
+                                                   <X className="h-4 w-4 mr-2" />
                                                    Reject
                                                 </DropdownMenuItem>
                                              </>
+                                          )}
+
+                                          {booking.status === "confirmed" && (
+                                             <DropdownMenuItem
+                                                onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
+                                                className="cursor-pointer"
+                                             >
+                                                Complete & Get paid
+                                             </DropdownMenuItem>
                                           )}
 
                                           {booking.isContact && (
@@ -289,15 +324,27 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                              onClick={() => navigate(`/model/dating/accept/${booking.id}`)}
                                              className="cursor-pointer text-emerald-600"
                                           >
+                                             <Check className="h-4 w-4 mr-2" />
                                              Accept
                                           </DropdownMenuItem>
                                           <DropdownMenuItem
                                              onClick={() => navigate(`/model/dating/reject/${booking.id}`)}
                                              className="cursor-pointer text-red-600"
                                           >
+                                             <X className="h-4 w-4 mr-2" />
                                              Reject
                                           </DropdownMenuItem>
                                        </>
+                                    )}
+
+                                    {booking.status === "confirmed" && (
+                                       <DropdownMenuItem
+                                          onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
+                                          className="cursor-pointer text-blue-600"
+                                       >
+                                          <Check className="h-4 w-4 mr-2" />
+                                          Complete & Get Paid
+                                       </DropdownMenuItem>
                                     )}
 
                                     {booking.isContact && (

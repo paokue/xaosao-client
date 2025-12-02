@@ -3,6 +3,176 @@ import { createAuditLogs } from "./log.server";
 import { FieldValidationError } from "./base.server";
 import type { IServiceBookingCredentials } from "~/interfaces/service";
 
+// ========================================
+// Escrow Payment Helper Functions
+// ========================================
+
+/**
+ * Hold payment from customer wallet for a booking
+ */
+async function holdPaymentFromCustomer(
+  customerId: string,
+  amount: number,
+  bookingId: string
+) {
+  const wallet = await prisma.wallet.findFirst({
+    where: { customerId, status: "active" },
+  });
+
+  if (!wallet) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Customer wallet not found!",
+    });
+  }
+
+  if (wallet.totalBalance < amount) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: `Insufficient balance! You need ${amount.toLocaleString()} LAK but have ${wallet.totalBalance.toLocaleString()} LAK.`,
+    });
+  }
+
+  const holdTransaction = await prisma.transaction_history.create({
+    data: {
+      identifier: "booking_hold",
+      amount: -amount,
+      status: "held",
+      comission: 0,
+      fee: 0,
+      customerId,
+      reason: `Payment held for booking #${bookingId}`,
+    },
+  });
+
+  await prisma.wallet.update({
+    where: { id: wallet.id },
+    data: { totalBalance: wallet.totalBalance - amount },
+  });
+
+  return holdTransaction;
+}
+
+/**
+ * Release held payment to model wallet
+ */
+async function releasePaymentToModel(
+  modelId: string,
+  amount: number,
+  bookingId: string,
+  holdTransactionId: string
+) {
+  const modelWallet = await prisma.wallet.findFirst({
+    where: { modelId, status: "active" },
+  });
+
+  if (!modelWallet) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Model wallet not found!",
+    });
+  }
+
+  await prisma.transaction_history.update({
+    where: { id: holdTransactionId },
+    data: { status: "released" },
+  });
+
+  const earningTransaction = await prisma.transaction_history.create({
+    data: {
+      identifier: "booking_earning",
+      amount: amount,
+      status: "approved",
+      comission: 0,
+      fee: 0,
+      modelId,
+      reason: `Earning from completed booking #${bookingId}`,
+    },
+  });
+
+  await prisma.wallet.update({
+    where: { id: modelWallet.id },
+    data: {
+      totalBalance: modelWallet.totalBalance + amount,
+      totalDeposit: modelWallet.totalDeposit + amount,
+    },
+  });
+
+  return earningTransaction;
+}
+
+/**
+ * Refund held payment back to customer
+ */
+async function refundPaymentToCustomer(
+  customerId: string,
+  amount: number,
+  bookingId: string,
+  holdTransactionId: string,
+  reason: string
+) {
+  const wallet = await prisma.wallet.findFirst({
+    where: { customerId, status: "active" },
+  });
+
+  if (!wallet) {
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Customer wallet not found!",
+    });
+  }
+
+  await prisma.transaction_history.update({
+    where: { id: holdTransactionId },
+    data: { status: "refunded" },
+  });
+
+  const refundTransaction = await prisma.transaction_history.create({
+    data: {
+      identifier: "booking_refund",
+      amount: amount,
+      status: "approved",
+      comission: 0,
+      fee: 0,
+      customerId,
+      reason: `Refund for booking #${bookingId}: ${reason}`,
+    },
+  });
+
+  await prisma.wallet.update({
+    where: { id: wallet.id },
+    data: { totalBalance: wallet.totalBalance + amount },
+  });
+
+  return refundTransaction;
+}
+
+/**
+ * Check if booking can be cancelled (2 hours before start time rule)
+ */
+export function canCancelBooking(startDate: Date): { canCancel: boolean; message: string } {
+  const now = new Date();
+  const bookingStart = new Date(startDate);
+  const hoursUntilBooking = (bookingStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  if (hoursUntilBooking < 2) {
+    return {
+      canCancel: false,
+      message: "Cannot cancel within 2 hours of booking start time. Please contact support.",
+    };
+  }
+
+  return { canCancel: true, message: "" };
+}
+
+// ========================================
+// Booking CRUD Functions
+// ========================================
+
 export async function createServiceBooking(
   customerId: string,
   modelId: string,
@@ -15,6 +185,10 @@ export async function createServiceBooking(
   };
 
   try {
+    // First, hold the payment from customer wallet
+    const holdTransaction = await holdPaymentFromCustomer(customerId, data.price, "pending");
+
+    // Create booking with payment held
     const result = await prisma.service_booking.create({
       data: {
         price: data.price,
@@ -24,16 +198,24 @@ export async function createServiceBooking(
         startDate: data.startDate,
         endDate: data.endDate,
         status: "pending",
+        paymentStatus: "held",
+        holdTransactionId: holdTransaction.id,
         customerId,
         modelId,
         modelServiceId,
       },
     });
 
+    // Update transaction with actual booking ID
+    await prisma.transaction_history.update({
+      where: { id: holdTransaction.id },
+      data: { reason: `Payment held for booking #${result.id}` },
+    });
+
     if (result.id) {
       await createAuditLogs({
         ...auditBase,
-        description: `Create service booking: ${result.id} successfully.`,
+        description: `Create service booking: ${result.id} with payment held successfully.`,
         status: "success",
         onSuccess: result,
       });
@@ -47,6 +229,11 @@ export async function createServiceBooking(
       status: "failed",
       onError: error,
     });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
     throw new FieldValidationError({
       success: false,
       error: true,
@@ -382,9 +569,7 @@ export async function cancelServiceBooking(id: string, customerId: string) {
 
   try {
     const booking = await prisma.service_booking.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!booking) {
@@ -403,34 +588,53 @@ export async function cancelServiceBooking(id: string, customerId: string) {
       });
     }
 
-    if (booking.status !== "pending") {
+    // Only pending or confirmed bookings can be cancelled
+    if (booking.status !== "pending" && booking.status !== "confirmed") {
       throw new FieldValidationError({
         success: false,
         error: true,
-        message:
-          "This date booking can't be cancel. Please contect admin to process!",
+        message: "This booking cannot be cancelled. Please contact support.",
       });
     }
 
-    const cancelServiceBooking = await prisma.service_booking.update({
-      where: {
-        id,
-        customerId: customerId,
-      },
+    // Check 2-hour cancellation rule
+    const cancelCheck = canCancelBooking(booking.startDate);
+    if (!cancelCheck.canCancel) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: cancelCheck.message,
+      });
+    }
+
+    // Refund payment if held
+    if (booking.paymentStatus === "held" && booking.holdTransactionId) {
+      await refundPaymentToCustomer(
+        customerId,
+        booking.price,
+        booking.id,
+        booking.holdTransactionId,
+        "Booking cancelled by customer"
+      );
+    }
+
+    const cancelledBooking = await prisma.service_booking.update({
+      where: { id, customerId },
       data: {
         status: "cancelled",
+        paymentStatus: "refunded",
       },
     });
 
-    if (cancelServiceBooking.id) {
+    if (cancelledBooking.id) {
       await createAuditLogs({
         ...auditBase,
-        description: `Cancel service booking: ${cancelServiceBooking.id} successfully.`,
+        description: `Cancel service booking: ${cancelledBooking.id} with refund successfully.`,
         status: "success",
-        onSuccess: cancelServiceBooking,
+        onSuccess: cancelledBooking,
       });
     }
-    return cancelServiceBooking;
+    return cancelledBooking;
   } catch (error) {
     console.error("CANCEL_SERVICE_BOOKING_FAILED", error);
     await createAuditLogs({
@@ -439,6 +643,11 @@ export async function cancelServiceBooking(id: string, customerId: string) {
       status: "failed",
       onError: error,
     });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
     throw new FieldValidationError({
       success: false,
       error: true,
@@ -642,6 +851,7 @@ export async function acceptBooking(id: string, modelId: string) {
 
 /**
  * Reject booking (Model rejects a customer's booking request)
+ * Automatically refunds the held payment to customer
  */
 export async function rejectBooking(id: string, modelId: string, reason?: string) {
   if (!id) throw new Error("Missing booking id!");
@@ -681,15 +891,30 @@ export async function rejectBooking(id: string, modelId: string, reason?: string
       });
     }
 
+    // Refund payment to customer if held
+    if (booking.paymentStatus === "held" && booking.holdTransactionId) {
+      await refundPaymentToCustomer(
+        booking.customerId,
+        booking.price,
+        booking.id,
+        booking.holdTransactionId,
+        reason || "Booking rejected by model"
+      );
+    }
+
     const updatedBooking = await prisma.service_booking.update({
       where: { id },
-      data: { status: "rejected" },
+      data: {
+        status: "rejected",
+        paymentStatus: "refunded",
+        rejectReason: reason || null,
+      },
     });
 
     if (updatedBooking.id) {
       await createAuditLogs({
         ...auditBase,
-        description: `Reject booking: ${updatedBooking.id} successfully. Reason: ${reason || "No reason provided"}`,
+        description: `Reject booking: ${updatedBooking.id} with refund successfully. Reason: ${reason || "No reason provided"}`,
         status: "success",
         onSuccess: updatedBooking,
       });
@@ -704,7 +929,16 @@ export async function rejectBooking(id: string, modelId: string, reason?: string
       status: "failed",
       onError: error,
     });
-    throw error;
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to reject booking!",
+    });
   }
 }
 
@@ -775,6 +1009,111 @@ export async function deleteModelBooking(id: string, modelId: string) {
       success: false,
       error: true,
       message: "Failed to delete booking!",
+    });
+  }
+}
+
+/**
+ * Complete booking (Model marks the date as completed after service is done)
+ * Releases the held payment to model's wallet
+ */
+export async function completeBooking(id: string, modelId: string) {
+  if (!id) throw new Error("Missing booking id!");
+  if (!modelId) throw new Error("Missing model id!");
+
+  const auditBase = {
+    action: "COMPLETE_BOOKING",
+    model: modelId,
+  };
+
+  try {
+    const booking = await prisma.service_booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "The booking does not exist!",
+      });
+    }
+
+    if (booking.modelId !== modelId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Unauthorized to complete this booking!",
+      });
+    }
+
+    if (booking.status !== "confirmed") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Only confirmed bookings can be marked as completed!",
+      });
+    }
+
+    // Check if booking date has passed (cannot complete before the date)
+    const now = new Date();
+    const bookingStart = new Date(booking.startDate);
+    if (now < bookingStart) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Cannot complete booking before the scheduled date!",
+      });
+    }
+
+    // Release payment to model if held
+    let releaseTransaction = null;
+    if (booking.paymentStatus === "held" && booking.holdTransactionId) {
+      releaseTransaction = await releasePaymentToModel(
+        modelId,
+        booking.price,
+        booking.id,
+        booking.holdTransactionId
+      );
+    }
+
+    const completedBooking = await prisma.service_booking.update({
+      where: { id },
+      data: {
+        status: "completed",
+        paymentStatus: "released",
+        completedAt: new Date(),
+        releaseTransactionId: releaseTransaction?.id || null,
+      },
+    });
+
+    if (completedBooking.id) {
+      await createAuditLogs({
+        ...auditBase,
+        description: `Complete booking: ${completedBooking.id} with payment released successfully.`,
+        status: "success",
+        onSuccess: completedBooking,
+      });
+    }
+
+    return completedBooking;
+  } catch (error) {
+    console.error("COMPLETE_BOOKING_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Complete booking failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to complete booking!",
     });
   }
 }

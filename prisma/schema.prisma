@@ -509,7 +509,12 @@ model service_booking {
   preferredAttire String
   startDate       DateTime
   endDate         DateTime?
-  status          String
+  status          String    // pending, confirmed, completed, cancelled, rejected
+  paymentStatus   String    @default("pending") // pending, held, released, refunded
+  rejectReason    String?
+  completedAt     DateTime?
+  holdTransactionId    String? @db.ObjectId // Customer's hold transaction
+  releaseTransactionId String? @db.ObjectId // Model's earning transaction
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
