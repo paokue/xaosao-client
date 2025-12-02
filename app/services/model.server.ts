@@ -1708,6 +1708,7 @@ export async function getCustomersByModelInteraction(
 
 /**
  * Create model interaction with customer (like/pass)
+ * Has toggle behavior: if same action exists, it will be deleted (unlike/unpass)
  */
 export async function createModelInteraction(
   modelId: string,
@@ -1723,7 +1724,19 @@ export async function createModelInteraction(
   });
 
   if (existingInteraction) {
-    // Update existing interaction
+    // If same action exists, delete it (toggle off / unlike / unpass)
+    if (existingInteraction.action === action) {
+      await prisma.model_interactions.delete({
+        where: { id: existingInteraction.id },
+      });
+
+      return {
+        success: true,
+        message: `Successfully ${action === "LIKE" ? "unliked" : "unpassed"} customer`,
+      };
+    }
+
+    // If different action exists, update it
     await prisma.model_interactions.update({
       where: { id: existingInteraction.id },
       data: { action },

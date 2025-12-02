@@ -28,6 +28,14 @@ export default [
     route("matches", "./routes/model/matches/matches.tsx"),
     route("profile", "./routes/model/profile/profile.tsx"),
     route("profile/edit", "./routes/model/profile/edit.tsx"),
+    route(
+      "customer-profile/:id",
+      "./routes/model/customer-profile/profile.tsx"
+    ),
+    route(
+      "customer-profile-share/:id",
+      "./routes/model/customer-profile/profile.share.tsx"
+    ),
 
     // Settings with nested routes
     route("settings", "./routes/model/settings.tsx", [

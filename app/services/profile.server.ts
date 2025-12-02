@@ -8,8 +8,8 @@ import type {
 } from "~/interfaces/customer";
 const { compare, hash } = bcrypt;
 
-// get customer profile
-export async function getCustomerProfile(customerId: string) {
+// get customer profile (for model viewing customer)
+export async function getCustomerProfile(customerId: string, modelId?: string) {
   if (!customerId) throw new Error("Missing customer id!");
 
   try {
@@ -58,6 +58,20 @@ export async function getCustomerProfile(customerId: string) {
             customer_interactions: true,
           },
         },
+        // Include friend_contacts to check if model is already a friend
+        friend_contacts: modelId
+          ? {
+              where: { modelId },
+              select: { id: true },
+            }
+          : false,
+        // Include model_interactions to check if model already liked/passed
+        model_interactions: modelId
+          ? {
+              where: { modelId },
+              select: { action: true },
+            }
+          : false,
       },
     });
 
@@ -67,28 +81,33 @@ export async function getCustomerProfile(customerId: string) {
       throw error;
     }
 
-    // get LIKE and PASS counts separately
-    const [likeCount, passCount] = await Promise.all([
-      prisma.customer_interactions.count({
+    // Get likes from models (model_interactions) and friend count
+    const [likeCount, friendCount] = await Promise.all([
+      prisma.model_interactions.count({
         where: {
           customerId,
           action: "LIKE",
         },
       }),
-      prisma.customer_interactions.count({
+      prisma.friend_contacts.count({
         where: {
           customerId,
-          action: "PASS",
         },
       }),
     ]);
+
+    // Derive isContact and modelAction
+    const friendContacts = (customer as any).friend_contacts || [];
+    const modelInteractions = (customer as any).model_interactions || [];
 
     return {
       ...customer,
       interactions: {
         likeCount,
-        passCount,
+        friendCount,
       },
+      isContact: friendContacts.length > 0,
+      modelAction: modelInteractions.length > 0 ? modelInteractions[0].action : null,
     };
   } catch (error) {
     console.error("GET_CUSTOMER_FAILED", error);
