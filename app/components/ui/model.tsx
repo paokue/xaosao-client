@@ -52,7 +52,7 @@ export default function Modal({ children, onClose, className }: ModalProps) {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-20 backdrop-blur-sm border"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-10 backdrop-blur-sm"
             onClick={handleBackdropClick}
             role="dialog"
             aria-modal="true"

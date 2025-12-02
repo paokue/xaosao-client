@@ -37,6 +37,14 @@ export default [
       "./routes/model/customer-profile/profile.share.tsx"
     ),
 
+    // Dating routes with nested modals
+    route("dating", "./routes/model/dating/dating.tsx", [
+      route("detail/:id", "./routes/model/dating/dating.detail.tsx"),
+      route("accept/:id", "./routes/model/dating/dating.accept.tsx"),
+      route("reject/:id", "./routes/model/dating/dating.reject.tsx"),
+      route("delete/:id", "./routes/model/dating/dating.delete.tsx"),
+    ]),
+
     // Settings with nested routes
     route("settings", "./routes/model/settings.tsx", [
       route("services", "./routes/model/settings/services.tsx"),

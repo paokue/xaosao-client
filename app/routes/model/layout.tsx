@@ -51,7 +51,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         { title: t('navigation.discover'), url: "/model", icon: Search },
         { title: t('navigation.match'), url: "/model/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/model/realtime-chat", icon: MessageCircle },
-        { title: t('navigation.datingHistory'), url: "/model/dates-history", icon: HandHeart },
+        { title: t('navigation.datingHistory'), url: "/model/dating", icon: HandHeart },
         { title: t('navigation.myProfile'), url: "/model/profile", icon: User },
         { title: t('navigation.setting'), url: "/model/settings", icon: Settings },
     ], [t, i18n.language]);
