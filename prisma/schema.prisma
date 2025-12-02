@@ -180,6 +180,7 @@ model customer {
   service_booking       service_booking[]
   subscription          subscription[]
   subscription_history  subscription_history[]
+  notifications         customer_notification[]
 }
 
 model model {
@@ -252,6 +253,7 @@ model model {
   friend_contacts       friend_contacts[]
   service_booking       service_booking[]
   banks                 banks[]
+  notifications         model_notification[]
 }
 
 // subscription
@@ -701,4 +703,43 @@ model setting {
   min_age                    Int
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
+}
+
+// Notification types:
+// - booking_created: New booking request (to model)
+// - booking_confirmed: Booking confirmed (to customer)
+// - booking_rejected: Booking rejected (to customer)
+// - booking_cancelled: Booking cancelled (to model)
+// - booking_checkin: Other party checked in (to both)
+// - booking_completed: Model marked as complete (to customer)
+// - booking_confirmed_completion: Customer confirmed completion (to model)
+// - booking_disputed: Customer disputed booking (to model)
+// - payment_released: Payment released to wallet (to model)
+// - payment_refunded: Payment refunded to wallet (to customer)
+// - match_new: New match found (to both)
+
+model customer_notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   // notification type
+  title     String   // notification title
+  message   String   // notification message
+  isRead    Boolean  @default(false)
+  data      Json?    // additional data (e.g., bookingId, modelId, etc.)
+  createdAt DateTime @default(now())
+
+  customer   customer @relation(fields: [customerId], references: [id])
+  customerId String   @db.ObjectId
+}
+
+model model_notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   // notification type
+  title     String   // notification title
+  message   String   // notification message
+  isRead    Boolean  @default(false)
+  data      Json?    // additional data (e.g., bookingId, customerId, etc.)
+  createdAt DateTime @default(now())
+
+  model   model  @relation(fields: [modelId], references: [id])
+  modelId String @db.ObjectId
 }

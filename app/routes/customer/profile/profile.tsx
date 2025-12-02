@@ -344,15 +344,15 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
         <div className="h-auto sm:min-h-screen bg-white px-0 sm:px-6 py-6 sm:py-2">
             <div className="w-full flex flex-col sm:flex-row gap-0 sm:gap-2 bg-white h-auto sm:h-full">
                 <div className="w-full sm:w-5/12 p-0 sm:p-2 border-r space-y-2">
-                    <div className="flex items-start justify-between sm:justify-end px-4">
+                    {/* <div className="flex items-start justify-between sm:justify-end px-4">
                         <div className="flex sm:hidden items-center">
-                            {/* <UserPlus className="w-5 h-5 text-gray-500 cursor-pointer" /> */}
+                            <UserPlus className="w-5 h-5 text-gray-500 cursor-pointer" />
                         </div>
                         <div className="flex items-start gap-4">
-                            {/* <Forward className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/customer/profile-share/userid")} /> */}
+                            <Forward className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/customer/profile-share/userid")} />
                             <Settings className="w-5 h-5 text-gray-500 cursor-pointer" onClick={() => navigate("/customer/setting")} />
                         </div>
-                    </div>
+                    </div> */}
                     <div className="rounded-md flex items-center justify-center flex-col space-y-2 sm:space-y-4 px-2 sm:px-4">
                         <div className="w-[100px] sm:w-[130px] h-[100px] sm:h-[130px] border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
                             <img

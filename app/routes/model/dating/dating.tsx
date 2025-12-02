@@ -1,19 +1,19 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useNavigation, Outlet, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, MessageSquareText, Eye, Check, X, Info, Shield, Wallet, ChevronDown, ChevronUp } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, Check, X, Info, Shield, Wallet, ChevronDown, ChevronUp } from "lucide-react"
 
 // components:
 import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
 
 // interface and service
-import { requireModelSession } from "~/services/model-auth.server"
 import { capitalize } from "~/utils/functions/textFormat"
 import { getAllModelBookings } from "~/services/booking.server"
+import { requireModelSession } from "~/services/model-auth.server"
 import { calculateAgeFromDOB, formatCurrency, formatDate } from "~/utils"
 
 const statusConfig: Record<string, { label: string; className: string }> = {

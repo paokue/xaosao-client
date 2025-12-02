@@ -3,6 +3,11 @@ import { index, route, type RouteConfig } from "@react-router/dev/routes";
 export default [
   index("routes/home.tsx"),
 
+  // API routes for SSE notifications
+  route("api/notifications/model-sse", "./routes/api/notifications/model-sse.ts"),
+  route("api/notifications/customer-sse", "./routes/api/notifications/customer-sse.ts"),
+  route("api/notifications/mark-read", "./routes/api/notifications/mark-read.ts"),
+
   // authentication routes
   route("login", "./routes/auth/login.tsx"),
   route("register", "./routes/auth/register.tsx"),
@@ -72,6 +77,9 @@ export default [
     // your new chat route
     route("realtime-chat", "./routes/model/chat/chat-wrapper.tsx"),
     route("chat", "./routes/model/chat/single-chat-wrapper.tsx"),
+
+    // Notifications
+    route("notifications", "./routes/model/notifications/notifications.tsx"),
   ]),
 
   route("customer", "./routes/customer/layout.tsx", [
@@ -163,5 +171,8 @@ export default [
     route("packages", "./routes/customer/packages/package.tsx"),
     route("payment/:id", "./routes/customer/packages/payment.tsx"),
     route("subscription-history", "./routes/customer/packages/history.tsx"),
+
+    // Notifications
+    route("notifications", "./routes/customer/notifications/notifications.tsx"),
   ]),
 ] satisfies RouteConfig;

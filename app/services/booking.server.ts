@@ -2,6 +2,19 @@ import { prisma } from "./database.server";
 import { createAuditLogs } from "./log.server";
 import { FieldValidationError } from "./base.server";
 import type { IServiceBookingCredentials } from "~/interfaces/service";
+import {
+  notifyBookingCreated,
+  notifyBookingConfirmed,
+  notifyBookingRejected,
+  notifyBookingCancelled,
+  notifyModelCheckedIn,
+  notifyCustomerCheckedIn,
+  notifyBookingCompleted,
+  notifyCompletionConfirmed,
+  notifyBookingDisputed,
+  notifyPaymentRefunded,
+  notifyAutoReleasePayment,
+} from "./notification.server";
 
 // ========================================
 // GPS & Location Helper Functions
@@ -304,6 +317,29 @@ export async function createServiceBooking(
         status: "success",
         onSuccess: result,
       });
+
+      // Send notification to model
+      try {
+        const customer = await prisma.customer.findUnique({
+          where: { id: customerId },
+          select: { firstName: true },
+        });
+        const modelService = await prisma.model_service.findUnique({
+          where: { id: modelServiceId },
+          include: { service: true },
+        });
+        if (customer && modelService?.service) {
+          await notifyBookingCreated(
+            modelId,
+            customerId,
+            result.id,
+            modelService.service.name,
+            customer.firstName
+          );
+        }
+      } catch (notifyError) {
+        console.error("NOTIFY_BOOKING_CREATED_FAILED", notifyError);
+      }
     }
     return result;
   } catch (error) {
@@ -718,6 +754,29 @@ export async function cancelServiceBooking(id: string, customerId: string) {
         status: "success",
         onSuccess: cancelledBooking,
       });
+
+      // Send notification to model
+      try {
+        const customer = await prisma.customer.findUnique({
+          where: { id: customerId },
+          select: { firstName: true },
+        });
+        const bookingWithService = await prisma.service_booking.findUnique({
+          where: { id },
+          include: { modelService: { include: { service: true } } },
+        });
+        if (customer && bookingWithService && booking.modelId && bookingWithService.modelService?.service) {
+          await notifyBookingCancelled(
+            booking.modelId,
+            customerId,
+            id,
+            bookingWithService.modelService.service.name,
+            customer.firstName
+          );
+        }
+      } catch (notifyError) {
+        console.error("NOTIFY_BOOKING_CANCELLED_FAILED", notifyError);
+      }
     }
     return cancelledBooking;
   } catch (error) {
@@ -919,6 +978,29 @@ export async function acceptBooking(id: string, modelId: string) {
         status: "success",
         onSuccess: updatedBooking,
       });
+
+      // Send notification to customer
+      try {
+        const model = await prisma.model.findUnique({
+          where: { id: modelId },
+          select: { firstName: true },
+        });
+        const bookingWithService = await prisma.service_booking.findUnique({
+          where: { id },
+          include: { modelService: { include: { service: true } } },
+        });
+        if (model && bookingWithService && booking.customerId && bookingWithService.modelService?.service) {
+          await notifyBookingConfirmed(
+            booking.customerId,
+            modelId,
+            id,
+            bookingWithService.modelService.service.name,
+            model.firstName
+          );
+        }
+      } catch (notifyError) {
+        console.error("NOTIFY_BOOKING_CONFIRMED_FAILED", notifyError);
+      }
     }
 
     return updatedBooking;
@@ -977,7 +1059,7 @@ export async function rejectBooking(id: string, modelId: string, reason?: string
     }
 
     // Refund payment to customer if held
-    if (booking.paymentStatus === "held" && booking.holdTransactionId) {
+    if (booking.paymentStatus === "held" && booking.holdTransactionId && booking.customerId) {
       await refundPaymentToCustomer(
         booking.customerId,
         booking.price,
@@ -1003,6 +1085,30 @@ export async function rejectBooking(id: string, modelId: string, reason?: string
         status: "success",
         onSuccess: updatedBooking,
       });
+
+      // Send notification to customer
+      try {
+        const model = await prisma.model.findUnique({
+          where: { id: modelId },
+          select: { firstName: true },
+        });
+        const bookingWithService = await prisma.service_booking.findUnique({
+          where: { id },
+          include: { modelService: { include: { service: true } } },
+        });
+        if (model && bookingWithService && booking.customerId && bookingWithService.modelService?.service) {
+          await notifyBookingRejected(
+            booking.customerId,
+            modelId,
+            id,
+            bookingWithService.modelService.service.name,
+            model.firstName,
+            reason
+          );
+        }
+      } catch (notifyError) {
+        console.error("NOTIFY_BOOKING_REJECTED_FAILED", notifyError);
+      }
     }
 
     return updatedBooking;
@@ -1174,6 +1280,29 @@ export async function completeBooking(id: string, modelId: string) {
         status: "success",
         onSuccess: updatedBooking,
       });
+
+      // Send notification to customer
+      try {
+        const model = await prisma.model.findUnique({
+          where: { id: modelId },
+          select: { firstName: true },
+        });
+        const bookingWithService = await prisma.service_booking.findUnique({
+          where: { id },
+          include: { modelService: { include: { service: true } } },
+        });
+        if (model && bookingWithService && booking.customerId && bookingWithService.modelService?.service) {
+          await notifyBookingCompleted(
+            booking.customerId,
+            modelId,
+            id,
+            bookingWithService.modelService.service.name,
+            model.firstName
+          );
+        }
+      } catch (notifyError) {
+        console.error("NOTIFY_BOOKING_COMPLETED_FAILED", notifyError);
+      }
     }
 
     return updatedBooking;
@@ -1303,6 +1432,24 @@ export async function modelCheckIn(
       onSuccess: updatedBooking,
     });
 
+    // Send notification to customer
+    try {
+      const model = await prisma.model.findUnique({
+        where: { id: modelId },
+        select: { firstName: true },
+      });
+      if (model && booking.customerId) {
+        await notifyModelCheckedIn(
+          booking.customerId,
+          modelId,
+          id,
+          model.firstName
+        );
+      }
+    } catch (notifyError) {
+      console.error("NOTIFY_MODEL_CHECKED_IN_FAILED", notifyError);
+    }
+
     return updatedBooking;
   } catch (error) {
     console.error("MODEL_CHECK_IN_FAILED", error);
@@ -1426,6 +1573,24 @@ export async function customerCheckIn(
       onSuccess: updatedBooking,
     });
 
+    // Send notification to model
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { firstName: true },
+      });
+      if (customer && booking.modelId) {
+        await notifyCustomerCheckedIn(
+          booking.modelId,
+          customerId,
+          id,
+          customer.firstName
+        );
+      }
+    } catch (notifyError) {
+      console.error("NOTIFY_CUSTOMER_CHECKED_IN_FAILED", notifyError);
+    }
+
     return updatedBooking;
   } catch (error) {
     console.error("CUSTOMER_CHECK_IN_FAILED", error);
@@ -1521,6 +1686,30 @@ export async function customerConfirmCompletion(id: string, customerId: string) 
       onSuccess: completedBooking,
     });
 
+    // Send notification to model
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { firstName: true },
+      });
+      const bookingWithService = await prisma.service_booking.findUnique({
+        where: { id },
+        include: { modelService: { include: { service: true } } },
+      });
+      if (customer && bookingWithService && booking.modelId && bookingWithService.modelService?.service) {
+        await notifyCompletionConfirmed(
+          booking.modelId,
+          customerId,
+          id,
+          bookingWithService.modelService.service.name,
+          customer.firstName,
+          booking.price
+        );
+      }
+    } catch (notifyError) {
+      console.error("NOTIFY_COMPLETION_CONFIRMED_FAILED", notifyError);
+    }
+
     return completedBooking;
   } catch (error) {
     console.error("CUSTOMER_CONFIRM_COMPLETION_FAILED", error);
@@ -1611,6 +1800,30 @@ export async function customerDisputeBooking(
       onSuccess: disputedBooking,
     });
 
+    // Send notification to model
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { firstName: true },
+      });
+      const bookingWithService = await prisma.service_booking.findUnique({
+        where: { id },
+        include: { modelService: { include: { service: true } } },
+      });
+      if (customer && bookingWithService && booking.modelId && bookingWithService.modelService?.service) {
+        await notifyBookingDisputed(
+          booking.modelId,
+          customerId,
+          id,
+          bookingWithService.modelService.service.name,
+          customer.firstName,
+          reason
+        );
+      }
+    } catch (notifyError) {
+      console.error("NOTIFY_BOOKING_DISPUTED_FAILED", notifyError);
+    }
+
     return disputedBooking;
   } catch (error) {
     console.error("CUSTOMER_DISPUTE_BOOKING_FAILED", error);
@@ -1687,6 +1900,20 @@ export async function processAutoRelease() {
           status: "success",
           onSuccess: completedBooking,
         });
+
+        // Send notifications to both model and customer
+        try {
+          if (booking.modelId && booking.customerId) {
+            await notifyAutoReleasePayment(
+              booking.modelId,
+              booking.customerId,
+              booking.id,
+              booking.price
+            );
+          }
+        } catch (notifyError) {
+          console.error("NOTIFY_AUTO_RELEASE_FAILED", notifyError);
+        }
 
         results.push({ bookingId: booking.id, status: "released" });
       } catch (error) {

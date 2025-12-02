@@ -3,8 +3,6 @@ import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "rea
 import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
 import {
-    Bell,
-    Boxes,
     HandHeart,
     Heart,
     MessageCircle,
@@ -18,9 +16,14 @@ import {
 import type { ICustomerResponse } from "~/interfaces/customer";
 import { requireUserSession } from "~/services/auths.server";
 import { getCustomerProfile } from "~/services/profile.server";
+import { getCustomerUnreadCount, getCustomerNotifications } from "~/services/notification.server";
+import { NotificationBell } from "~/components/notifications/NotificationBell";
+import type { Notification } from "~/hooks/useNotifications";
 
 interface LoaderReturn {
     customerData: ICustomerResponse;
+    unreadNotifications: number;
+    initialNotifications: Notification[];
 }
 
 interface TransactionProps {
@@ -28,16 +31,30 @@ interface TransactionProps {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-    const customerId = await requireUserSession(request)
-    const customerData = await getCustomerProfile(customerId)
+    const customerId = await requireUserSession(request);
+    const [customerData, unreadNotifications, notifications] = await Promise.all([
+        getCustomerProfile(customerId),
+        getCustomerUnreadCount(customerId),
+        getCustomerNotifications(customerId, { limit: 10 }),
+    ]);
 
-    return { customerData }
+    const initialNotifications: Notification[] = notifications.map((n) => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        data: n.data as Record<string, any>,
+        isRead: n.isRead,
+        createdAt: n.createdAt.toISOString(),
+    }));
+
+    return { customerData, unreadNotifications, initialNotifications };
 }
 
 export default function Dashboard({ loaderData }: TransactionProps) {
     const location = useLocation();
     const navigate = useNavigate();
-    const { customerData } = loaderData;
+    const { customerData, unreadNotifications, initialNotifications } = loaderData;
     const { t, i18n } = useTranslation();
 
     const navigationItems = useMemo(() => [
@@ -58,7 +75,7 @@ export default function Dashboard({ loaderData }: TransactionProps) {
         { title: t('navigation.dating'), url: "/customer/dates-history", icon: HandHeart },
         { title: t('navigation.wallet'), url: "/customer/wallets", icon: Wallet2 },
         // { title: t('navigation.notification'), url: "/customer/notification", icon: Bell },
-        { title: t('navigation.profile'), url: "/customer/profile", icon: User2Icon },
+        // { title: t('navigation.profile'), url: "/customer/profile", icon: User2Icon },
     ], [t, i18n.language]);
 
     const isActiveRoute = (url: string) => {
@@ -75,24 +92,28 @@ export default function Dashboard({ loaderData }: TransactionProps) {
 
     return (
         <div className="flex min-h-screen w-full relative">
-            {/* Sidebar for Desktop */}
             <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between sm:sticky sm:top-0 sm:h-screen">
                 <div className="w-full">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-14 h-14 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
-                            <img
-                                src={customerData.profile}
-                                alt="Profile"
-                                className="w-full h-full rounded-full object-cover cursor-pointer"
-                            />
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="relative">
+                                <div className="w-16 h-16 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
+                                    <img
+                                        src={customerData.profile}
+                                        alt="Profile"
+                                        className="w-full h-full rounded-full object-cover cursor-pointer"
+                                    />
+                                </div>
+                                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg">{customerData.firstName} {customerData?.lastName}</h2>
+                                <p className="text-xs text-gray-500">
+                                    Find your perfect match
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg">{customerData.firstName} {customerData?.lastName}</h2>
-                            <p className="text-xs text-muted-foreground">
-                                Find your perfect match
-                            </p>
-                        </div>
-                        {/* <img src="/images/logo-pink.png" className="w-40 h-12" /> */}
+                        <NotificationBell userType="customer" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
                     </div>
 
                     <SidebarSeparator className="my-4" />
@@ -120,6 +141,28 @@ export default function Dashboard({ loaderData }: TransactionProps) {
 
             {/* Main Content */}
             <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
+                <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-30">
+                    <Link to="/customer/profile"
+                        className="flex items-center gap-2"
+                    >
+                        <div className="relative">
+                            <img
+                                src={customerData.profile}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover border border-rose-300"
+                            />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                        </div>
+                        <div className="flex items-start justify-center flex-col">
+                            <span className="text-sm font-medium uppercase">{customerData.firstName} {customerData.lastName}</span>
+                            <span className="text-xs text-gray-500">{customerData.bio}</span>
+                        </div>
+                    </Link>
+                    <div className="flex items-center justify-center gap-4">
+                        <NotificationBell userType="customer" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
+                        <Settings size={18} className="text-gray-500" onClick={() => navigate("/customer/setting")} />
+                    </div>
+                </div>
                 <main className="bg-background flex-1">
                     <Outlet />
                 </main>

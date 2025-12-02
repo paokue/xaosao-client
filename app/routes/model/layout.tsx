@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, Outlet, useLocation, type LoaderFunction } from "react-router";
+import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
 import {
@@ -10,11 +10,13 @@ import {
     Settings,
     User,
     User2Icon,
-    Wallet,
-    Wallet2,
 } from "lucide-react";
 import { requireModelSession } from "~/services/model-auth.server";
 import { getModelDashboardData } from "~/services/model.server";
+import { getModelUnreadCount, getModelNotifications } from "~/services/notification.server";
+import { NotificationBell } from "~/components/notifications/NotificationBell";
+import { capitalize } from "~/utils/functions/textFormat";
+import type { Notification } from "~/hooks/useNotifications";
 
 interface ModelData {
     id: string;
@@ -29,6 +31,8 @@ interface ModelData {
 
 interface LoaderReturn {
     modelData: ModelData;
+    unreadNotifications: number;
+    initialNotifications: Notification[];
 }
 
 interface LayoutProps {
@@ -37,14 +41,29 @@ interface LayoutProps {
 
 export const loader: LoaderFunction = async ({ request }) => {
     const modelId = await requireModelSession(request);
-    const modelData = await getModelDashboardData(modelId);
+    const [modelData, unreadNotifications, notifications] = await Promise.all([
+        getModelDashboardData(modelId),
+        getModelUnreadCount(modelId),
+        getModelNotifications(modelId, { limit: 10 }),
+    ]);
 
-    return { modelData };
+    const initialNotifications: Notification[] = notifications.map((n) => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        data: n.data as Record<string, any>,
+        isRead: n.isRead,
+        createdAt: n.createdAt.toISOString(),
+    }));
+
+    return { modelData, unreadNotifications, initialNotifications };
 }
 
 export default function ModelLayout({ loaderData }: LayoutProps) {
     const location = useLocation();
-    const { modelData } = loaderData;
+    const navigate = useNavigate();
+    const { modelData, unreadNotifications, initialNotifications } = loaderData;
     const { t, i18n } = useTranslation();
 
     const navigationItems = useMemo(() => [
@@ -78,23 +97,28 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
 
     return (
         <div className="flex min-h-screen w-full relative">
-            {/* Sidebar for Desktop */}
             <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between sm:sticky sm:top-0 sm:h-screen">
                 <div className="w-full">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-14 h-14 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
-                            <img
-                                src={modelData.profile}
-                                alt="Profile"
-                                className="w-full h-full rounded-full object-cover cursor-pointer"
-                            />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="relative">
+                                <div className="w-14 h-14 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
+                                    <img
+                                        src={modelData.profile}
+                                        alt="Profile"
+                                        className="w-full h-full rounded-full object-cover cursor-pointer"
+                                    />
+                                </div>
+                                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg">{modelData.firstName} {modelData?.lastName}</h2>
+                                <p className="text-xs text-muted-foreground">
+                                    Connect with customers
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg">{modelData.firstName} {modelData?.lastName}</h2>
-                            <p className="text-xs text-muted-foreground">
-                                Connect with customers
-                            </p>
-                        </div>
+                        <NotificationBell userType="model" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
                     </div>
 
                     <SidebarSeparator className="my-4" />
@@ -122,6 +146,28 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
 
             {/* Main Content */}
             <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
+                <div className="sm:hidden flex items-center justify-between px-4 py-2 border-b bg-white sticky top-0 z-30">
+                    <Link to="/customer/profile"
+                        className="flex items-center gap-2"
+                    >
+                        <div className="relative">
+                            <img
+                                src={modelData.profile}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover border border-rose-300"
+                            />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                        </div>
+                        <div className="flex items-start justify-center flex-col">
+                            <span className="text-sm font-medium uppercase">{modelData.firstName} {modelData.lastName}</span>
+                            <span className="text-xs text-gray-500">{capitalize(modelData.available_status)}</span>
+                        </div>
+                    </Link>
+                    <div className="flex items-center justify-center gap-4">
+                        <NotificationBell userType="model" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
+                        <Settings size={18} className="text-gray-500" onClick={() => navigate("/model/settings")} />
+                    </div>
+                </div>
                 <main className="bg-background flex-1">
                     <Outlet />
                 </main>
