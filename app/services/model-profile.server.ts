@@ -2,7 +2,10 @@ import { prisma } from "./database.server";
 import { default as bcrypt } from "bcryptjs";
 import { createAuditLogs } from "./log.server";
 import { FieldValidationError } from "./base.server";
-import type { IModelProfileCredentials, IModelSettingCredentials } from "~/interfaces/model-profile";
+import type {
+  IModelProfileCredentials,
+  IModelSettingCredentials,
+} from "~/interfaces/model-profile";
 const { compare, hash } = bcrypt;
 
 // Get model's own profile
@@ -448,6 +451,54 @@ export async function updateModelSetting(
   }
 }
 
+// Update chat profile (sync with chat backend)
+export async function updateModelChatProfile(
+  authToken: string,
+  data: {
+    phone_number: string;
+    first_name: string;
+    last_name: string;
+    profile_image: string;
+  }
+) {
+  const url = `${process.env.VITE_API_URL}update-profile`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        phone_number: data.phone_number,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        profile_image: data.profile_image,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error("Failed to update model chat profile:", result.message);
+      return { success: false, message: result.message };
+    }
+
+    console.log("Model chat profile updated successfully");
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error("Error updating model chat profile:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to update model chat profile",
+    };
+  }
+}
+
 // ============ BANK FUNCTIONS ============
 
 // Get model banks
@@ -540,7 +591,10 @@ export async function createModelBank(
     throw new FieldValidationError({
       success: false,
       error: true,
-      message: error.code === "P2002" ? "Bank account already exists!" : "Failed to create model bank!",
+      message:
+        error.code === "P2002"
+          ? "Bank account already exists!"
+          : "Failed to create model bank!",
     });
   }
 }
@@ -615,7 +669,10 @@ export async function updateModelBank(
     throw new FieldValidationError({
       success: false,
       error: true,
-      message: error.code === "P2002" ? "Bank account already exists!" : "Failed to update model bank!",
+      message:
+        error.code === "P2002"
+          ? "Bank account already exists!"
+          : "Failed to update model bank!",
     });
   }
 }

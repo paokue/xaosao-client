@@ -10,11 +10,11 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
-import { requireModelSession } from "~/services/model-auth.server";
+import { requireModelSession, getModelTokenFromSession } from "~/services/model-auth.server";
 import { validateUpdateProfileInputs } from "~/services/validation.server";
 import { capitalize, extractFilenameFromCDNSafe } from "~/utils/functions/textFormat";
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server";
-import { getModelOwnProfile, updateModelProfile } from "~/services/model-profile.server";
+import { getModelOwnProfile, updateModelProfile, updateModelChatProfile } from "~/services/model-profile.server";
 import type { IModelProfileCredentials, IModelOwnProfileResponse } from "~/interfaces/model-profile";
 
 interface LoaderReturn {
@@ -73,6 +73,22 @@ export async function action({ request }: Route.ActionArgs) {
 
             const res = await updateModelProfile(modelId, modelFormData as IModelProfileCredentials);
             if (res.id) {
+                // Sync profile update to chat backend (non-blocking)
+                try {
+                    const authToken = await getModelTokenFromSession(request);
+                    if (authToken) {
+                        await updateModelChatProfile(authToken, {
+                            phone_number: String(modelFormData.whatsapp),
+                            first_name: modelFormData.firstName || "",
+                            last_name: modelFormData.lastName || "",
+                            profile_image: modelFormData.profile || "",
+                        });
+                    }
+                } catch (chatError) {
+                    // Log error but don't fail the main profile update
+                    console.error("Failed to sync model chat profile:", chatError);
+                }
+
                 return redirect(`/model/profile?toastMessage=Update+your+profile+successfully!&toastType=success`);
             }
         } catch (error: any) {

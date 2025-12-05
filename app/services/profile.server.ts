@@ -525,6 +525,51 @@ export async function createReport(
   }
 }
 
+// Update chat profile (sync with chat backend)
+export async function updateChatProfile(
+  authToken: string,
+  data: {
+    phone_number: string;
+    first_name: string;
+    last_name: string;
+    profile_image: string;
+  }
+) {
+  const url = `${process.env.VITE_API_URL}update-profile`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        phone_number: data.phone_number,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        profile_image: data.profile_image,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error("Failed to update chat profile:", result.message);
+      return { success: false, message: result.message };
+    }
+
+    console.log("Chat profile updated successfully");
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error("Error updating chat profile:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to update chat profile",
+    };
+  }
+}
+
 // Delete self account
 export async function deleteAccount(customerId: string) {
   if (!customerId)

@@ -11,9 +11,9 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
-import { requireUserSession } from "~/services/auths.server";
+import { requireUserSession, getUserTokenFromSession } from "~/services/auths.server";
 import { validateUpdateProfileInputs } from "~/services/validation.server";
-import { getCustomerProfile, updateProfile } from "~/services/profile.server";
+import { getCustomerProfile, updateProfile, updateChatProfile } from "~/services/profile.server";
 import type { ICustomerCredentials, ICustomerResponse } from "~/interfaces/customer";
 import { deleteFileFromBunny, uploadFileToBunnyServer } from "~/services/upload.server";
 import { capitalize, extractFilenameFromCDNSafe } from "~/utils/functions/textFormat";
@@ -60,6 +60,22 @@ export async function action({ request }: Route.ActionArgs) {
             await validateUpdateProfileInputs(customerData as ICustomerCredentials)
             const res = await updateProfile(customerId, customerData as ICustomerCredentials);
             if (res.id) {
+                // Sync profile update to chat backend (non-blocking)
+                try {
+                    const authToken = await getUserTokenFromSession(request);
+                    if (authToken) {
+                        await updateChatProfile(authToken, {
+                            phone_number: String(customerData.whatsapp),
+                            first_name: customerData.firstName || "",
+                            last_name: customerData.lastName || "",
+                            profile_image: customerData.profile || "",
+                        });
+                    }
+                } catch (chatError) {
+                    // Log error but don't fail the main profile update
+                    console.error("Failed to sync chat profile:", chatError);
+                }
+
                 return redirect(`/customer/profile?toastMessage=Update+your+profile+successfully!&toastType=success`);
             }
         } catch (error: any) {
