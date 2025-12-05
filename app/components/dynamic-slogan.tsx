@@ -28,7 +28,7 @@ export function DynamicSlogan() {
 
     // Always render the same initial content for SSR consistency
     return (
-        <h2 className="text-3xl sm:text-10xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent mb-2 font-serif uppercase text-shadow-md">
+        <h2 className="text-3xl sm:text-10xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent mb-2 font-serif uppercase">
             {slogans[currentSlogan]}
         </h2>
     )

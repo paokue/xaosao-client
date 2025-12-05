@@ -1,22 +1,25 @@
 import { useMemo } from "react";
-import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
-import { SidebarSeparator } from "~/components/ui/sidebar";
+import { Form, Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import {
     HandHeart,
     Heart,
+    LogOut,
     MessageCircle,
     Search,
     Settings,
     User,
     User2Icon,
 } from "lucide-react";
-import { requireModelSession } from "~/services/model-auth.server";
-import { getModelDashboardData } from "~/services/model.server";
-import { getModelUnreadCount, getModelNotifications } from "~/services/notification.server";
+import { SidebarSeparator } from "~/components/ui/sidebar";
 import { NotificationBell } from "~/components/notifications/NotificationBell";
+
+// services
 import { capitalize } from "~/utils/functions/textFormat";
 import type { Notification } from "~/hooks/useNotifications";
+import { getModelDashboardData } from "~/services/model.server";
+import { requireModelSession } from "~/services/model-auth.server";
+import { getModelUnreadCount, getModelNotifications } from "~/services/notification.server";
 
 interface ModelData {
     id: string;
@@ -94,6 +97,12 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         location.pathname.includes("realtime-chat") ||
         location.pathname.includes("chat");
 
+    // 👇 Show mobile header only on main navigation routes
+    const showMobileHeader = mobileNavigationItems.some(item => {
+        if (item.url === "/model" && location.pathname === "/model") return true;
+        if (item.url !== "/model" && location.pathname.startsWith(item.url)) return true;
+        return false;
+    });
 
     return (
         <div className="flex min-h-screen w-full relative">
@@ -141,33 +150,43 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
                             );
                         })}
                     </div>
+                    <Form method="post" action="/model-logout">
+                        <button
+                            type="submit"
+                            className="flex items-center justify-center cursor-pointer space-x-3 p-2 rounded-md transition-colors bg-rose-50 text-rose-500 mt-8 hover:border hover:border-rose-500 w-full"
+                        >
+                            <p suppressHydrationWarning>Logout</p>
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </Form>
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
-                <div className="sm:hidden flex items-center justify-between px-4 py-2 border-b bg-white sticky top-0 z-30">
-                    <Link to="/customer/profile"
-                        className="flex items-center gap-2"
-                    >
-                        <div className="relative">
-                            <img
-                                src={modelData.profile}
-                                alt="Profile"
-                                className="w-10 h-10 rounded-full object-cover border border-rose-300"
-                            />
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                {showMobileHeader && (
+                    <div className="sm:hidden flex items-center justify-between px-4 py-2 border-b bg-white sticky top-0 z-30">
+                        <Link to="/model/profile"
+                            className="flex items-center gap-2"
+                        >
+                            <div className="relative">
+                                <img
+                                    src={modelData.profile}
+                                    alt="Profile"
+                                    className="w-10 h-10 rounded-full object-cover border border-rose-300"
+                                />
+                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                            </div>
+                            <div className="flex items-start justify-center flex-col">
+                                <span className="text-sm font-medium uppercase">{modelData.firstName} {modelData.lastName}</span>
+                                <span className="text-xs text-gray-500">{capitalize(modelData.available_status)}</span>
+                            </div>
+                        </Link>
+                        <div className="flex items-center justify-center gap-4">
+                            <NotificationBell userType="model" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
+                            <Settings size={18} className="text-gray-500" onClick={() => navigate("/model/settings")} />
                         </div>
-                        <div className="flex items-start justify-center flex-col">
-                            <span className="text-sm font-medium uppercase">{modelData.firstName} {modelData.lastName}</span>
-                            <span className="text-xs text-gray-500">{capitalize(modelData.available_status)}</span>
-                        </div>
-                    </Link>
-                    <div className="flex items-center justify-center gap-4">
-                        <NotificationBell userType="model" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
-                        <Settings size={18} className="text-gray-500" onClick={() => navigate("/model/settings")} />
                     </div>
-                </div>
+                )}
                 <main className="bg-background flex-1">
                     <Outlet />
                 </main>

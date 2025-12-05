@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import { useTranslation } from "react-i18next";
 import { SidebarSeparator } from "~/components/ui/sidebar";
+import { Link, Outlet, useLocation, useNavigate, type LoaderFunction } from "react-router";
 import {
     HandHeart,
     Heart,
@@ -9,16 +9,15 @@ import {
     Search,
     Settings,
     User,
-    User2Icon,
     Wallet,
     Wallet2,
 } from "lucide-react";
-import type { ICustomerResponse } from "~/interfaces/customer";
-import { requireUserSession } from "~/services/auths.server";
-import { getCustomerProfile } from "~/services/profile.server";
-import { getCustomerUnreadCount, getCustomerNotifications } from "~/services/notification.server";
-import { NotificationBell } from "~/components/notifications/NotificationBell";
 import type { Notification } from "~/hooks/useNotifications";
+import { requireUserSession } from "~/services/auths.server";
+import type { ICustomerResponse } from "~/interfaces/customer";
+import { getCustomerProfile } from "~/services/profile.server";
+import { NotificationBell } from "~/components/notifications/NotificationBell";
+import { getCustomerUnreadCount, getCustomerNotifications } from "~/services/notification.server";
 
 interface LoaderReturn {
     customerData: ICustomerResponse;
@@ -62,7 +61,6 @@ export default function Dashboard({ loaderData }: TransactionProps) {
         { title: t('navigation.match'), url: "/customer/matches", icon: Heart },
         { title: t('navigation.chat'), url: "/customer/realtime-chat", icon: MessageCircle },
         { title: t('navigation.datingHistory'), url: "/customer/dates-history", icon: HandHeart },
-        // { title: t('navigation.packages'), url: "/customer/packages", icon: Boxes },
         { title: t('navigation.wallet'), url: "/customer/wallets", icon: Wallet },
         { title: t('navigation.myProfile'), url: "/customer/profile", icon: User },
         { title: t('navigation.setting'), url: "/customer/setting", icon: Settings },
@@ -74,8 +72,6 @@ export default function Dashboard({ loaderData }: TransactionProps) {
         { title: t('navigation.chat'), url: "/customer/realtime-chat", icon: MessageCircle },
         { title: t('navigation.dating'), url: "/customer/dates-history", icon: HandHeart },
         { title: t('navigation.wallet'), url: "/customer/wallets", icon: Wallet2 },
-        // { title: t('navigation.notification'), url: "/customer/notification", icon: Bell },
-        // { title: t('navigation.profile'), url: "/customer/profile", icon: User2Icon },
     ], [t, i18n.language]);
 
     const isActiveRoute = (url: string) => {
@@ -88,6 +84,13 @@ export default function Dashboard({ loaderData }: TransactionProps) {
     const hideMobileNav =
         location.pathname.includes("realtime-chat") ||
         location.pathname.includes("chat");
+
+    // 👇 Show mobile header only on main navigation routes (hide on realtime-chat)
+    const showMobileHeader = !hideMobileNav && mobileNavigationItems.some(item => {
+        if (item.url === "/customer" && location.pathname === "/customer") return true;
+        if (item.url !== "/customer" && location.pathname.startsWith(item.url)) return true;
+        return false;
+    });
 
 
     return (
@@ -139,30 +142,31 @@ export default function Dashboard({ loaderData }: TransactionProps) {
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
-                <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-30">
-                    <Link to="/customer/profile"
-                        className="flex items-center gap-2"
-                    >
-                        <div className="relative">
-                            <img
-                                src={customerData.profile}
-                                alt="Profile"
-                                className="w-10 h-10 rounded-full object-cover border border-rose-300"
-                            />
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+            <div className="w-full sm:w-4/5 flex flex-col min-h-screen">
+                {showMobileHeader && (
+                    <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-30">
+                        <Link to="/customer/profile"
+                            className="flex items-center gap-2"
+                        >
+                            <div className="relative">
+                                <img
+                                    src={customerData.profile}
+                                    alt="Profile"
+                                    className="w-10 h-10 rounded-full object-cover border border-rose-300"
+                                />
+                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                            </div>
+                            <div className="flex items-start justify-center flex-col">
+                                <span className="text-sm font-medium uppercase">{customerData.firstName} {customerData.lastName}</span>
+                                <span className="text-xs text-gray-500">{customerData.bio}</span>
+                            </div>
+                        </Link>
+                        <div className="flex items-center justify-center gap-4">
+                            <NotificationBell userType="customer" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
+                            <Settings size={18} className="text-gray-500" onClick={() => navigate("/customer/setting")} />
                         </div>
-                        <div className="flex items-start justify-center flex-col">
-                            <span className="text-sm font-medium uppercase">{customerData.firstName} {customerData.lastName}</span>
-                            <span className="text-xs text-gray-500">{customerData.bio}</span>
-                        </div>
-                    </Link>
-                    <div className="flex items-center justify-center gap-4">
-                        <NotificationBell userType="customer" initialCount={unreadNotifications} initialNotifications={initialNotifications} />
-                        <Settings size={18} className="text-gray-500" onClick={() => navigate("/customer/setting")} />
                     </div>
-                </div>
+                )}
                 <main className="bg-background flex-1">
                     <Outlet />
                 </main>

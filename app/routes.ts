@@ -15,6 +15,7 @@ export default [
   route("reset-password", "./routes/auth/reset-password.tsx"),
   route("verify-otp", "./routes/auth/verify-otp.tsx"),
   route("logout", "./routes/logout.ts"),
+  route("model-logout", "./routes/model-logout.ts"),
 
   // Model authentication routes
   route("model-auth/login", "./routes/model-auth/login.tsx"),
