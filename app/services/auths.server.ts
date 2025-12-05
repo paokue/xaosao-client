@@ -40,6 +40,7 @@ interface UserRegistrationData {
   last_name: string;
   user_name: string;
   gender: "male" | "female" | "other";
+  profile_image?: string;
 }
 
 interface UserLogin {
@@ -145,7 +146,7 @@ export async function destroyUserSession(request: Request) {
     headers: {
       "Set-Cookie": [
         await sessionStorage.destroySession(session),
-        `whoxa_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+        `whoxa_customer_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
       ].join(", "),
     },
   });
@@ -167,7 +168,7 @@ export async function createUserSession(
 
   // Build cookie header manually to avoid encoding
   const cookieParts = [
-    `whoxa_auth_token=${token}`,
+    `whoxa_customer_auth_token=${token}`,
     `Path=/`,
     `Max-Age=${maxAge}`,
     `SameSite=Lax`,
@@ -423,6 +424,7 @@ export async function customerRegister(
         username: customerData.username,
         gender: customerData.gender,
         password: passwordHash,
+        profile: customerData.profile || "",
         latitude: +locationDetails.latitude,
         longitude: +locationDetails.longitude,
         country: locationDetails.countryName,
@@ -473,6 +475,7 @@ export async function customerRegister(
         last_name: customerData.lastName || "",
         user_name: customerData.username,
         gender: customerData.gender,
+        profile_image: customerData.profile || "",
       };
 
       const chatRes = await registerUserWithoutOTP(userData);

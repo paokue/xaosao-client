@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Form, Link, useActionData, useLoaderData, useNavigate, useNavigation } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { Loader } from "lucide-react";
@@ -32,11 +32,18 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
+  // Dynamic import for code splitting
+  const { prisma } = await import("~/services/database.server");
+
   const formData = await request.formData();
 
   const whatsappRaw = formData.get("whatsapp");
   const passwordRaw = formData.get("password");
   const rememberMeRaw = formData.get("rememberMe");
+
+  // Get GPS coordinates from client (if provided)
+  const latitudeRaw = formData.get("latitude");
+  const longitudeRaw = formData.get("longitude");
 
   // Basic validation
   if (!whatsappRaw || !passwordRaw) {
@@ -64,6 +71,43 @@ export async function action({ request }: ActionFunctionArgs) {
 
     // Validate inputs against injection and business rules
     validateModelSignInInputs(credentials);
+
+    // Update model GPS location if provided (non-blocking - don't fail login if this fails)
+    if (latitudeRaw && longitudeRaw) {
+      try {
+        const latitude = parseFloat(String(latitudeRaw));
+        const longitude = parseFloat(String(longitudeRaw));
+
+        // Validate coordinates
+        if (!isNaN(latitude) && !isNaN(longitude) &&
+          latitude >= -90 && latitude <= 90 &&
+          longitude >= -180 && longitude <= 180) {
+
+          const model = await prisma.model.findFirst({
+            where: { whatsapp },
+            select: { id: true }
+          });
+
+          if (model) {
+            // Update model GPS location in database
+            await prisma.model.update({
+              where: { id: model.id },
+              data: {
+                latitude,
+                longitude,
+              },
+            }).catch(err => {
+              // Log error but don't fail login
+              console.error("Failed to update model GPS location on login:", err);
+            });
+
+            console.log(`Model GPS location updated for ${whatsapp}: (${latitude}, ${longitude})`);
+          }
+        }
+      } catch (locationError) {
+        console.error("Model GPS location update error during login:", locationError);
+      }
+    }
 
     // Attempt login
     return await modelLogin(credentials);
@@ -99,6 +143,69 @@ export default function ModelLogin() {
   const { showResetSuccess } = useLoaderData<typeof loader>();
   const isSubmitting = navigation.state === "submitting";
   const [showPassword, setShowPassword] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'denied' | 'error'>('loading');
+
+  // Function to request GPS location
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationStatus('error');
+      console.error("Geolocation is not supported by this browser");
+      return;
+    }
+
+    // Check if we're on a secure context (HTTPS or localhost)
+    const isSecureContext = window.isSecureContext ||
+      window.location.protocol === 'https:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.');
+
+    if (!isSecureContext) {
+      console.warn("Geolocation requires HTTPS. Current URL:", window.location.href);
+    }
+
+    setLocationStatus('loading');
+    console.log("Requesting GPS location from:", window.location.hostname);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setLocationStatus('success');
+        console.log("✅ Model GPS location obtained:", position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        console.error("❌ Geolocation error:", error.message, "Code:", error.code);
+
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationStatus('denied');
+          console.warn("User denied location permission. Login will work without GPS.");
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          setLocationStatus('error');
+          console.error("Location information unavailable");
+        } else if (error.code === error.TIMEOUT) {
+          setLocationStatus('error');
+          console.error("Location request timed out");
+        } else {
+          setLocationStatus('error');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  }, []);
+
+  // Get user's GPS location on component mount
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4">
@@ -113,6 +220,37 @@ export default function ModelLogin() {
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access your dashboard
           </p>
+
+          {/* Location status indicator */}
+          <div className="flex items-center justify-center pt-3">
+            {locationStatus === 'loading' && (
+              <p className="text-xs text-yellow-600 flex items-center">
+                <Loader className="w-3 h-3 mr-1 animate-spin" />
+                Getting your location...
+              </p>
+            )}
+            {locationStatus === 'success' && (
+              <p className="text-xs text-green-600 flex items-center">
+                <span className="mr-1">📍</span>
+                Location detected
+              </p>
+            )}
+            {(locationStatus === 'denied' || locationStatus === 'error') && (
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-500 flex items-center">
+                  <span className="mr-1">📍</span>
+                  Location unavailable
+                </p>
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  className="text-xs text-rose-500 hover:text-rose-400 underline"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {showResetSuccess && (
@@ -129,6 +267,14 @@ export default function ModelLogin() {
         )}
 
         <Form method="post" className="mt-8 space-y-6">
+          {/* Hidden fields for GPS coordinates */}
+          {location && (
+            <>
+              <input type="hidden" name="latitude" value={location.latitude} />
+              <input type="hidden" name="longitude" value={location.longitude} />
+            </>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1">

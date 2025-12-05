@@ -58,6 +58,7 @@
   "register": {
     "title": "创建账户！",
     "subtitle": "这将显示在您的个人资料中，您可以稍后更改。",
+    "profileImage": "头像",
     "firstName": "名字",
     "lastName": "姓氏",
     "username": "用户名",

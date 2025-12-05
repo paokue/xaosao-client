@@ -165,7 +165,7 @@ export async function destroyModelSession(request: Request) {
     headers: {
       "Set-Cookie": [
         await modelSessionStorage.destroySession(session),
-        `whoxa_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+        `whoxa_model_auth_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
       ].join(", "),
     },
   });
@@ -187,7 +187,7 @@ export async function createModelSession(
 
   // Build cookie header manually to avoid encoding
   const cookieParts = [
-    `whoxa_auth_token=${token}`,
+    `whoxa_model_auth_token=${token}`,
     `Path=/`,
     `Max-Age=${maxAge}`,
     `SameSite=Lax`,

@@ -301,10 +301,6 @@ export default function SignInPage() {
                     className="rounded-full flex items-center justify-center sm:justify-start mb-8 cursor-pointer"
                     aria-label="Go back to home"
                 >
-                    {/* <p className="flex items-center space-x-2">
-                        <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
-                    </p> */}
                     <img src="/images/logo-white.png" className="w-30 h-10" />
                 </button>
 
@@ -453,7 +449,7 @@ export default function SignInPage() {
                             <span className="text-white">{t('login.noAccount')}</span>
                             <Link
                                 to="/register"
-                                className="text-white text-md underline font-bold hover:text-rose-500 transition-colors rounded"
+                                className="text-white text-xs font-bold transition-colors rounded uppercase hover:text-rose-500"
                             >
                                 {isMobile ? t('login.createAccountMobile') : t('login.createAccount')}
                             </Link>

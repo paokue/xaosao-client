@@ -58,6 +58,7 @@
   "register": {
     "title": "Create an Account!",
     "subtitle": "It will display on your profile and you can change it later.",
+    "profileImage": "Profile Image",
     "firstName": "First Name",
     "lastName": "Last Name",
     "username": "Username",

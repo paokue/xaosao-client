@@ -1,8 +1,8 @@
-import { AlertCircle, ArrowLeft, Loader } from "lucide-react"
-import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
 import { useState, useEffect } from "react"
-import type { Route } from "./+types/reset-password"
 import { useTranslation } from "react-i18next"
+import { AlertCircle, Loader } from "lucide-react"
+import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
+import type { Route } from "./+types/reset-password"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
                     <div className="text-center pt-4">
                         <p className="text-md text-gray-400">
                             {t('resetPassword.rememberPassword')}{" "}&nbsp;&nbsp;
-                            <Link to="/login" className="text-white hover:text-rose-600 font-medium hover:underline uppercase hover:underline">
+                            <Link to="/login" className="text-xs text-white hover:text-rose-600 font-medium uppercase">
                                 {t('login.loginButton')}
                             </Link>
                         </p>

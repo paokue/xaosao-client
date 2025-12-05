@@ -14,6 +14,7 @@ export interface ICustomerSignupCredentials {
   gender: Gender;
   dob: string;
   password: string;
+  profile: string;
 }
 
 export interface ICustomerForgotCredentials {

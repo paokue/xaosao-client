@@ -1,8 +1,6 @@
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Heart, ArrowLeft } from "lucide-react"
-import { Link } from "react-router"
 import { Button } from "~/components/ui/button"
+import { useState, useRef, useEffect } from "react"
 
 export default function VerifyOTPPage() {
     const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -79,7 +77,7 @@ export default function VerifyOTPPage() {
 
 
             <div
-                className="border-l border-rose-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-11/12
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 h-11/12
                             bg-black/50 backdrop-blur-md shadow-2xl p-4 sm:p-8 flex flex-col justify-center rounded-lg z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 

@@ -1,8 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import type { Route } from "./+types/forgot-password";
 import { AlertCircle, ArrowLeft, Loader, LockIcon } from "lucide-react";
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router";
-import { useTranslation } from "react-i18next";
 
 // components
 import { Label } from "~/components/ui/label";
@@ -214,7 +214,7 @@ export default function ForgotPasswordPage() {
                                 {t('forgotPassword.rememberPassword')}{" "}
                                 <Link
                                     to="/login"
-                                    className="text-white hover:text-rose-600 font-medium hover:underline ml-2 uppercase hover:underline"
+                                    className="text-xs text-white hover:text-rose-600 font-medium hover:underline ml-2 uppercase hover:underline"
                                 >
                                     {t('login.loginButton')}
                                 </Link>

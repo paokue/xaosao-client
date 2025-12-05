@@ -58,6 +58,7 @@
   "register": {
     "title": "계정 만들기!",
     "subtitle": "프로필에 표시되며 나중에 변경할 수 있습니다.",
+    "profileImage": "프로필 이미지",
     "firstName": "이름",
     "lastName": "성",
     "username": "사용자 이름",

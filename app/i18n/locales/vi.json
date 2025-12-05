@@ -58,6 +58,7 @@
   "register": {
     "title": "Tạo tài khoản!",
     "subtitle": "Thông tin sẽ hiển thị trên hồ sơ của bạn và có thể thay đổi sau.",
+    "profileImage": "Ảnh đại diện",
     "firstName": "Tên",
     "lastName": "Họ",
     "username": "Tên người dùng",

@@ -75,7 +75,7 @@ const ChatWrapper = () => {
          )}
          <iframe
             ref={iframeRef}
-            src={`${CHAT_URL}contact-list`}
+            src={`${CHAT_URL}contact-list?userType=model`}
             style={{
                width: "100%",
                height: "100%",

@@ -78,7 +78,7 @@ const SingleChatWrapper = () => {
          )}
          <iframe
             ref={iframeRef}
-            src={`${CHAT_URL}chat?id=${id}`}
+            src={`${CHAT_URL}chat?id=${id}&userType=model`}
             style={{
                width: "100%",
                height: "100%",

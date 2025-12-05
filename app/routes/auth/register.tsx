@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
 import type { Route } from "./+types/register"
 import { useTranslation } from "react-i18next"
+import React, { useState, useEffect, useRef } from "react"
+import { AlertCircle, Camera, Eye, EyeOff, Loader, User, UserPlus } from "lucide-react"
 import { Form, Link, redirect, useActionData, useNavigate, useNavigation } from "react-router"
-import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader, User, UserPlus } from "lucide-react"
 
 // components
 import { Input } from "~/components/ui/input"
@@ -16,6 +16,7 @@ import type { Gender } from "~/interfaces/base"
 import { validateCustomerSignupInputs } from "~/services/validation.server"
 import type { ICustomerSignupCredentials } from "~/interfaces"
 import { FieldValidationError, getCurrentIP } from "~/services/base.server"
+import { uploadFileToBunnyServer } from "~/services/upload.server"
 
 const backgroundImages = [
     "https://images.pexels.com/photos/12810667/pexels-photo-12810667.jpeg",
@@ -33,12 +34,41 @@ export async function action({ request }: Route.ActionArgs) {
 
     const confirmPassword = formData.get("confirmPassword") as string
     const genderValue = formData.get("gender") as string
+    const newProfile = formData.get("newProfile") as File | null;
 
     let gender: Gender
     if (genderValue === "male" || genderValue === "female" || genderValue === "other") {
         gender = genderValue as Gender
     } else {
-        return { error: "Please select a valid gender!" }
+        return { success: false, error: true, message: "Please select a valid gender!" }
+    }
+
+    // Profile image validation (required)
+    if (!newProfile || !(newProfile instanceof File) || newProfile.size === 0) {
+        return { success: false, error: true, message: "Profile image is required" };
+    }
+
+    let profileUrl = "";
+    if (newProfile && newProfile instanceof File && newProfile.size > 0) {
+        // File size validation (max 5MB)
+        if (newProfile.size > 5 * 1024 * 1024) {
+            return { success: false, error: true, message: "Profile image must be less than 5MB" };
+        }
+
+        // File type validation
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(newProfile.type)) {
+            return { success: false, error: true, message: "Profile image must be JPG, JPEG, PNG, or WebP format" };
+        }
+
+        try {
+            // Upload profile image to Bunny CDN
+            const buffer = Buffer.from(await newProfile.arrayBuffer());
+            profileUrl = await uploadFileToBunnyServer(buffer, newProfile.name, newProfile.type);
+        } catch (uploadError: any) {
+            console.error("Profile upload error:", uploadError);
+            return { success: false, error: true, message: "Failed to upload profile image. Please try again." };
+        }
     }
 
     const signUpData: ICustomerSignupCredentials = {
@@ -49,6 +79,7 @@ export async function action({ request }: Route.ActionArgs) {
         gender: gender,
         dob: formData.get("dob") as string,
         password: formData.get("password") as string,
+        profile: profileUrl,
     };
 
     if (!signUpData.firstName) {
@@ -111,6 +142,9 @@ export default function SignUpPage() {
     const [isAcceptTerms, setIsAcceptTerms] = useState(false)
     const [showConPassword, setShowConPassword] = useState(false)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [profileImage, setProfileImage] = useState<string>("")
+    const [profileError, setProfileError] = useState<string>("")
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     const actionData = useActionData<typeof action>()
     const isSubmitting = navigation.state !== 'idle' && navigation.formMethod === "POST";
@@ -122,15 +156,50 @@ export default function SignUpPage() {
         return () => clearInterval(interval)
     }, []);
 
+    const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProfileError("");
+
+        if (!e.target.files || !e.target.files[0]) {
+            return;
+        }
+
+        const file = e.target.files[0];
+
+        // File size validation (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setProfileError("Profile image must be less than 5MB");
+            setProfileImage("");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+
+        // File type validation
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            setProfileError("Profile image must be JPG, JPEG, PNG, or WebP format");
+            setProfileImage("");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+
+        // Valid file - show preview
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result as string;
+            setProfileImage(result);
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
-        <div className="fullscreen safe-area relative overflow-hidden">
-            {backgroundImages.map((image, index) => (
+        <div className="min-h-screen safe-area relative overflow-hidden">
+            {backgroundImages.map((bgImage, index) => (
                 <div
                     key={index}
-                    className={`absolute inset-0 transition-opacity duration-3000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
+                    className={`absolute inset-0 z-0 transition-opacity duration-3000 ${index === currentImageIndex ? "opacity-100" : "opacity-0"
                         }`}
                     style={{
-                        backgroundImage: `url(${image})`,
+                        backgroundImage: `url(${bgImage})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     }}
@@ -142,11 +211,7 @@ export default function SignUpPage() {
                             bg-black/50 backdrop-blur-lg shadow-2xl py-8 px-4 sm:p-8 flex flex-col justify-start z-20
                             lg:top-0 lg:right-0 lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:w-2/5 lg:h-full lg:rounded-none">
 
-                <div className="rounded-full hidden sm:flex items-center justify-start mb-8 cursor-pointer" onClick={() => navigate("/")}>
-                    {/* <p className="flex items-center space-x-2">
-                        <ArrowLeft className="text-xl text-gray-300" />
-                        <span className="text-white text-xl">XAOSAO</span>
-                    </p> */}
+                <div className="rounded-full hidden sm:flex items-center justify-start mb-4 cursor-pointer" onClick={() => navigate("/")}>
                     <img src="/images/logo-white.png" className="w-30 h-10" />
                 </div>
 
@@ -156,7 +221,34 @@ export default function SignUpPage() {
                     </h1>
                     <p className="text-white text-xs sm:text-sm">{t('register.subtitle')}</p>
                 </div>
-                <Form method="post" className="space-y-3 sm:space-y-4">
+                <Form method="post" encType="multipart/form-data" className="space-y-1 sm:space-y-4">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                        <Label className="text-gray-300 text-sm">
+                            {t('register.profileImage')}<span className="text-rose-500">*</span>
+                        </Label>
+                        <div className="relative w-[100px] h-[100px] rounded-full flex items-center justify-center">
+                            <img
+                                src={profileImage || "/images/default-image.png"}
+                                alt="Profile Preview"
+                                className={`w-full h-full rounded-full object-cover shadow-md border-2 ${profileError || (!profileImage && actionData?.error) ? "border-red-500" : "border-rose-200"}`}
+                            />
+                            <label className="absolute bottom-0 right-0 bg-rose-500 p-1.5 rounded-full cursor-pointer shadow-md hover:bg-rose-600">
+                                <Camera className="w-4 h-4 text-white" />
+                                <input
+                                    type="file"
+                                    name="newProfile"
+                                    accept="image/*"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    onChange={onFileChange}
+                                />
+                            </label>
+                        </div>
+                        {profileError && (
+                            <p className="text-xs text-red-400 text-center">{profileError}</p>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="firstName" className="text-gray-300 text-sm">
@@ -363,7 +455,7 @@ export default function SignUpPage() {
 
                     <div className="text-center space-x-2">
                         <span className="text-white">{t('register.alreadyHaveAccount')} </span>
-                        <Link to="/login" className="text-white font-bold hover:text-rose-600 font-xs underline">
+                        <Link to="/login" className="text-white text-xs font-bold hover:text-rose-600 font-xs uppercase">
                             {t('register.backLogin')}
                         </Link>
                     </div>
