@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { Form, Link, useActionData, useLoaderData, useNavigate, useNavigation } from "react-router";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { Loader } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useState, useEffect, useCallback } from "react";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Form, Link, useActionData, useLoaderData, useNavigate, useNavigation } from "react-router";
 
 // services
 import { modelLogin } from "~/services/model-auth.server";
@@ -25,14 +26,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  // Only allow POST requests
   if (request.method !== "POST") {
     return {
-      error: "Invalid request method",
+      error: "modelAuth.errors.invalidRequestMethod",
     };
   }
 
-  // Dynamic import for code splitting
   const { prisma } = await import("~/services/database.server");
 
   const formData = await request.formData();
@@ -45,21 +44,17 @@ export async function action({ request }: ActionFunctionArgs) {
   const latitudeRaw = formData.get("latitude");
   const longitudeRaw = formData.get("longitude");
 
-  // Basic validation
   if (!whatsappRaw || !passwordRaw) {
     return {
-      error: "Phone number and password are required",
+      error: "modelAuth.errors.phoneAndPasswordRequired",
     };
   }
 
   try {
-    // Parse and sanitize inputs
     const whatsapp = Number(whatsappRaw);
-
-    // Check if phone number is valid number
     if (isNaN(whatsapp) || whatsapp <= 0) {
       return {
-        error: "Invalid phone number format. Please enter digits only.",
+        error: "modelAuth.errors.invalidPhoneFormat",
       };
     }
 
@@ -69,7 +64,6 @@ export async function action({ request }: ActionFunctionArgs) {
       rememberMe: rememberMeRaw === "on",
     };
 
-    // Validate inputs against injection and business rules
     validateModelSignInInputs(credentials);
 
     // Update model GPS location if provided (non-blocking - don't fail login if this fails)
@@ -78,7 +72,6 @@ export async function action({ request }: ActionFunctionArgs) {
         const latitude = parseFloat(String(latitudeRaw));
         const longitude = parseFloat(String(longitudeRaw));
 
-        // Validate coordinates
         if (!isNaN(latitude) && !isNaN(longitude) &&
           latitude >= -90 && latitude <= 90 &&
           longitude >= -180 && longitude <= 180) {
@@ -89,7 +82,6 @@ export async function action({ request }: ActionFunctionArgs) {
           });
 
           if (model) {
-            // Update model GPS location in database
             await prisma.model.update({
               where: { id: model.id },
               data: {
@@ -97,7 +89,6 @@ export async function action({ request }: ActionFunctionArgs) {
                 longitude,
               },
             }).catch(err => {
-              // Log error but don't fail login
               console.error("Failed to update model GPS location on login:", err);
             });
 
@@ -112,7 +103,6 @@ export async function action({ request }: ActionFunctionArgs) {
     // Attempt login
     return await modelLogin(credentials);
   } catch (error: any) {
-    // Handle validation errors
     if (error && typeof error === "object" && !error.message) {
       const validationError = Object.values(error)[0];
       return {
@@ -120,29 +110,41 @@ export async function action({ request }: ActionFunctionArgs) {
       };
     }
 
-    // Handle authentication errors
     if (error && typeof error === "object" && "status" in error) {
       const httpError = error as { status: number; message?: string };
       if (httpError.status === 401) {
         return {
-          error: httpError.message || "Invalid phone number or password",
+          error: httpError.message || "modelAuth.errors.invalidCredentials",
         };
       }
     }
 
     return {
-      error: error.message || "Login failed. Please check your credentials.",
+      error: error.message || "modelAuth.errors.loginFailed",
     };
   }
 }
 
 export default function ModelLogin() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
   const actionData = useActionData<typeof action>();
   const { showResetSuccess } = useLoaderData<typeof loader>();
   const isSubmitting = navigation.state === "submitting";
   const [showPassword, setShowPassword] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(showResetSuccess);
+
+  // Hide success message after 5 seconds
+  useEffect(() => {
+    if (showResetSuccess) {
+      setShowSuccessMessage(true);
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showResetSuccess]);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'denied' | 'error'>('loading');
 
@@ -150,7 +152,7 @@ export default function ModelLogin() {
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationStatus('error');
-      console.error("Geolocation is not supported by this browser");
+      // console.error("Geolocation is not supported by this browser");
       return;
     }
 
@@ -163,11 +165,10 @@ export default function ModelLogin() {
       window.location.hostname.startsWith('10.');
 
     if (!isSecureContext) {
-      console.warn("Geolocation requires HTTPS. Current URL:", window.location.href);
+      // console.warn("Geolocation requires HTTPS. Current URL:", window.location.href);
     }
 
     setLocationStatus('loading');
-    console.log("Requesting GPS location from:", window.location.hostname);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -176,20 +177,20 @@ export default function ModelLogin() {
           longitude: position.coords.longitude,
         });
         setLocationStatus('success');
-        console.log("✅ Model GPS location obtained:", position.coords.latitude, position.coords.longitude);
+        // console.log("✅ Model GPS location obtained:", position.coords.latitude, position.coords.longitude);
       },
       (error) => {
         console.error("❌ Geolocation error:", error.message, "Code:", error.code);
 
         if (error.code === error.PERMISSION_DENIED) {
           setLocationStatus('denied');
-          console.warn("User denied location permission. Login will work without GPS.");
+          // console.warn("User denied location permission. Login will work without GPS.");
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           setLocationStatus('error');
-          console.error("Location information unavailable");
+          // console.error("Location information unavailable");
         } else if (error.code === error.TIMEOUT) {
           setLocationStatus('error');
-          console.error("Location request timed out");
+          // console.error("Location request timed out");
         } else {
           setLocationStatus('error');
         }
@@ -218,7 +219,7 @@ export default function ModelLogin() {
             <img src="/images/logo-pink.png" className="w-30 h-10" />
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to access your dashboard
+            {t("modelAuth.login.title")}
           </p>
 
           {/* Location status indicator */}
@@ -226,48 +227,47 @@ export default function ModelLogin() {
             {locationStatus === 'loading' && (
               <p className="text-xs text-yellow-600 flex items-center">
                 <Loader className="w-3 h-3 mr-1 animate-spin" />
-                Getting your location...
+                {t("modelAuth.login.gettingLocation")}
               </p>
             )}
             {locationStatus === 'success' && (
               <p className="text-xs text-green-600 flex items-center">
                 <span className="mr-1">📍</span>
-                Location detected
+                {t("modelAuth.login.locationDetected")}
               </p>
             )}
             {(locationStatus === 'denied' || locationStatus === 'error') && (
               <div className="flex items-center gap-2">
                 <p className="text-xs text-gray-500 flex items-center">
                   <span className="mr-1">📍</span>
-                  Location unavailable
+                  {t("modelAuth.login.locationUnavailable")}
                 </p>
                 <button
                   type="button"
                   onClick={requestLocation}
                   className="text-xs text-rose-500 hover:text-rose-400 underline"
                 >
-                  Retry
+                  {t("modelAuth.login.retry")}
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {showResetSuccess && (
+        {showSuccessMessage && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-            <p className="font-medium">Password reset successful!</p>
-            <p className="text-sm mt-1">You can now login with your new password.</p>
+            <p className="text-md font-medium">{t("modelAuth.login.passwordResetSuccess")}</p>
+            <p className="text-sm mt-1">{t("modelAuth.login.passwordResetSuccessMessage")}</p>
           </div>
         )}
 
         {actionData?.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {actionData.error}
+          <div className="text-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {t(actionData.error)}
           </div>
         )}
 
         <Form method="post" className="mt-8 space-y-6">
-          {/* Hidden fields for GPS coordinates */}
           {location && (
             <>
               <input type="hidden" name="latitude" value={location.latitude} />
@@ -278,7 +278,7 @@ export default function ModelLogin() {
           <div className="space-y-4">
             <div>
               <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone number <span className="text-rose-500">*</span>
+                {t("modelAuth.login.phoneNumber")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="whatsapp"
@@ -296,7 +296,7 @@ export default function ModelLogin() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-rose-500">*</span>
+                {t("modelAuth.login.password")} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -335,7 +335,7 @@ export default function ModelLogin() {
                   className="h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
-                  Remember me
+                  {t("modelAuth.login.rememberMe")}
                 </label>
               </div>
 
@@ -343,7 +343,7 @@ export default function ModelLogin() {
                 to="/model-auth/forgot-password"
                 className="text-sm font-medium text-rose-600 hover:text-rose-500"
               >
-                Forgot password?
+                {t("modelAuth.login.forgotPassword")}
               </Link>
             </div>
           </div>
@@ -355,25 +355,25 @@ export default function ModelLogin() {
               className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium rounded-sm text-white transition-colors"
             >
               {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? "Signing in..." : "Sign in"}
+              {isSubmitting ? t("modelAuth.login.signingIn") : t("modelAuth.login.signIn")}
             </button>
           </div>
 
           <div className="flex items-center justify-center text-sm">
-            Don't have an account yet?&nbsp;&nbsp;
+            {t("modelAuth.login.noAccount")}&nbsp;&nbsp;
             <Link
               to="/model-auth/register"
               className="font-medium text-rose-600 hover:text-rose-500"
             >
-              Create new account.
+              {t("modelAuth.login.createAccount")}
             </Link>
           </div>
 
           <div className="text-center pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              Are you a customer?{" "}
+              {t("modelAuth.login.areYouCustomer")}{" "}
               <Link to="/login" className="font-medium text-black hover:text-rose-500 uppercase text-xs ml-2">
-                Login here
+                {t("modelAuth.login.loginHere")}
               </Link>
             </p>
           </div>

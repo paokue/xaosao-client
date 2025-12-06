@@ -55,10 +55,12 @@ export async function action({ request }: Route.ActionArgs) {
             return { success: false, error: true, message: "Profile image must be less than 5MB" };
         }
 
-        // File type validation
-        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-        if (!allowedTypes.includes(newProfile.type)) {
-            return { success: false, error: true, message: "Profile image must be JPG, JPEG, PNG, or WebP format" };
+        // File type validation (relaxed for iOS compatibility - iOS may report heic/heif or empty type)
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif", ""];
+        const fileExtension = newProfile.name.toLowerCase().split('.').pop();
+        const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+        if (!allowedTypes.includes(newProfile.type) && !allowedExtensions.includes(fileExtension || "")) {
+            return { success: false, error: true, message: "Profile image must be JPG, JPEG, PNG, WebP, or HEIC format" };
         }
 
         try {
@@ -173,22 +175,38 @@ export default function SignUpPage() {
             return;
         }
 
-        // File type validation
-        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-        if (!allowedTypes.includes(file.type)) {
-            setProfileError("Profile image must be JPG, JPEG, PNG, or WebP format");
+        // Relaxed file type validation for iOS compatibility
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif", ""];
+        const fileExtension = file.name.toLowerCase().split('.').pop();
+        const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || "")) {
+            setProfileError("Profile image must be JPG, JPEG, PNG, WebP, or HEIC format");
             setProfileImage("");
             if (fileInputRef.current) fileInputRef.current.value = "";
             return;
         }
 
-        // Valid file - show preview
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            setProfileImage(result);
-        };
-        reader.readAsDataURL(file);
+        // Use URL.createObjectURL for preview (more reliable on iOS)
+        try {
+            // Revoke previous object URL to prevent memory leaks
+            if (profileImage && profileImage.startsWith('blob:')) {
+                URL.revokeObjectURL(profileImage);
+            }
+            const objectUrl = URL.createObjectURL(file);
+            setProfileImage(objectUrl);
+        } catch {
+            // Fallback to FileReader if URL.createObjectURL fails
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result as string;
+                setProfileImage(result);
+            };
+            reader.onerror = () => {
+                setProfileError("Failed to load image preview");
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     return (
@@ -228,21 +246,25 @@ export default function SignUpPage() {
                         </Label>
                         <div className="relative w-[100px] h-[100px] rounded-full flex items-center justify-center">
                             <img
-                                src={profileImage || "/images/default-image.png"}
+                                src={profileImage || "https://xaosao.b-cdn.net/default-image.png"}
                                 alt="Profile Preview"
                                 className={`w-full h-full rounded-full object-cover shadow-md border-2 ${profileError || (!profileImage && actionData?.error) ? "border-red-500" : "border-rose-200"}`}
                             />
-                            <label className="absolute bottom-0 right-0 bg-rose-500 p-1.5 rounded-full cursor-pointer shadow-md hover:bg-rose-600">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="absolute bottom-0 right-0 bg-rose-500 p-1.5 rounded-full cursor-pointer shadow-md hover:bg-rose-600"
+                            >
                                 <Camera className="w-4 h-4 text-white" />
-                                <input
-                                    type="file"
-                                    name="newProfile"
-                                    accept="image/*"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    onChange={onFileChange}
-                                />
-                            </label>
+                            </button>
+                            <input
+                                type="file"
+                                name="newProfile"
+                                accept="image/*"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={onFileChange}
+                            />
                         </div>
                         {profileError && (
                             <p className="text-xs text-red-400 text-center">{profileError}</p>

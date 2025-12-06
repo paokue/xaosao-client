@@ -14,11 +14,10 @@ import {
 } from "~/components/ui/card"
 import {
     Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
     DialogTitle,
+    DialogContent,
+    DialogHeader,
+    DialogDescription,
 } from "~/components/ui/dialog";
 import Rating from '~/components/ui/rating';
 import { Badge } from '~/components/ui/badge';

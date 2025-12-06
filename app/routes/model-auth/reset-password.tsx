@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Loader } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { modelResetPassword } from "~/services/model-auth.server";
+import { validateModelResetPasswordInputs } from "~/services/model-validation.server";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
-import { Loader } from "lucide-react";
-import { validateModelResetPasswordInputs } from "~/services/model-validation.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -19,15 +20,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!token) {
     return redirect("/model-auth/forgot-password");
   }
-
   return { token };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  // Only allow POST requests
   if (request.method !== "POST") {
     return {
-      error: "Invalid request method",
+      error: "modelAuth.errors.invalidRequestMethod",
     };
   }
 
@@ -36,25 +35,20 @@ export async function action({ request }: ActionFunctionArgs) {
   const newPassword = formData.get("newPassword");
   const confirmPassword = formData.get("confirmPassword");
 
-  // Basic required field validation
   if (!token || !newPassword || !confirmPassword) {
     return {
-      error: "Please fill in all fields",
+      error: "modelAuth.resetPassword.fillAllFields",
     };
   }
 
   try {
-    // Prepare data for validation
     const resetData = {
       token: String(token).trim(),
       password: String(newPassword),
       confirmPassword: String(confirmPassword),
     };
 
-    // Validate inputs against injection attacks and business rules
     validateModelResetPasswordInputs(resetData);
-
-    // Attempt password reset
     const result = await modelResetPassword(resetData.token, resetData.password);
 
     if (result.success) {
@@ -62,10 +56,9 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     return {
-      error: result.message || "Failed to reset password",
+      error: result.message || "modelAuth.resetPassword.failedToReset",
     };
   } catch (error: any) {
-    // Handle validation errors
     if (error && typeof error === "object" && !error.message) {
       const validationError = Object.values(error)[0];
       return {
@@ -74,17 +67,17 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     return {
-      error: error.message || "Something went wrong. Please try again.",
+      error: error.message || "modelAuth.errors.somethingWentWrong",
     };
   }
 }
 
 export default function ModelResetPassword() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
   const { token } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -95,25 +88,24 @@ export default function ModelResetPassword() {
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />
           </div>
-          <h2 className="mt-6 text-xl text-gray-900">Create New Password</h2>
+          <h2 className="mt-6 text-xl text-gray-900">{t("modelAuth.resetPassword.title")}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Your new password must be different from the previous.
+            {t("modelAuth.resetPassword.subtitle")}
           </p>
         </div>
 
         {actionData?.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {actionData.error}
+          <div className="text-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {t(actionData.error)}
           </div>
         )}
 
         <Form method="post" className="mt-2 space-y-6">
           <input type="hidden" name="token" value={token} />
-
           <div className="space-y-4">
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                New Password  <span className="text-rose-500">*</span>
+                {t("modelAuth.resetPassword.newPassword")}  <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -122,7 +114,7 @@ export default function ModelResetPassword() {
                   type={showPassword ? "text" : "password"}
                   required
                   minLength={8}
-                  placeholder="Minimum 8 characters"
+                  placeholder="********"
                   className="text-sm appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                 />
                 <button
@@ -146,7 +138,7 @@ export default function ModelResetPassword() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm New Password  <span className="text-rose-500">*</span>
+                {t("modelAuth.resetPassword.confirmPassword")}  <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -155,7 +147,7 @@ export default function ModelResetPassword() {
                   type={showConfirmPassword ? "text" : "password"}
                   required
                   minLength={8}
-                  placeholder="Re-enter your password"
+                  placeholder="********"
                   className="text-sm appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                 />
                 <button
@@ -179,31 +171,31 @@ export default function ModelResetPassword() {
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Password must contain:</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">{t("modelAuth.resetPassword.passwordRequirements")}</h4>
             <ul className="space-y-1 text-xs text-gray-600">
               <li className="flex items-center">
                 <svg className="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                At least 8 characters
+                {t("modelAuth.resetPassword.requirement1")}
               </li>
               <li className="flex items-center">
                 <svg className="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                At least one uppercase letter (A-Z)
+                {t("modelAuth.resetPassword.requirement2")}
               </li>
               <li className="flex items-center">
                 <svg className="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                At least one lowercase letter (a-z)
+                {t("modelAuth.resetPassword.requirement3")}
               </li>
               <li className="flex items-center">
                 <svg className="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                At least one number (0-9)
+                {t("modelAuth.resetPassword.requirement4")}
               </li>
             </ul>
           </div>
@@ -215,7 +207,7 @@ export default function ModelResetPassword() {
               className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? "Resetting..." : "Reset Password"}
+              {isSubmitting ? t("modelAuth.resetPassword.resetting") : t("modelAuth.resetPassword.resetPassword")}
             </button>
           </div>
 
@@ -224,7 +216,7 @@ export default function ModelResetPassword() {
               to="/model-auth/login"
               className="font-medium text-rose-600 hover:text-rose-500 text-sm uppercase text-xs"
             >
-              ← Back to login
+              ← {t("modelAuth.forgotPassword.backToLogin")}
             </Link>
           </div>
         </Form>

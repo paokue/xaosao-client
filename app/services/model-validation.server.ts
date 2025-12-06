@@ -77,11 +77,10 @@ const refineSafe = (schema: z.ZodString) =>
   schema
     .trim()
     .refine((val) => val.length > 0, {
-      message: "This field cannot be empty.",
+      message: "modelAuth.validation.fieldCannotBeEmpty",
     })
     .refine(blockInjection, {
-      message:
-        "Invalid input detected. Please remove special characters or scripts.",
+      message: "modelAuth.validation.invalidInputDetected",
     });
 
 /**
@@ -91,7 +90,8 @@ const refineSafe = (schema: z.ZodString) =>
  */
 const sanitizePhoneNumber = (value: unknown): number => {
   if (typeof value === "number") return value;
-  if (typeof value !== "string") throw new Error("Invalid phone number type");
+  if (typeof value !== "string")
+    throw new Error("modelAuth.validation.invalidPhoneNumberType");
 
   // Remove all non-digit characters
   const digitsOnly = value.replace(/\D/g, "");
@@ -100,7 +100,7 @@ const sanitizePhoneNumber = (value: unknown): number => {
   const phoneNumber = parseInt(digitsOnly, 10);
 
   if (isNaN(phoneNumber)) {
-    throw new Error("Phone number must contain only digits");
+    throw new Error("modelAuth.validation.phoneNumberDigitsOnly");
   }
 
   return phoneNumber;
@@ -116,15 +116,18 @@ const phoneNumberSchema = z
   .union([z.string(), z.number()])
   .transform(sanitizePhoneNumber)
   .refine((val) => val >= 1000000000 && val <= 9999999999, {
-    message: "Phone number must be exactly 10 digits.",
+    message: "modelAuth.validation.phoneNumberExactly10Digits",
   })
-  .refine((val) => {
-    const str = val.toString();
-    // Validate Lao phone number format (starts with 20, 30, etc.)
-    return /^[2-9]\d{9}$/.test(str);
-  }, {
-    message: "Please enter a valid Lao phone number.",
-  });
+  .refine(
+    (val) => {
+      const str = val.toString();
+      // Validate Lao phone number format (starts with 20, 30, etc.)
+      return /^[2-9]\d{9}$/.test(str);
+    },
+    {
+      message: "modelAuth.validation.invalidLaoPhoneNumber",
+    }
+  );
 
 // ====================== Model Sign In Validation ======================
 
@@ -133,8 +136,8 @@ const modelSignInSchema = z.object({
   password: refineSafe(
     z
       .string()
-      .min(8, "Password must be at least 8 characters long.")
-      .max(128, "Password is too long.")
+      .min(8, "modelAuth.validation.passwordMinLength")
+      .max(128, "modelAuth.validation.passwordTooLong")
   ),
   rememberMe: z.boolean(),
 });
@@ -161,47 +164,43 @@ const modelSignUpSchema = z
     firstName: refineSafe(
       z
         .string()
-        .min(2, "First name must be at least 2 characters long.")
-        .max(50, "First name must be at most 50 characters long.")
+        .min(2, "modelAuth.validation.firstNameMinLength")
+        .max(50, "modelAuth.validation.firstNameMaxLength")
         .regex(/^[a-zA-Z\s\u0E80-\u0EFF]+$/, {
-          message:
-            "First name can only contain letters and spaces (English or Lao).",
+          message: "modelAuth.validation.firstNameLettersOnly",
         })
     ),
     lastName: z
       .string()
       .trim()
-      .max(50, "Last name must be at most 50 characters long.")
+      .max(50, "modelAuth.validation.lastNameMaxLength")
       .regex(/^[a-zA-Z\s\u0E80-\u0EFF]*$/, {
-        message:
-          "Last name can only contain letters and spaces (English or Lao).",
+        message: "modelAuth.validation.lastNameLettersOnly",
       })
       .optional()
       .or(z.literal("")),
     username: refineSafe(
       z
         .string()
-        .min(3, "Username must be at least 3 characters long.")
-        .max(30, "Username must be at most 30 characters long.")
-        .regex(/^[a-zA-Z0-9_.-]+$/, {
-          message:
-            "Username can only contain letters, numbers, dots, hyphens, and underscores.",
+        .min(3, "modelAuth.validation.usernameMinLength")
+        .max(30, "modelAuth.validation.usernameMaxLength")
+        .regex(/^[a-zA-Z0-9_.\-\u0E00-\u0E7F\u0E80-\u0EFF]+$/, {
+          message: "modelAuth.validation.usernameInvalidChars",
         })
     ),
     password: refineSafe(
       z
         .string()
-        .min(8, "Password must be at least 8 characters long.")
-        .max(128, "Password is too long.")
+        .min(8, "modelAuth.validation.passwordMinLength")
+        .max(128, "modelAuth.validation.passwordTooLong")
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-          message:
-            "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+          message: "modelAuth.validation.passwordRequirements",
         })
     ),
     dob: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, {
-        message: "Date of birth must be in YYYY-MM-DD format.",
+        message: "modelAuth.validation.dobFormat",
       })
       .refine(
         (date) => {
@@ -211,41 +210,41 @@ const modelSignUpSchema = z
           return age >= 18 && age <= 100;
         },
         {
-          message: "You must be at least 18 years old and under 100 years old.",
+          message: "modelAuth.validation.ageRequirement",
         }
       ),
     gender: z.enum(["male", "female", "other"], {
-      message: "Gender must be one of: male, female, or other.",
+      message: "modelAuth.validation.genderRequired",
     }),
     whatsapp: phoneNumberSchema,
     bio: refineSafe(
       z
         .string()
-        .min(10, "Bio must be at least 10 characters long.")
-        .max(500, "Bio must be at most 500 characters long.")
+        .min(10, "modelAuth.validation.bioMinLength")
+        .max(500, "modelAuth.validation.bioMaxLength")
     ),
-    profile: z.string().url("Invalid profile image URL."),
+    profile: z.string().url("modelAuth.validation.invalidProfileImageUrl"),
     address: refineSafe(
       z
         .string()
-        .min(5, "Address must be at least 5 characters long.")
-        .max(200, "Address must be at most 200 characters long.")
+        .min(5, "modelAuth.validation.addressMinLength")
+        .max(200, "modelAuth.validation.addressMaxLength")
     ),
     career: z
       .string()
       .trim()
-      .max(100, "Career must be at most 100 characters long.")
+      .max(100, "modelAuth.validation.careerMaxLength")
       .refine(blockInjection, {
-        message: "Invalid input detected in career field.",
+        message: "modelAuth.validation.invalidCareerInput",
       })
       .optional()
       .or(z.literal("")),
     education: z
       .string()
       .trim()
-      .max(100, "Education must be at most 100 characters long.")
+      .max(100, "modelAuth.validation.educationMaxLength")
       .refine(blockInjection, {
-        message: "Invalid input detected in education field.",
+        message: "modelAuth.validation.invalidEducationInput",
       })
       .optional()
       .or(z.literal("")),
@@ -254,13 +253,13 @@ const modelSignUpSchema = z
         z
           .string()
           .trim()
-          .min(1, "Interest cannot be empty.")
-          .max(50, "Each interest must be at most 50 characters long.")
+          .min(1, "modelAuth.validation.interestCannotBeEmpty")
+          .max(50, "modelAuth.validation.interestMaxLength")
           .refine(blockInjection, {
-            message: "Invalid input detected in interests.",
+            message: "modelAuth.validation.invalidInterestInput",
           })
       )
-      .max(10, "You can add up to 10 interests only.")
+      .max(10, "modelAuth.validation.maxInterests")
       .optional(),
   })
   .strict(); // Reject any extra fields not defined in schema
@@ -306,24 +305,23 @@ const modelResetPasswordSchema = z
     token: z
       .string()
       .trim()
-      .length(6, "Reset token must be exactly 6 characters.")
+      .length(6, "modelAuth.validation.resetTokenLength")
       .regex(/^[A-F0-9]{6}$/, {
-        message: "Invalid token format. Must be 6 uppercase hexadecimal characters.",
+        message: "modelAuth.validation.invalidTokenFormat",
       }),
     password: refineSafe(
       z
         .string()
-        .min(8, "Password must be at least 8 characters long.")
-        .max(128, "Password is too long.")
+        .min(8, "modelAuth.validation.passwordMinLength")
+        .max(128, "modelAuth.validation.passwordTooLong")
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-          message:
-            "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+          message: "modelAuth.validation.passwordRequirements",
         })
     ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
+    message: "modelAuth.validation.passwordsDoNotMatch",
     path: ["confirmPassword"],
   });
 

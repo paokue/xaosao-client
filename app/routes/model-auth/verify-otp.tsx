@@ -1,8 +1,9 @@
+import { Loader } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { modelVerifyResetToken, modelForgotPassword } from "~/services/model-auth.server";
 import { Form, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
-import { Loader } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -18,15 +19,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!whatsapp) {
     return redirect("/model-auth/forgot-password");
   }
-
   return { whatsapp };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  // Only allow POST requests
   if (request.method !== "POST") {
     return {
-      error: "Invalid request method",
+      error: "modelAuth.errors.invalidRequestMethod",
     };
   }
 
@@ -35,11 +34,10 @@ export async function action({ request }: ActionFunctionArgs) {
   const whatsapp = formData.get("whatsapp");
   const otp = formData.get("otp");
 
-  // Handle resend OTP
   if (intent === "resend") {
     if (!whatsapp) {
       return {
-        error: "Phone number is required",
+        error: "modelAuth.verifyOtp.phoneRequired",
       };
     }
 
@@ -47,43 +45,40 @@ export async function action({ request }: ActionFunctionArgs) {
       await modelForgotPassword(Number(whatsapp));
       return {
         success: true,
-        message: "OTP has been resent to your phone number",
+        message: "modelAuth.verifyOtp.otpResent",
       };
     } catch (error: any) {
       return {
-        error: error.message || "Failed to resend OTP",
+        error: error.message || "modelAuth.verifyOtp.failedToResend",
       };
     }
   }
 
-  // Validate OTP submission
   if (!otp || !whatsapp) {
     return {
-      error: "Please enter the OTP code",
+      error: "modelAuth.verifyOtp.enterOtpCode",
     };
   }
 
-  // Validate OTP format
   const otpString = String(otp).trim();
 
-  // Must be exactly 6 characters
   if (otpString.length !== 6) {
     return {
-      error: "OTP must be exactly 6 characters",
+      error: "modelAuth.verifyOtp.otpLengthError",
     };
   }
 
   // Must contain only uppercase hexadecimal characters (A-F, 0-9)
   if (!/^[A-F0-9]{6}$/.test(otpString)) {
     return {
-      error: "Invalid OTP format. Please enter the code from your SMS",
+      error: "modelAuth.verifyOtp.invalidOtpFormat",
     };
   }
 
   // Check for injection attempts
   if (/<|>|\.\.\/|\\|javascript:|script|eval\(/.test(otpString)) {
     return {
-      error: "Invalid characters detected in OTP",
+      error: "modelAuth.verifyOtp.invalidCharacters",
     };
   }
 
@@ -95,16 +90,17 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     return {
-      error: "Invalid or expired OTP code. Please request a new one",
+      error: "modelAuth.verifyOtp.invalidOtp",
     };
   } catch (error: any) {
     return {
-      error: error.message || "Failed to verify OTP. Please try again",
+      error: error.message || "modelAuth.verifyOtp.failedToVerify",
     };
   }
 }
 
 export default function ModelVerifyOTP() {
+  const { t } = useTranslation();
   const { whatsapp } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -131,7 +127,7 @@ export default function ModelVerifyOTP() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [actionData?.success]); // Restart countdown when OTP is resent successfully
+  }, [actionData?.success]);
 
   const handleOtpChange = (index: number, value: string) => {
     // Prevent pasting multiple characters
@@ -181,22 +177,22 @@ export default function ModelVerifyOTP() {
           <div className="flex justify-center mb-4">
             <img src="/images/logo-pink.png" className="w-30 h-10" />
           </div>
-          <h2 className="mt-6 text-xl text-gray-900">Verify OTP</h2>
+          <h2 className="mt-6 text-xl text-gray-900">{t("modelAuth.verifyOtp.title")}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter the 6-digit code sent to &nbsp;
+            {t("modelAuth.verifyOtp.subtitle")} &nbsp;
             <span className="font-medium text-gray-900">{whatsapp}</span>
           </p>
         </div>
 
         {actionData?.success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-            {actionData.message}
+          <div className="text-sm bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            {t("modelAuth.verifyOtp.otpSentNotice")}
           </div>
         )}
 
         {actionData?.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {actionData.error}
+          <div className="text-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {t(actionData.error)}
           </div>
         )}
 
@@ -206,7 +202,7 @@ export default function ModelVerifyOTP() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3 text-start">
-              Enter OTP Code <span className="text-rose-500">*</span>
+              {t("modelAuth.verifyOtp.otpCode")} <span className="text-rose-500">*</span>
             </label>
             <div className="flex gap-2 justify-between">
               {otp.map((digit, index) => (
@@ -234,7 +230,7 @@ export default function ModelVerifyOTP() {
               className="cursor-pointer group relative w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? "Verifying..." : "Verify OTP"}
+              {isSubmitting ? t("modelAuth.verifyOtp.verifying") : t("modelAuth.verifyOtp.verify")}
             </button>
           </div>
         </Form>
@@ -245,7 +241,7 @@ export default function ModelVerifyOTP() {
               to="/model-auth/forgot-password"
               className="font-medium text-gray-600 hover:text-gray-500 text-sm"
             >
-              ← Use a different number
+              ← {t("modelAuth.forgotPassword.backToLogin")}
             </Link>
           </div>
           <Form method="post">
@@ -259,15 +255,14 @@ export default function ModelVerifyOTP() {
                 : "text-gray-400 cursor-not-allowed"
                 }`}
             >
-              {canResend ? "Resend OTP" : `Resend OTP in ${countdown}s`}
+              {canResend ? t("modelAuth.verifyOtp.resendCode") : `${t("modelAuth.verifyOtp.resendIn")} ${countdown}${t("modelAuth.verifyOtp.seconds")}`}
             </button>
           </Form>
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-xs text-blue-700">
-            The OTP is valid for 60 seconds. If you don't receive it, please check your phone
-            number and try again!
+            {t("modelAuth.verifyOtp.otpSentNotice")}
           </p>
         </div>
       </div>

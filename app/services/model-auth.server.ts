@@ -241,7 +241,7 @@ async function loginModelOnChat(modelData: ModelLogin): Promise<LoginResponse> {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-      message: "Failed to login model",
+      message: "modelAuth.serverMessages.loginFailed",
     };
   }
 }
@@ -262,7 +262,7 @@ export async function modelLogin({
 
   if (!existingModel) {
     const error = new Error(
-      "Could not log you in, please check the provided credentials."
+      "modelAuth.serverMessages.loginInvalidCredentials"
     ) as Error & {
       status?: number;
     };
@@ -282,7 +282,7 @@ export async function modelLogin({
 
   if (existingModel.status !== "active") {
     const error = new Error(
-      "Could not log you in, Your account is unavailable now!"
+      "modelAuth.serverMessages.loginAccountUnavailable"
     ) as Error & {
       status?: number;
     };
@@ -301,7 +301,7 @@ export async function modelLogin({
   const passwordCorrect = await compare(password, existingModel.password);
   if (!passwordCorrect) {
     const error = new Error(
-      "Could not log you in, Your account is not available now."
+      "modelAuth.serverMessages.loginAccountNotActive"
     ) as Error & {
       status?: number;
     };
@@ -379,14 +379,14 @@ async function registerModelWithoutOTP(
     return {
       success: true,
       data: data,
-      message: "Model registered successfully",
+      message: "modelAuth.serverMessages.registrationSuccess",
     };
   } catch (error) {
     console.error("Model registration to chat failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-      message: "Failed to register model",
+      message: "modelAuth.serverMessages.registrationFailed",
     };
   }
 }
@@ -397,7 +397,7 @@ export async function modelRegister(
   ip: string,
   accessKey: string
 ) {
-  if (!modelData) throw new Error("Missing creation data!");
+  if (!modelData) throw new Error("modelAuth.serverMessages.missingCreationData");
 
   try {
     const existingModel = await prisma.model.findFirst({
@@ -405,7 +405,7 @@ export async function modelRegister(
     });
 
     if (existingModel) {
-      throw new Error("This phone number is already registered!");
+      throw new Error("modelAuth.serverMessages.phoneAlreadyRegistered");
     }
 
     const locationDetails = await getLocationDetails(ip, accessKey);
@@ -531,7 +531,7 @@ export async function modelRegister(
     return {
       success: true,
       error: false,
-      message: "Model registration submitted successfully! Awaiting approval.",
+      message: "modelAuth.serverMessages.registrationSuccess",
     };
   } catch (error: any) {
     console.log("INSERT_MODEL_DATA_FAILED", error);
@@ -540,7 +540,7 @@ export async function modelRegister(
       throw new FieldValidationError({
         success: false,
         error: true,
-        message: "This phone number is already registered!",
+        message: "modelAuth.serverMessages.phoneAlreadyRegistered",
       });
     }
 
@@ -559,7 +559,7 @@ export async function modelRegister(
     throw new FieldValidationError({
       success: false,
       error: true,
-      message: error.message || "Failed to add model, Try again later!",
+      message: error.message || "modelAuth.serverMessages.registrationFailed",
     });
   }
 }
@@ -603,9 +603,9 @@ export async function modelForgotPassword(whatsapp: number) {
         ...auditBase,
         description: `Password reset requested for non-existent phone: ${whatsapp}`,
         status: "failed",
-        onError: new Error("Phone number not found"),
+        onError: new Error("modelAuth.serverMessages.phoneNotFound"),
       });
-      throw new Error("Phone number not found");
+      throw new Error("modelAuth.serverMessages.phoneNotFound");
     }
 
     const resetToken = crypto.randomBytes(3).toString("hex").toUpperCase();
@@ -629,7 +629,7 @@ export async function modelForgotPassword(whatsapp: number) {
         status: "failed",
         onSuccess: sendRes,
       });
-      throw new Error("Send OTP to model failed! Please try again later!");
+      throw new Error("modelAuth.serverMessages.sendOtpFailed");
     }
 
     await createAuditLogs({
@@ -642,14 +642,14 @@ export async function modelForgotPassword(whatsapp: number) {
     return {
       success: true,
       error: false,
-      message: "Send OTP to model success!",
+      message: "modelAuth.serverMessages.sendOtpSuccess",
     };
   } catch (error: any) {
     console.error("MODEL_FORGOT_PASSWORD_ERROR", error);
     throw new FieldValidationError({
       success: false,
       error: true,
-      message: error.message || "Failed to process forgot password request!",
+      message: error.message || "modelAuth.serverMessages.forgotPasswordFailed",
     });
   }
 }
@@ -682,7 +682,7 @@ export async function modelResetPassword(token: string, newPassword: string) {
       return {
         success: false,
         error: true,
-        message: "Invalid OTP code to reset password!",
+        message: "modelAuth.serverMessages.invalidOtpCode",
       };
     }
 
@@ -708,7 +708,7 @@ export async function modelResetPassword(token: string, newPassword: string) {
     return {
       success: true,
       error: false,
-      message: "Reset password successfully!",
+      message: "modelAuth.serverMessages.resetPasswordSuccess",
     };
   } catch (error: any) {
     console.error("MODEL_RESET_PASSWORD_ERROR", error);
@@ -724,7 +724,7 @@ export async function modelResetPassword(token: string, newPassword: string) {
     throw new FieldValidationError({
       success: false,
       error: true,
-      message: error.message || "Failed to reset password, please try again!",
+      message: error.message || "modelAuth.serverMessages.resetPasswordFailed",
     });
   }
 }

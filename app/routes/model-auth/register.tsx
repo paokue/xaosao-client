@@ -1,10 +1,13 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from "react";
-import { modelRegister } from "~/services/model-auth.server";
 import { Eye, EyeOff, Camera, X, Loader } from "lucide-react";
-import { uploadFileToBunnyServer } from "~/services/upload.server";
 import type { ActionFunctionArgs, MetaFunction } from "react-router";
-import type { IModelSignupCredentials } from "~/services/model-auth.server";
 import { Form, Link, useActionData, useNavigation, useNavigate } from "react-router";
+
+// services:
+import { modelRegister } from "~/services/model-auth.server";
+import { uploadFileToBunnyServer } from "~/services/upload.server";
+import type { IModelSignupCredentials } from "~/services/model-auth.server";
 import { validateModelSignUpInputs } from "~/services/model-validation.server";
 
 export const meta: MetaFunction = () => {
@@ -18,7 +21,7 @@ export async function action({ request }: ActionFunctionArgs) {
   // Only allow POST requests
   if (request.method !== "POST") {
     return {
-      error: "Invalid request method",
+      error: "modelAuth.errors.invalidRequestMethod",
     };
   }
 
@@ -42,36 +45,38 @@ export async function action({ request }: ActionFunctionArgs) {
   // Basic required fields validation
   if (!firstName || !username || !password || !dob || !gender || !whatsapp || !bio || !address) {
     return {
-      error: "Please fill in all required fields (First Name, Username, Password, DOB, Gender, Phone Number, Bio, and Address)",
+      error: "modelAuth.errors.requiredFieldsMissing",
     };
   }
 
   // Profile image validation
   if (!newProfile || !(newProfile instanceof File) || newProfile.size === 0) {
     return {
-      error: "Profile image is required",
+      error: "modelAuth.errors.profileImageRequired",
     };
   }
 
   // File size validation (max 5MB)
   if (newProfile.size > 5 * 1024 * 1024) {
     return {
-      error: "Profile image must be less than 5MB",
+      error: "modelAuth.errors.profileImageTooLarge",
     };
   }
 
-  // File type validation
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(newProfile.type)) {
+  // File type validation (relaxed for iOS compatibility - iOS may report heic/heif or empty type)
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif", ""];
+  const fileExtension = newProfile.name.toLowerCase().split('.').pop();
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+  if (!allowedTypes.includes(newProfile.type) && !allowedExtensions.includes(fileExtension || "")) {
     return {
-      error: "Profile image must be JPG, JPEG, PNG, or WebP format",
+      error: "modelAuth.errors.profileImageInvalidFormat",
     };
   }
 
   // Password confirmation validation
   if (password !== confirmPassword) {
     return {
-      error: "Passwords do not match",
+      error: "modelAuth.errors.passwordsDoNotMatch",
     };
   }
 
@@ -129,7 +134,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return { error: result.message };
   } catch (error: any) {
-    // Handle validation errors
     if (error && typeof error === "object" && !error.message) {
       const validationError = Object.values(error)[0];
       return {
@@ -138,24 +142,25 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     return {
-      error: error.message || "Registration failed. Please try again.",
+      error: error.message || "modelAuth.errors.registrationFailed",
     };
   }
 }
 
 export default function ModelRegister() {
-  const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const navigation = useNavigation();
+  const actionData = useActionData<typeof action>();
   const isSubmitting = navigation.state === "submitting";
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [image, setImage] = useState<string>("");
-  const [interests, setInterests] = useState<string[]>([]);
   const [newInterest, setNewInterest] = useState("");
-  const [profileError, setProfileError] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [interests, setInterests] = useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [profileError, setProfileError] = useState<string>("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (actionData?.success) {
@@ -173,7 +178,6 @@ export default function ModelRegister() {
     setProfileError("");
 
     if (!e.target.files || !e.target.files[0]) {
-      setProfileError("Please select a profile image");
       return;
     }
 
@@ -181,28 +185,42 @@ export default function ModelRegister() {
 
     // File size validation (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setProfileError("Profile image must be less than 5MB");
+      setProfileError(t("modelAuth.errors.profileImageTooLarge"));
       setImage("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    // File type validation
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      setProfileError("Profile image must be JPG, JPEG, PNG, or WebP format");
+    // Relaxed file type validation for iOS compatibility
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif", ""];
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || "")) {
+      setProfileError(t("modelAuth.errors.profileImageInvalidFormat"));
       setImage("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-
-    // Valid file - show preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setImage(result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Revoke previous object URL to prevent memory leaks
+      if (image && image.startsWith('blob:')) {
+        URL.revokeObjectURL(image);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      setImage(objectUrl);
+    } catch {
+      // Fallback to FileReader if URL.createObjectURL fails
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        setImage(result);
+      };
+      reader.onerror = () => {
+        setProfileError(t("modelAuth.errors.imagePreviewFailed"));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const removeInterest = (index: number) => {
@@ -217,11 +235,9 @@ export default function ModelRegister() {
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // Check if profile image is uploaded before submission
     if (!image) {
       e.preventDefault();
-      setProfileError("Profile image is required. Please upload a photo.");
-      // Scroll to top to show error
+      setProfileError(t("modelAuth.errors.profileImageRequiredUpload"));
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -230,35 +246,33 @@ export default function ModelRegister() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-purple-50 px-4 py-2">
       <div className="max-w-2xl w-full space-y-8 bg-white px-2 sm:px-8 py-4 rounded-lg shadow-xl">
-        <Form method="post" encType="multipart/form-data" className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {actionData?.error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {actionData.error}
-            </div>
-          )}
-
+        <Form method="post" encType="multipart/form-data" className="mt-4 sm:mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="flex flex-col items-center justify-center space-y-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Please choose your profile image <span className="text-rose-500">*</span>
+              {t("modelAuth.register.profileImage")} <span className="text-rose-500">*</span>
             </label>
             <div className="relative w-[120px] h-[120px] rounded-full flex items-center justify-center">
               <img
-                src={image || "/images/default-image.png"}
+                src={image || "https://xaosao.b-cdn.net/default-image.png"}
                 alt="Profile Preview"
                 className={`w-full h-full rounded-full object-cover shadow-md border-2 ${profileError ? "border-red-500" : "border-rose-200"
                   }`}
               />
-              <label className="absolute bottom-1 right-1 bg-rose-500 p-2 rounded-full cursor-pointer shadow-md hover:bg-rose-600">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-1 right-1 bg-rose-500 p-2 rounded-full cursor-pointer shadow-md hover:bg-rose-600"
+              >
                 <Camera className="w-5 h-5 text-white" />
-                <input
-                  type="file"
-                  name="newProfile"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={onFileChange}
-                />
-              </label>
+              </button>
+              <input
+                type="file"
+                name="newProfile"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={onFileChange}
+              />
             </div>
             {profileError && (
               <p className="text-sm text-red-600 mt-1 text-center">{profileError}</p>
@@ -268,48 +282,48 @@ export default function ModelRegister() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                First Name <span className="text-rose-500">*</span>
+                {t("modelAuth.register.firstName")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="firstName"
                 name="firstName"
                 type="text"
                 required
-                placeholder="Enter your first name...."
+                placeholder={t("modelAuth.register.firstNamePlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                Last Name
+                {t("modelAuth.register.lastName")}
               </label>
               <input
                 id="lastName"
                 name="lastName"
                 type="text"
-                placeholder="Enter your last name...."
+                placeholder={t("modelAuth.register.lastNamePlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Username <span className="text-rose-500">*</span>
+                {t("modelAuth.register.username")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
                 required
-                placeholder="Enter your username...."
+                placeholder={t("modelAuth.register.usernamePlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number <span className="text-rose-500">*</span>
+                {t("modelAuth.register.phoneNumber")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="whatsapp"
@@ -324,7 +338,7 @@ export default function ModelRegister() {
 
             <div>
               <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth <span className="text-rose-500">*</span>
+                {t("modelAuth.register.dateOfBirth")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="dob"
@@ -337,7 +351,7 @@ export default function ModelRegister() {
 
             <div>
               <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
-                Gender <span className="text-rose-500">*</span>
+                {t("modelAuth.register.gender")} <span className="text-rose-500">*</span>
               </label>
               <select
                 id="gender"
@@ -345,16 +359,16 @@ export default function ModelRegister() {
                 required
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="">{t("modelAuth.register.selectGender")}</option>
+                <option value="male">{t("modelAuth.register.male")}</option>
+                <option value="female">{t("modelAuth.register.female")}</option>
+                <option value="other">{t("modelAuth.register.other")}</option>
               </select>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-rose-500">*</span> (Minimum 8 characters)
+                {t("modelAuth.register.password")} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -363,7 +377,7 @@ export default function ModelRegister() {
                   type={showPassword ? "text" : "password"}
                   required
                   minLength={8}
-                  placeholder="Enter your password...."
+                  placeholder={t("modelAuth.register.passwordPlaceholder")}
                   className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
                 <button
@@ -378,7 +392,7 @@ export default function ModelRegister() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password <span className="text-rose-500">*</span>
+                {t("modelAuth.register.confirmPassword")} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -387,7 +401,7 @@ export default function ModelRegister() {
                   type={showConfirmPassword ? "text" : "password"}
                   required
                   minLength={8}
-                  placeholder="Confirm your password...."
+                  placeholder={t("modelAuth.register.confirmPasswordPlaceholder")}
                   className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
                 <button
@@ -402,61 +416,61 @@ export default function ModelRegister() {
 
             <div>
               <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                Address <span className="text-rose-500">*</span>
+                {t("modelAuth.register.address")} <span className="text-rose-500">*</span>
               </label>
               <input
                 id="address"
                 name="address"
                 type="text"
                 required
-                placeholder="Enter your address...."
+                placeholder={t("modelAuth.register.addressPlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                Bio <span className="text-rose-500">*</span>
+                {t("modelAuth.register.bio")} <span className="text-rose-500">*</span>
               </label>
               <textarea
                 id="bio"
                 name="bio"
                 rows={2}
                 required
-                placeholder="Tell us about yourself..."
+                placeholder={t("modelAuth.register.bioPlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="career" className="block text-sm font-medium text-gray-700 mb-1">
-                Career
+                {t("modelAuth.register.career")}
               </label>
               <input
                 id="career"
                 name="career"
                 type="text"
-                placeholder="Enter your career...."
+                placeholder={t("modelAuth.register.careerPlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label htmlFor="education" className="block text-sm font-medium text-gray-700 mb-1">
-                Education
+                {t("modelAuth.register.education")}
               </label>
               <input
                 id="education"
                 name="education"
                 type="text"
-                placeholder="Enter your education...."
+                placeholder={t("modelAuth.register.educationPlaceholder")}
                 className="text-sm appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Interests
+                {t("modelAuth.register.interests")}
               </label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {interests.map((interest, index) => (
@@ -479,7 +493,7 @@ export default function ModelRegister() {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Add an interest (e.g., Music, Sports)..."
+                  placeholder={t("modelAuth.register.interestsDescription")}
                   value={newInterest}
                   onChange={(e) => setNewInterest(e.target.value)}
                   onKeyDown={(e) => {
@@ -495,31 +509,35 @@ export default function ModelRegister() {
                   onClick={addInterest}
                   className="px-4 py-2 bg-rose-100 border border-rose-200 text-rose-500 hover:bg-rose-200 rounded-lg text-sm font-medium"
                 >
-                  Add
+                  {t("modelAuth.register.addInterest")}
                 </button>
               </div>
               <input type="hidden" name="interests" value={JSON.stringify(interests)} />
             </div>
 
-            <div className="mt-8">
+            <div className="mt-4 sm:mt-8">
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="cursor-pointer w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-                {isSubmitting ? "Creating Account..." : "Register"}
+                {isSubmitting ? t("modelAuth.register.registering") : t("modelAuth.register.register")}
               </button>
             </div>
           </div>
 
-
+          {actionData?.error && (
+            <div className="text-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {t(actionData.error)}
+            </div>
+          )}
 
           <div className="text-center text-sm">
             <p className="text-gray-600">
-              Already have an account?&nbsp;&nbsp;
+              {t("modelAuth.register.alreadyHaveAccount")}&nbsp;&nbsp;
               <Link to="/model-auth/login" className="font-medium text-rose-600 hover:text-rose-500 text-xs uppercase">
-                Sign in
+                {t("modelAuth.register.loginHere")}
               </Link>
             </p>
           </div>
