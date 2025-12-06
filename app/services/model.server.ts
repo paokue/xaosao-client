@@ -1,8 +1,9 @@
 import { prisma } from "./database.server";
-import { differenceInYears } from "date-fns";
-import { FieldValidationError } from "./base.server";
 import { default as bcrypt } from "bcryptjs";
+import { differenceInYears } from "date-fns";
 import { createAuditLogs } from "./log.server";
+import { FieldValidationError } from "./base.server";
+
 const { compare, hash } = bcrypt;
 
 interface ForYouFilters {
@@ -21,7 +22,6 @@ interface ForYouFilters {
 // Discover page - Get online/active models that customer hasn't passed
 export async function getModelsForCustomer(customerId: string) {
   try {
-    // Get customer location for distance calculation
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
       select: { latitude: true, longitude: true },
@@ -30,7 +30,6 @@ export async function getModelsForCustomer(customerId: string) {
     const models = await prisma.model.findMany({
       where: {
         status: "active",
-        // Exclude models the customer has passed
         customer_interactions: {
           none: {
             customerId,
@@ -927,9 +926,6 @@ export async function getModelsByInteraction(
 // ==================== MODEL-SIDE FUNCTIONS ====================
 // These functions are for models to query their own data
 
-/**
- * Get model by ID with all related data (for model's own profile)
- */
 export async function getModelDashboardData(modelId: string) {
   return await prisma.model.findUnique({
     where: { id: modelId },
@@ -971,9 +967,6 @@ export async function getModelDashboardData(modelId: string) {
   });
 }
 
-/**
- * Get booking requests for a model
- */
 export async function getModelBookingRequests(
   modelId: string,
   status?: string
@@ -1013,9 +1006,6 @@ export async function getModelBookingRequests(
   });
 }
 
-/**
- * Get model sessions/calls
- */
 export async function getModelSessions(modelId: string, limit = 20) {
   return await prisma.session.findMany({
     where: {
@@ -1043,9 +1033,6 @@ export async function getModelSessions(modelId: string, limit = 20) {
   });
 }
 
-/**
- * Get model earnings summary
- */
 export async function getModelEarnings(modelId: string) {
   const wallet = await prisma.wallet.findFirst({
     where: { modelId: modelId },
@@ -1102,9 +1089,6 @@ export async function getModelEarnings(modelId: string) {
   };
 }
 
-/**
- * Get model conversations/messages
- */
 export async function getModelConversations(modelId: string) {
   return await prisma.conversation.findMany({
     where: {
@@ -1133,9 +1117,6 @@ export async function getModelConversations(modelId: string) {
   });
 }
 
-/**
- * Get customers who liked the model
- */
 export async function getCustomersWhoLikedModel(modelId: string) {
   return await prisma.customer_interactions.findMany({
     where: {
@@ -1167,9 +1148,6 @@ export async function getCustomersWhoLikedModel(modelId: string) {
   });
 }
 
-/**
- * Update model availability status
- */
 export async function updateModelAvailability(
   modelId: string,
   availableStatus: string
@@ -1182,9 +1160,6 @@ export async function updateModelAvailability(
   });
 }
 
-/**
- * Update model profile
- */
 export async function updateModelProfile(
   modelId: string,
   data: {
@@ -1208,9 +1183,6 @@ export async function updateModelProfile(
   });
 }
 
-/**
- * Update booking status (accept/reject)
- */
 export async function updateBookingStatus(
   bookingId: string,
   status: string,
@@ -1236,9 +1208,6 @@ export async function updateBookingStatus(
   });
 }
 
-/**
- * Get model dashboard statistics
- */
 export async function getModelDashboardStats(modelId: string) {
   // Total bookings
   const totalBookings = await prisma.service_booking.count({
@@ -1318,9 +1287,6 @@ export async function getModelDashboardStats(modelId: string) {
   };
 }
 
-/**
- * Get model reviews
- */
 export async function getModelReviews(modelId: string, limit = 20) {
   return await prisma.review.findMany({
     where: {
@@ -1348,9 +1314,6 @@ export async function getModelReviews(modelId: string, limit = 20) {
   });
 }
 
-/**
- * Get model's friend contacts
- */
 export async function getModelFriendContacts(modelId: string) {
   return await prisma.friend_contacts.findMany({
     where: {
@@ -1373,9 +1336,6 @@ export async function getModelFriendContacts(modelId: string) {
   });
 }
 
-/**
- * Update model images
- */
 export async function addModelImage(modelId: string, imageName: string) {
   return await prisma.images.create({
     data: {
@@ -1386,9 +1346,6 @@ export async function addModelImage(modelId: string, imageName: string) {
   });
 }
 
-/**
- * Delete model image
- */
 export async function deleteModelImage(imageId: string, modelId: string) {
   const image = await prisma.images.findFirst({
     where: {
@@ -1406,13 +1363,8 @@ export async function deleteModelImage(imageId: string, modelId: string) {
   });
 }
 
-// ========================================
-// Model-Side Matches Functions (For viewing customers)
-// ========================================
+// ========================================  Model-Side Matches Functions (For viewing customers)
 
-/**
- * Get "For You" customers for a model (customers who haven't interacted with the model yet)
- */
 export async function getForYouCustomers(
   modelId: string,
   options: {
@@ -1573,9 +1525,6 @@ export async function getForYouCustomers(
   };
 }
 
-/**
- * Get customers who liked this model
- */
 export async function getCustomersWhoLikedMe(
   modelId: string,
   page: number = 1,
@@ -1639,9 +1588,6 @@ export async function getCustomersWhoLikedMe(
   };
 }
 
-/**
- * Get customers by model's interaction type (LIKE or PASS)
- */
 export async function getCustomersByModelInteraction(
   modelId: string,
   action: "LIKE" | "PASS",
@@ -1706,10 +1652,6 @@ export async function getCustomersByModelInteraction(
   };
 }
 
-/**
- * Create model interaction with customer (like/pass)
- * Has toggle behavior: if same action exists, it will be deleted (unlike/unpass)
- */
 export async function createModelInteraction(
   modelId: string,
   customerId: string,
@@ -1767,9 +1709,6 @@ export async function createModelInteraction(
 // Model Services Management
 // ========================================
 
-/**
- * Get all available services
- */
 export async function getAllServices() {
   return await prisma.service.findMany({
     where: {
@@ -1781,9 +1720,6 @@ export async function getAllServices() {
   });
 }
 
-/**
- * Get model's applied services
- */
 export async function getModelAppliedServices(modelId: string) {
   return await prisma.model_service.findMany({
     where: {
@@ -1799,9 +1735,6 @@ export async function getModelAppliedServices(modelId: string) {
   });
 }
 
-/**
- * Update model service availability
- */
 export async function updateModelServiceAvailability(
   modelServiceId: string,
   isAvailable: boolean,
@@ -1991,7 +1924,8 @@ export async function createModelReport(
 
     return {
       success: true,
-      message: "Report submitted successfully! We'll review it as soon as possible.",
+      message:
+        "Report submitted successfully! We'll review it as soon as possible.",
       data: report,
     };
   } catch (error: any) {

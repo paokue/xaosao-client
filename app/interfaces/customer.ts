@@ -55,3 +55,27 @@ export interface ICustomerSettingCredentials {
   defaultLanguage: string;
   defaultTheme: string;
 }
+
+// CustomerCard Props:
+export interface CustomerCardProps {
+  customer: {
+    id: string;
+    firstName: string;
+    lastName?: string;
+    profile?: string;
+    dob?: string;
+    location?: any;
+    latitude?: number;
+    longitude?: number;
+    gender?: string;
+    relationshipStatus?: string;
+    bio?: string;
+    Images?: Array<{ id: string; name: string }>;
+    isContact?: boolean;
+    modelAction?: "LIKE" | "PASS" | null;
+  };
+  modelProfile?: string;
+  modelLatitude?: number;
+  modelLongitude?: number;
+  onViewProfile?: (customerId: string) => void;
+}

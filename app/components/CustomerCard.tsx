@@ -1,6 +1,6 @@
 import { differenceInYears } from "date-fns";
-import { MapPin, Heart, MessageSquareText, X, User, UserRoundPlus } from "lucide-react";
 import { Form, useNavigate } from "react-router";
+import { MapPin, Heart, MessageSquareText, X, User, UserRoundPlus } from "lucide-react";
 
 // swiper imports
 import "swiper/css";
@@ -8,29 +8,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-
-interface CustomerCardProps {
-  customer: {
-    id: string;
-    firstName: string;
-    lastName?: string;
-    profile?: string;
-    dob?: string;
-    location?: any;
-    latitude?: number;
-    longitude?: number;
-    gender?: string;
-    relationshipStatus?: string;
-    bio?: string;
-    Images?: Array<{ id: string; name: string }>;
-    isContact?: boolean;
-    modelAction?: "LIKE" | "PASS" | null;
-  };
-  modelProfile?: string;
-  modelLatitude?: number;
-  modelLongitude?: number;
-  onViewProfile?: (customerId: string) => void;
-}
+import type { CustomerCardProps } from "~/interfaces/customer";
 
 export default function CustomerCard({
   customer,
@@ -129,26 +107,6 @@ export default function CustomerCard({
           </SwiperSlide>
         )}
 
-        <div className="absolute top-4 left-4 z-10">
-          <div className="relative w-10 h-10">
-            <div className="w-full h-full rounded-full border-2 border-rose-500 shadow-lg overflow-hidden bg-white">
-              {modelProfile ? (
-                <img
-                  src={modelProfile}
-                  alt="Model"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <User className="w-5 h-5 text-gray-500" />
-                </div>
-              )}
-            </div>
-
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
-          </div>
-        </div>
-
         <Form method="post">
           <input type="hidden" name="customerId" value={customer.id} />
           <input type="hidden" name="like" value="false" id={`likeInput-${customer.id}`} />
@@ -181,11 +139,10 @@ export default function CustomerCard({
                 (document.getElementById(`likeInput-${customer.id}`) as HTMLInputElement).value = "true";
                 (document.getElementById(`passInput-${customer.id}`) as HTMLInputElement).value = "false";
               }}
-              className={`cursor-pointer backdrop-blur-sm p-1.5 rounded-full transition-all duration-300 shadow-lg ${
-                customer.modelAction === "LIKE"
-                  ? "bg-rose-500 text-white hover:bg-rose-600"
-                  : "bg-white/90 hover:bg-rose-500 hover:text-white"
-              }`}
+              className={`cursor-pointer backdrop-blur-sm p-1.5 rounded-full transition-all duration-300 shadow-lg ${customer.modelAction === "LIKE"
+                ? "bg-rose-500 text-white hover:bg-rose-600"
+                : "bg-white/90 hover:bg-rose-500 hover:text-white"
+                }`}
             >
               <Heart className="w-3.5 h-3.5" />
             </button>
@@ -202,7 +159,23 @@ export default function CustomerCard({
           </div>
         </Form>
 
-        <div className="absolute bottom-3 left-0 right-0 p-4 text-white z-10">
+        <div className="flex items-center justify-start gap-2 absolute bottom-3 left-0 right-0 p-4 text-white z-10">
+          <div className="relative w-10 h-10">
+            <div className="w-full h-full rounded-full border-2 border-rose-500 shadow-lg overflow-hidden bg-white">
+              {modelProfile ? (
+                <img
+                  src={modelProfile}
+                  alt="Model"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                  <User className="w-5 h-5 text-gray-500" />
+                </div>
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+          </div>
           <div className="flex-1">
             <h3 className="text-sm sm:text-md text-shadow-lg">
               {customer.firstName}
@@ -215,8 +188,8 @@ export default function CustomerCard({
             </h3>
             {distance !== null && (
               <div className="flex items-center text-sm text-gray-200">
-                <MapPin className="w-4 h-4 mr-1 text-rose-500" />
-                <span>{distance} km</span>
+                <MapPin className="w-4 h-4 mr-1" />
+                <span className="mt-1">{distance} km</span>
               </div>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router";
 
@@ -33,15 +34,18 @@ const toastStyles: Record<ToastType, ToastStyleConfig> = {
 };
 
 export default function Toast() {
+   const { t } = useTranslation();
    const [searchParams] = useSearchParams();
    const navigate = useNavigate();
 
-   const message = searchParams.get("toastMessage");
+   const rawMessage = searchParams.get("toastMessage");
+   // Translate the message if it's a translation key, otherwise use as-is
+   const message = rawMessage ? t(rawMessage) : null;
    const type = (searchParams.get("toastType") as ToastType) || "success";
    const duration = Number(searchParams.get("toastDuration")) || 3000;
 
    useEffect(() => {
-      if (message) {
+      if (rawMessage) {
          const timer = setTimeout(() => {
             searchParams.delete("toastMessage");
             searchParams.delete("toastType");
@@ -51,7 +55,7 @@ export default function Toast() {
 
          return () => clearTimeout(timer);
       }
-   }, [message, duration, navigate, searchParams]);
+   }, [rawMessage, duration, navigate, searchParams]);
 
    if (!message) return null;
 

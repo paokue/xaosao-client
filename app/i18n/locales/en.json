@@ -937,5 +937,25 @@
       "invalidTokenFormat": "Invalid token format. Must be 6 uppercase hexadecimal characters.",
       "passwordsDoNotMatch": "Passwords do not match."
     }
+  },
+  "modelDashboard": {
+    "title": "Online partners for you",
+    "subtitle": "Browse and connect with active partners looking for models like you.",
+    "loadingMore": "Loading More...",
+    "loadMoreCustomers": "Load More Customers",
+    "showingCustomers": "Showing {{count}} customer(s)",
+    "noCustomersTitle": "No Customers Available",
+    "noCustomersMessage": "There are no active customers to show right now. Check back later!",
+    "refreshPage": "Refresh Page",
+    "success": {
+      "addFriend": "Added friend successfully!",
+      "interaction": "Interaction successful!"
+    },
+    "errors": {
+      "authenticationError": "Authentication error. Please login again.",
+      "failedToAddFriend": "Failed to add friend",
+      "invalidAction": "Invalid request action to process!",
+      "invalidRequestMethod": "Invalid request method. Please try again later."
+    }
   }
 }

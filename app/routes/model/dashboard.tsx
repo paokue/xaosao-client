@@ -58,7 +58,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // Check if token exists
   if (!token) {
-    return redirect(`/model?toastMessage=Authentication+error.+Please+login+again&toastType=error`);
+    return redirect(`/model?toastMessage=${encodeURIComponent("modelDashboard.errors.authenticationError")}&toastType=error`);
   }
 
   if (request.method === "POST") {
@@ -66,45 +66,43 @@ export async function action({ request }: ActionFunctionArgs) {
       try {
         const res = await modelAddFriend(modelId, customerId, token);
         if (res?.success) {
-          return redirect(`/model?toastMessage=Add+friend+successfully!&toastType=success`);
+          return redirect(`/model?toastMessage=${encodeURIComponent("modelDashboard.success.addFriend")}&toastType=success`);
         } else {
-          return redirect(`/model?toastMessage=${encodeURIComponent(res?.message || 'Failed to add friend')}&toastType=error`);
+          return redirect(`/model?toastMessage=${encodeURIComponent(res?.message || "modelDashboard.errors.failedToAddFriend")}&toastType=error`);
         }
       } catch (error: any) {
-        return redirect(`/model?toastMessage=${encodeURIComponent(error.message || 'Failed to add friend')}&toastType=error`);
+        return redirect(`/model?toastMessage=${encodeURIComponent(error.message || "modelDashboard.errors.failedToAddFriend")}&toastType=error`);
       }
     } else {
       if (like === false && pass === false) {
-        return { success: false, error: true, message: "Invalid request action to process!" };
+        return { success: false, error: true, message: "modelDashboard.errors.invalidAction" };
       }
       const actionType = like === true ? "LIKE" : "PASS";
       try {
         const res = await createModelInteraction(modelId, customerId, actionType as "LIKE" | "PASS");
         if (res?.success) {
-          return redirect(`/model?toastMessage=Interaction+successfully!&toastType=success`);
+          return redirect(`/model?toastMessage=${encodeURIComponent("modelDashboard.success.interaction")}&toastType=success`);
         }
       } catch (error: any) {
-        return redirect(`/model?toastMessage=${error.message}&toastType=error`);
+        return redirect(`/model?toastMessage=${encodeURIComponent(error.message)}&toastType=error`);
       }
     }
   }
-
-  return redirect(`/model?toastMessage=Invalid+request+method.+Please+try+again+later&toastType=warning`);
+  return redirect(`/model?toastMessage=${encodeURIComponent("modelDashboard.errors.invalidRequestMethod")}&toastType=warning`);
 }
 
 export default function ModelDashboard() {
   const { t } = useTranslation();
-  const initialData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof loader>();
   const navigate = useNavigate();
   const navigation = useNavigation();
+  const fetcher = useFetcher<typeof loader>();
+  const initialData = useLoaderData<typeof loader>();
   const [customers, setCustomers] = useState(initialData.customers);
-  const [currentPage, setCurrentPage] = useState(initialData.pagination.currentPage);
   const [hasMore, setHasMore] = useState(initialData.pagination.hasNextPage);
+  const [currentPage, setCurrentPage] = useState(initialData.pagination.currentPage);
 
   const isSubmitting = navigation.state !== "idle" && navigation.formMethod === "POST";
 
-  // Auto-reload data when initialData changes (after action success)
   useEffect(() => {
     setCustomers(initialData.customers);
     setCurrentPage(initialData.pagination.currentPage);
@@ -147,12 +145,12 @@ export default function ModelDashboard() {
 
   return (
     <div className="min-h-screen p-4 sm:p-6">
-      <div className="mb-8">
+      <div className="mb-8 space-y-1 sm:space-y-2">
         <h1 className="text-lg sm:text-xl text-rose-500 text-shadow-sm">
-          Online partners for you
+          {t("modelDashboard.title")}
         </h1>
         <p className="text-sm text-gray-600">
-          Browse and connect with active partner looking for models like you.
+          {t("modelDashboard.subtitle")}
         </p>
       </div>
 
@@ -181,11 +179,11 @@ export default function ModelDashboard() {
                 {fetcher.state === "loading" ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Loading More...</span>
+                    <span>{t("modelDashboard.loadingMore")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Load More Customers</span>
+                    <span>{t("modelDashboard.loadMoreCustomers")}</span>
                     <div className="bg-white/20 rounded-full p-1">
                       <Heart className="w-4 h-4" />
                     </div>
@@ -196,7 +194,7 @@ export default function ModelDashboard() {
           )}
 
           <div className="text-center mt-6 text-gray-500 text-sm">
-            Showing {customers.length} customer{customers.length !== 1 ? "s" : ""}
+            {t("modelDashboard.showingCustomers", { count: customers.length })}
           </div>
         </>
       ) : (
@@ -204,16 +202,16 @@ export default function ModelDashboard() {
           <div className="bg-white rounded-2xl shadow-xl p-12 max-w-md text-center">
             <div className="text-6xl mb-6">💕</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              No Customers Available
+              {t("modelDashboard.noCustomersTitle")}
             </h3>
             <p className="text-gray-600 mb-6">
-              There are no active customers to show right now. Check back later!
+              {t("modelDashboard.noCustomersMessage")}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="bg-gradient-to-r from-rose-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-rose-600 hover:to-purple-700 transition-all duration-300"
             >
-              Refresh Page
+              {t("modelDashboard.refreshPage")}
             </button>
           </div>
         </div>

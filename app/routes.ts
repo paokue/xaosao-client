@@ -4,9 +4,18 @@ export default [
   index("routes/home.tsx"),
 
   // API routes for SSE notifications
-  route("api/notifications/model-sse", "./routes/api/notifications/model-sse.ts"),
-  route("api/notifications/customer-sse", "./routes/api/notifications/customer-sse.ts"),
-  route("api/notifications/mark-read", "./routes/api/notifications/mark-read.ts"),
+  route(
+    "api/notifications/model-sse",
+    "./routes/api/notifications/model-sse.ts"
+  ),
+  route(
+    "api/notifications/customer-sse",
+    "./routes/api/notifications/customer-sse.ts"
+  ),
+  route(
+    "api/notifications/mark-read",
+    "./routes/api/notifications/mark-read.ts"
+  ),
 
   // authentication routes
   route("login", "./routes/auth/login.tsx"),
@@ -30,7 +39,6 @@ export default [
   // Model dashboard routes
   route("model", "./routes/model/layout.tsx", [
     index("./routes/model/dashboard.tsx"),
-    route("requests", "./routes/model/requests.tsx"),
     route("matches", "./routes/model/matches/matches.tsx"),
     route("profile", "./routes/model/profile/profile.tsx"),
     route("profile/edit", "./routes/model/profile/edit.tsx"),
