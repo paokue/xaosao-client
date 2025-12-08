@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Briefcase, Check, DollarSign, Loader } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Briefcase, Check, Loader, SquarePen, Trash2 } from "lucide-react";
 import { Form, useLoaderData, useNavigation, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
@@ -23,6 +24,7 @@ import {
   updateServiceApplication,
 } from "~/services/service.server";
 import { requireModelSession } from "~/services/model-auth.server";
+import { formatMoney } from "~/utils/functions/moneyFormat";
 
 export const meta: MetaFunction = () => {
   return [
@@ -66,11 +68,11 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = await applyForService(modelId, serviceId, customRate);
     if (result?.success) {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+        `/model/settings/services?toastMessage=${encodeURIComponent("modelServices.success.applied")}&toastType=success`
       );
     } else {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to apply")}&toastType=error`
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "modelServices.errors.failedToApply")}&toastType=error`
       );
     }
   } else if (actionType === "edit") {
@@ -84,22 +86,22 @@ export async function action({ request }: ActionFunctionArgs) {
     );
     if (result?.success) {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+        `/model/settings/services?toastMessage=${encodeURIComponent("modelServices.success.updated")}&toastType=success`
       );
     } else {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to update")}&toastType=error`
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "modelServices.errors.failedToUpdate")}&toastType=error`
       );
     }
   } else if (actionType === "cancel") {
     const result = await cancelServiceApplication(modelId, serviceId);
     if (result?.success) {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+        `/model/settings/services?toastMessage=${encodeURIComponent("modelServices.success.canceled")}&toastType=success`
       );
     } else {
       return redirect(
-        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "Failed to cancel")}&toastType=error`
+        `/model/settings/services?toastMessage=${encodeURIComponent(result?.message || "modelServices.errors.failedToCancel")}&toastType=error`
       );
     }
   }
@@ -108,6 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ServicesSettings() {
+  const { t } = useTranslation();
   const { services } = useLoaderData<LoaderData>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -116,6 +119,23 @@ export default function ServicesSettings() {
   const [applyModal, setApplyModal] = useState<Service | null>(null);
   const [editModal, setEditModal] = useState<Service | null>(null);
   const [cancelModal, setCancelModal] = useState<Service | null>(null);
+
+  // Helper function to get translated service name
+  const getServiceName = (nameKey: string) => {
+    const translatedName = t(`modelServices.serviceItems.${nameKey}.name`);
+    // If translation not found, return the original key
+    return translatedName.includes('modelServices.serviceItems') ? nameKey : translatedName;
+  };
+
+  // Helper function to get translated service description
+  const getServiceDescription = (nameKey: string, fallbackDescription: string | null) => {
+    const translatedDesc = t(`modelServices.serviceItems.${nameKey}.description`);
+    // If translation not found, return the original description or noDescription
+    if (translatedDesc.includes('modelServices.serviceItems')) {
+      return fallbackDescription || t("modelServices.noDescription");
+    }
+    return translatedDesc;
+  };
 
   // Close modals when form submission starts
   useEffect(() => {
@@ -135,9 +155,9 @@ export default function ServicesSettings() {
           </div>
           <div>
             <h1 className="text-md">
-              Services Apply
+              {t("modelServices.title")}
             </h1>
-            <p className="text-sm text-gray-600">Apply for services to start earning</p>
+            <p className="text-sm text-gray-600">{t("modelServices.subtitle")}</p>
           </div>
         </div>
       </div>
@@ -145,9 +165,9 @@ export default function ServicesSettings() {
       {services.length === 0 ? (
         <div className="bg-rose-50 border border-rose-200 rounded-xl p-8 text-center">
           <Briefcase className="w-12 h-12 text-rose-400 mx-auto mb-3" />
-          <p className="text-gray-600 mb-2">No services available</p>
+          <p className="text-gray-600 mb-2">{t("modelServices.noServices")}</p>
           <p className="text-sm text-gray-500">
-            Check back later for new service opportunities
+            {t("modelServices.checkBackLater")}
           </p>
         </div>
       ) : (
@@ -155,18 +175,43 @@ export default function ServicesSettings() {
           {services.map((service) => (
             <div
               key={service.id}
-              className={`rounded-sm overflow-hidden transition-all hover:shadow-lg space-y-2 py-4 ${service.isApplied ? "border border-rose-500" : "bg-white border"
+              className={`relative rounded-sm overflow-hidden transition-all hover:shadow-lg space-y-2 py-4 ${service.isApplied ? "border border-rose-500 bg-rose-50" : "bg-white border"
                 }`}
             >
+              {/* Icon buttons - sticky top right */}
+              {service.isApplied && (
+                <div className="absolute top-2 right-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCancelModal(service)}
+                    className="p-1.5 rounded-full bg-white border border-gray-300 text-gray-500 hover:bg-gray-500 hover:text-white transition-colors shadow-sm"
+                    title={t("modelServices.cancel")}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditModal(service);
+                      setCustomRate(service.customRate?.toString() || service.baseRate.toString());
+                    }}
+                    className="p-1.5 rounded-full bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors shadow-sm"
+                    title={t("modelServices.edit")}
+                  >
+                    <SquarePen className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               <div className={`px-4 ${service.isApplied ? "text-rose-500" : ""}`}>
                 <div className="flex items-center justify-start gap-4">
                   <h3 className={`text-md mb-1 text-rose-500}`}>
-                    {service.name}
+                    {getServiceName(service.name)}
                   </h3>
                   {service.isApplied && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 backdrop-blur-sm rounded-sm text-xs text-rose-500">
                       <Check className="w-3 h-3" />
-                      Applied
+                      {t("modelServices.applied")}
                     </span>
                   )}
                 </div>
@@ -174,57 +219,35 @@ export default function ServicesSettings() {
 
               <div className="px-4">
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                  {service.description || "No description available"}
+                  {getServiceDescription(service.name, service.description)}
                 </p>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Base Rate:</span>
+                    <span className="text-gray-600">{t("modelServices.baseRate")}</span>
                     <span className="font-semibold text-gray-900 flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {service.baseRate.toFixed(2)}
+                      {formatMoney(service.baseRate)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Commission:</span>
+                    <span className="text-gray-600">{t("modelServices.commission")}</span>
                     <span className="font-semibold text-rose-600">
                       {service.commission}%
                     </span>
                   </div>
                   {service.isApplied && service.customRate && (
                     <div className="flex items-center justify-between text-sm pt-2 border-t">
-                      <span className="text-gray-600">Your Rate:</span>
+                      <span className="text-gray-600">{t("modelServices.yourRate")}</span>
                       <span className="font-bold text-rose-600 flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5" />
-                        {service.customRate.toFixed(2)}
+                        {formatMoney(service.customRate)}
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="w-full flex items-center justify-center my-6">
-                  {service.isApplied ? (
-                    <div className="w-full flex items-center justify-between gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setCancelModal(service)}
-                        className="w-1/2 text-gray-500 hover:bg-gray-100"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setEditModal(service);
-                          setCustomRate(service.customRate?.toString() || service.baseRate.toString());
-                        }}
-                        className="w-1/2 bg-rose-500 hover:bg-rose-600 text-white"
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  ) : (
+                {/* Apply button - only shown when not applied */}
+                {!service.isApplied && (
+                  <div className="w-full flex items-center justify-center my-6">
                     <Button
                       type="button"
                       variant="outline"
@@ -234,10 +257,10 @@ export default function ServicesSettings() {
                       }}
                       className="w-full border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white"
                     >
-                      Apply Now
+                      {t("modelServices.applyNow")}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -248,12 +271,12 @@ export default function ServicesSettings() {
         <div className="flex items-start gap-3">
           <Briefcase className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-md text-blue-600 font-medium mb-1">About Services</p>
+            <p className="text-md text-blue-600 font-medium mb-1">{t("modelServices.aboutTitle")}</p>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Apply for services you want to offer to customers</li>
-              <li>• Set your custom rate and availability after approval</li>
-              <li>• Commission is deducted from each booking</li>
-              <li>• You can cancel your application anytime</li>
+              <li>• {t("modelServices.aboutItem1")}</li>
+              <li>• {t("modelServices.aboutItem2")}</li>
+              <li>• {t("modelServices.aboutItem3")}</li>
+              <li>• {t("modelServices.aboutItem4")}</li>
             </ul>
           </div>
         </div>
@@ -263,26 +286,25 @@ export default function ServicesSettings() {
       <Dialog open={!!applyModal} onOpenChange={(open) => !open && setApplyModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-md font-normal">Apply for Service</DialogTitle>
+            <DialogTitle className="text-md font-normal">{t("modelServices.applyModal.title")}</DialogTitle>
           </DialogHeader>
 
           {applyModal && (
             <>
               <div className="mb-4 p-4 bg-rose-50 rounded-sm">
-                <h3 className="font-semibold text-rose-600 mb-2">{applyModal.name}</h3>
+                <h3 className="font-semibold text-rose-600 mb-2">{getServiceName(applyModal.name)}</h3>
                 <p className="text-sm text-gray-700 mb-3">
-                  {applyModal.description || "No description available"}
+                  {getServiceDescription(applyModal.name, applyModal.description)}
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Base Rate:</span>
+                    <span className="text-gray-600">{t("modelServices.baseRate")}</span>
                     <span className="font-semibold flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {applyModal.baseRate.toFixed(2)}
+                      {formatMoney(applyModal.baseRate)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Commission:</span>
+                    <span className="text-gray-600">{t("modelServices.commission")}</span>
                     <span className="font-semibold text-rose-600">
                       {applyModal.commission}%
                     </span>
@@ -296,10 +318,10 @@ export default function ServicesSettings() {
 
                 <div className="space-y-2">
                   <Label htmlFor="customRate">
-                    Your Custom Rate <span className="text-rose-500">*</span>
+                    {t("modelServices.customRateLabel")} <span className="text-rose-500">*</span>
                   </Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">Kip</span>
                     <Input
                       id="customRate"
                       type="number"
@@ -310,31 +332,32 @@ export default function ServicesSettings() {
                       min="0"
                       required
                       className="pl-10"
-                      placeholder="Enter your rate"
+                      placeholder={t("modelServices.enterYourRate")}
                     />
                   </div>
                 </div>
 
-                <DialogFooter className="gap-2">
+                <DialogFooter className="flex flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setApplyModal(null)}
+                    className="flex-1"
                   >
-                    Close
+                    {t("modelServices.close")}
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-rose-500 hover:bg-rose-600"
+                    className="flex-1 bg-rose-500 hover:bg-rose-600"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Applying...
+                        {t("modelServices.applying")}
                       </>
                     ) : (
-                      "Save & Apply"
+                      t("modelServices.saveAndApply")
                     )}
                   </Button>
                 </DialogFooter>
@@ -348,26 +371,25 @@ export default function ServicesSettings() {
       <Dialog open={!!editModal} onOpenChange={(open) => !open && setEditModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-md font-normal">Edit Service</DialogTitle>
+            <DialogTitle className="text-md font-normal">{t("modelServices.editModal.title")}</DialogTitle>
           </DialogHeader>
 
           {editModal && (
             <>
               <div className="mb-4 p-4 bg-rose-50 rounded-sm">
-                <h3 className="font-semibold text-rose-600 mb-2">{editModal.name}</h3>
+                <h3 className="font-semibold text-rose-600 mb-2">{getServiceName(editModal.name)}</h3>
                 <p className="text-sm text-gray-700 mb-3">
-                  {editModal.description || "No description available"}
+                  {getServiceDescription(editModal.name, editModal.description)}
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Base Rate:</span>
+                    <span className="text-gray-600">{t("modelServices.baseRate")}</span>
                     <span className="font-semibold flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {editModal.baseRate.toFixed(2)}
+                      {formatMoney(editModal.baseRate)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Commission:</span>
+                    <span className="text-gray-600">{t("modelServices.commission")}</span>
                     <span className="font-semibold text-rose-600">
                       {editModal.commission}%
                     </span>
@@ -382,10 +404,10 @@ export default function ServicesSettings() {
 
                 <div className="space-y-2">
                   <Label htmlFor="editCustomRate">
-                    Your Custom Rate <span className="text-rose-500">*</span>
+                    {t("modelServices.customRateLabel")} <span className="text-rose-500">*</span>
                   </Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">Kip</span>
                     <Input
                       id="editCustomRate"
                       type="number"
@@ -396,34 +418,35 @@ export default function ServicesSettings() {
                       min="0"
                       required
                       className="pl-10"
-                      placeholder="Enter your rate"
+                      placeholder={t("modelServices.enterYourRate")}
                     />
                   </div>
                   <p className="text-xs text-gray-500">
-                    Update your hourly rate for this service
+                    {t("modelServices.editModal.rateHint")}
                   </p>
                 </div>
 
-                <DialogFooter className="gap-2">
+                <DialogFooter className="flex flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setEditModal(null)}
+                    className="flex-1"
                   >
-                    Close
+                    {t("modelServices.close")}
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-rose-500 hover:bg-rose-600"
+                    className="flex-1 bg-rose-500 hover:bg-rose-600"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Updating...
+                        {t("modelServices.updating")}
                       </>
                     ) : (
-                      "Update Rate"
+                      t("modelServices.updateRate")
                     )}
                   </Button>
                 </DialogFooter>
@@ -437,7 +460,7 @@ export default function ServicesSettings() {
       <Dialog open={!!cancelModal} onOpenChange={(open) => !open && setCancelModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-md font-normal">Cancel Service</DialogTitle>
+            <DialogTitle className="text-md font-normal">{t("modelServices.cancelModal.title")}</DialogTitle>
           </DialogHeader>
 
           {cancelModal && (
@@ -445,13 +468,11 @@ export default function ServicesSettings() {
               <div className="space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-sm p-4">
                   <p className="text-sm text-red-600">
-                    Are you sure you want to cancel your application for{" "}
-                    <span className="font-semibold">{cancelModal.name}</span>?
+                    {t("modelServices.cancelModal.confirmMessage", { name: getServiceName(cancelModal.name) })}
                   </p>
                 </div>
                 <p className="text-sm text-gray-600">
-                  This will remove your custom rate and make you unavailable for this service.
-                  You can always re-apply later.
+                  {t("modelServices.cancelModal.warning")}
                 </p>
               </div>
 
@@ -459,26 +480,27 @@ export default function ServicesSettings() {
                 <input type="hidden" name="serviceId" value={cancelModal.id} />
                 <input type="hidden" name="actionType" value="cancel" />
 
-                <DialogFooter className="gap-2">
+                <DialogFooter className="flex flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setCancelModal(null)}
+                    className="flex-1"
                   >
-                    Keep Service
+                    {t("modelServices.cancelModal.keepService")}
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-red-600 hover:bg-red-700"
+                    className="flex-1 bg-red-600 hover:bg-red-700"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Canceling...
+                        {t("modelServices.canceling")}
                       </>
                     ) : (
-                      "Confirm Cancel"
+                      t("modelServices.cancelModal.confirmCancel")
                     )}
                   </Button>
                 </DialogFooter>

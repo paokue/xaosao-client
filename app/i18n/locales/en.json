@@ -957,5 +957,74 @@
       "invalidAction": "Invalid request action to process!",
       "invalidRequestMethod": "Invalid request method. Please try again later."
     }
+  },
+  "modelServices": {
+    "title": "Services Apply",
+    "subtitle": "Apply for services to start earning",
+    "noServices": "No services available",
+    "checkBackLater": "Check back later for new service opportunities",
+    "applied": "Applied",
+    "noDescription": "No description available",
+    "baseRate": "Base Rate:",
+    "commission": "Commission:",
+    "yourRate": "Your Rate:",
+    "applyNow": "Apply Now",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "close": "Close",
+    "customRateLabel": "Your Custom Rate",
+    "enterYourRate": "Enter your rate",
+    "applying": "Applying...",
+    "saveAndApply": "Save & Apply",
+    "updating": "Updating...",
+    "updateRate": "Update Rate",
+    "canceling": "Canceling...",
+    "aboutTitle": "About Services",
+    "aboutItem1": "Apply for services you want to offer to customers",
+    "aboutItem2": "Set your custom rate and availability after approval",
+    "aboutItem3": "Commission is deducted from each booking",
+    "aboutItem4": "You can cancel your application anytime",
+    "applyModal": {
+      "title": "Apply for Service"
+    },
+    "editModal": {
+      "title": "Edit Service",
+      "rateHint": "Update your hourly rate for this service"
+    },
+    "cancelModal": {
+      "title": "Cancel Service",
+      "confirmMessage": "Are you sure you want to cancel your application for {{name}}?",
+      "warning": "This will remove your custom rate and make you unavailable for this service. You can always re-apply later.",
+      "keepService": "Keep Service",
+      "confirmCancel": "Confirm Cancel"
+    },
+    "success": {
+      "applied": "Service applied successfully!",
+      "updated": "Service rate updated successfully!",
+      "canceled": "Service canceled successfully!"
+    },
+    "errors": {
+      "failedToApply": "Failed to apply for service",
+      "failedToUpdate": "Failed to update service",
+      "failedToCancel": "Failed to cancel service"
+    },
+    "serviceItems": {
+      "hmongNewYear": {
+        "name": "Partner for Hmong New Year 2025",
+        "description": "Be your perfect Hmong New Year companion to celebrate the festive season together with joy and cultural traditions."
+      },
+      "drinkingFriend": {
+        "name": "Drinking Friend",
+        "description": "Enjoy social gatherings with a friendly drinking companion who makes every moment fun and memorable."
+      },
+      "travelingFriend": {
+        "name": "Traveling Friend",
+        "description": "Explore new places with an adventurous travel buddy who shares your passion for discovering new destinations."
+      },
+      "sleepPartner": {
+        "name": "Sleep Partner",
+        "description": "Find comfort with a calming sleep companion for peaceful rest and relaxation (non-romantic companionship)."
+      }
+    }
   }
 }

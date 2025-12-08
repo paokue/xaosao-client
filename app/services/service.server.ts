@@ -10,7 +10,7 @@ export async function getServicesForModel(modelId: string) {
         status: "active",
       },
       orderBy: {
-        name: "asc",
+        order: "asc",
       },
     });
 

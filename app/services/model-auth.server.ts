@@ -223,8 +223,6 @@ async function loginModelOnChat(modelData: ModelLogin): Promise<LoginResponse> {
       body: JSON.stringify(modelData),
     });
 
-    // console.log("loginModelOnChat URL:", url, "Status:", response.status);
-
     const data = await response.json();
 
     if (!data.success) {
@@ -397,7 +395,8 @@ export async function modelRegister(
   ip: string,
   accessKey: string
 ) {
-  if (!modelData) throw new Error("modelAuth.serverMessages.missingCreationData");
+  if (!modelData)
+    throw new Error("modelAuth.serverMessages.missingCreationData");
 
   try {
     const existingModel = await prisma.model.findFirst({

@@ -117,7 +117,7 @@ export default function CustomerCard({
             {customer.isContact ? (
               <button
                 type="button"
-                onClick={() => navigate(`/model/realtime-chat?id=${customer.firstName}`)}
+                onClick={() => navigate(`/model/chat?id=${customer.firstName}`)}
                 className="bg-rose-500 hover:bg-rose-600 text-white cursor-pointer backdrop-blur-sm p-1.5 rounded-full transition-all duration-300 shadow-lg"
               >
                 <MessageSquareText className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export default function CustomerCard({
               {customer.lastName ? ` ${customer.lastName}` : ""},
               {customer.dob && (
                 <span className="text-sm ml-2 font-normal">
-                  {calculateAge(customer.dob)} years
+                  {calculateAge(customer.dob)} Y
                 </span>
               )}
             </h3>

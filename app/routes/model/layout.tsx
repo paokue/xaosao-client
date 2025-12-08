@@ -155,7 +155,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
                             type="submit"
                             className="flex items-center justify-center cursor-pointer space-x-3 p-2 rounded-md transition-colors bg-rose-50 text-rose-500 mt-8 hover:border hover:border-rose-500 w-full"
                         >
-                            <p suppressHydrationWarning>Logout</p>
+                            <p suppressHydrationWarning>{t('settings.common.logout')}</p>
                             <LogOut className="w-4 h-4" />
                         </button>
                     </Form>
