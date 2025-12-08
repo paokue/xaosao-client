@@ -2,6 +2,7 @@ import React from 'react';
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useNavigate, Form, redirect, useNavigation } from 'react-router';
 import { User, Calendar, MarsStroke, ToggleLeft, MapPin, Book, BriefcaseBusiness, ChevronLeft, ChevronRight, Heart, MessageSquareText, Forward, UserPlus, Loader, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // components
 import { Badge } from '~/components/ui/badge';
@@ -45,7 +46,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
    // Check if token exists
    if (!token) {
-      return redirect(`/model/customer-profile/${customerId}?toastMessage=Authentication+error.+Please+login+again&toastType=error`);
+      return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent("modelCustomerProfile.errors.authError")}&toastType=error`);
    }
 
    if (request.method === "POST") {
@@ -55,12 +56,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
             const { modelAddFriend } = await import("~/services/interaction.server");
             const res = await modelAddFriend(modelId, customerId, token);
             if (res?.success) {
-               return redirect(`/model/customer-profile/${customerId}?toastMessage=Add+friend+successfully!&toastType=success`);
+               return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent("modelCustomerProfile.success.addFriend")}&toastType=success`);
             } else {
-               return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(res?.message || 'Failed to add friend')}&toastType=error`);
+               return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(res?.message || "modelCustomerProfile.errors.addFriendFailed")}&toastType=error`);
             }
          } catch (error: any) {
-            return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(error.message || 'Failed to add friend')}&toastType=error`);
+            return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(error.message || "modelCustomerProfile.errors.addFriendFailed")}&toastType=error`);
          }
       }
 
@@ -71,15 +72,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
             const { createModelInteraction } = await import("~/services/model.server");
             const res = await createModelInteraction(modelId, customerId, actionType);
             if (res?.success) {
-               return redirect(`/model/customer-profile/${customerId}?toastMessage=${actionType === "LIKE" ? "Liked" : "Passed"}+successfully!&toastType=success`);
+               return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(actionType === "LIKE" ? "modelCustomerProfile.success.liked" : "modelCustomerProfile.success.passed")}&toastType=success`);
             }
          } catch (error: any) {
-            return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(error.message || 'Action failed')}&toastType=error`);
+            return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent(error.message || "modelCustomerProfile.errors.actionFailed")}&toastType=error`);
          }
       }
    }
 
-   return redirect(`/model/customer-profile/${customerId}?toastMessage=Invalid+request&toastType=warning`);
+   return redirect(`/model/customer-profile/${customerId}?toastMessage=${encodeURIComponent("modelCustomerProfile.errors.invalidRequest")}&toastType=warning`);
 }
 
 interface CustomerData {
@@ -110,6 +111,7 @@ interface CustomerData {
 }
 
 export default function CustomerProfilePage() {
+   const { t } = useTranslation();
    const navigate = useNavigate();
    const navigation = useNavigation();
    const { customer } = useLoaderData<{ customer: CustomerData }>();
@@ -159,7 +161,7 @@ export default function CustomerProfilePage() {
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
             <div className="flex items-center justify-center gap-2">
                <Loader className="w-4 h-4 text-rose-500 animate-spin" />
-               <p className="text-rose-600">Processing...</p>
+               <p className="text-rose-600">{t("modelCustomerProfile.processing")}</p>
             </div>
          </div>
       );
@@ -260,11 +262,11 @@ export default function CustomerProfilePage() {
                      <div className="flex items-center gap-6 mb-4">
                         <div className='flex items-center gap-1'>
                            <span className="text-lg text-black font-bold">{formatNumber(customer.interactions?.likeCount || 0)}</span>
-                           <span className="text-md text-gray-500 ml-1">Likes</span>
+                           <span className="text-md text-gray-500 ml-1">{t("modelCustomerProfile.likes")}</span>
                         </div>
                         <div className='flex items-center gap-1'>
                            <span className="text-lg text-black font-bold">{formatNumber(customer.interactions?.friendCount || 0)}</span>
-                           <span className="text-md text-gray-500 ml-1">Friends</span>
+                           <span className="text-md text-gray-500 ml-1">{t("modelCustomerProfile.friends")}</span>
                         </div>
                      </div>
 
@@ -280,7 +282,7 @@ export default function CustomerProfilePage() {
                                  }`}
                            >
                               <Heart className="w-4 h-4" />
-                              {customer.modelAction === "LIKE" ? "Liked" : "Like"}
+                              {customer.modelAction === "LIKE" ? t("modelCustomerProfile.liked") : t("modelCustomerProfile.like")}
                            </Button>
                         </Form>
 
@@ -293,7 +295,7 @@ export default function CustomerProfilePage() {
                                  onClick={() => navigate(`/model/chat?id=${customer.firstName}`)}
                               >
                                  <MessageSquareText className="w-4 h-4" />
-                                 Message
+                                 {t("modelCustomerProfile.message")}
                               </Button>
                            ) : (
                               <Button
@@ -304,7 +306,7 @@ export default function CustomerProfilePage() {
                                  className="cursor-pointer hidden sm:flex bg-white border border-gray-700 hover:bg-gray-700 text-gray-700 hover:text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                               >
                                  <UserPlus className="w-4 h-4" />
-                                 Add Friend
+                                 {t("modelCustomerProfile.addFriend")}
                               </Button>
                            )}
                         </Form>
@@ -315,8 +317,8 @@ export default function CustomerProfilePage() {
                            className="cursor-pointer hidden sm:flex bg-gray-600 text-white px-4 font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 rounded-md"
                            onClick={() => navigate(`/model/customer-profile-share/${customer.id}`)}
                         >
-                           <Forward className="w-4 h-4 mr-1" />
-                           Share
+                           <Forward className="w-4 h-4" />
+                           {t("modelCustomerProfile.share")}
                         </Button>
                      </div>
                   </div>
@@ -325,11 +327,11 @@ export default function CustomerProfilePage() {
                <div className="flex sm:hidden items-center justify-around w-full mb-4">
                   <div className="w-1/2 text-center flex items-center justify-center gap-3 border-r">
                      <div className="text-lg text-black font-bold">{formatNumber(customer.interactions?.likeCount || 0)}</div>
-                     <div className="text-md text-gray-500">Likes</div>
+                     <div className="text-md text-gray-500">{t("modelCustomerProfile.likes")}</div>
                   </div>
                   <div className="w-1/2 text-center flex items-center justify-center gap-3">
                      <div className="text-lg text-black font-bold">{formatNumber(customer.interactions?.friendCount || 0)}</div>
-                     <div className="text-md text-gray-500">Friends</div>
+                     <div className="text-md text-gray-500">{t("modelCustomerProfile.friends")}</div>
                   </div>
                </div>
             </div>
@@ -339,45 +341,45 @@ export default function CustomerProfilePage() {
             <div className="w-full flex flex-col sm:flex-row py-4">
                <div className="w-full sm:w-2/5 space-y-4 p-2">
                   <div className="w-full flex items-start justify-start flex-col space-y-3 text-sm">
-                     <h3 className="text-gray-800 font-bold uppercase">Personal Information:</h3>
-                     <p className='flex items-center'><User size={14} />&nbsp;Full Name: {customer.firstName}&nbsp;{customer.lastName || ''}</p>
+                     <h3 className="text-gray-800 font-bold uppercase">{t("modelCustomerProfile.personalInfo")}:</h3>
+                     <p className='flex items-center'><User size={14} />&nbsp;{t("modelCustomerProfile.fullName")}: {customer.firstName}&nbsp;{customer.lastName || ''}</p>
                      {customer.dob && (
-                        <p className="flex items-center"><Calendar size={14} />&nbsp;Age: {calculateAgeFromDOB(customer.dob)} years old</p>
+                        <p className="flex items-center"><Calendar size={14} />&nbsp;{t("modelCustomerProfile.age")}: {calculateAgeFromDOB(customer.dob)} {t("modelCustomerProfile.yearsOld")}</p>
                      )}
                      {customer.gender && (
-                        <div className="flex items-center"><MarsStroke size={14} />&nbsp;Gender:&nbsp;&nbsp;
+                        <div className="flex items-center"><MarsStroke size={14} />&nbsp;{t("modelCustomerProfile.gender")}:&nbsp;&nbsp;
                            <Badge variant="outline" className={`${customer.gender === "male" ? "bg-gray-700 text-gray-300" : "bg-rose-100 text-rose-500"} px-3 py-1`}>
                               {capitalize(customer.gender)}
                            </Badge>
                         </div>
                      )}
                      {customer.status && (
-                        <div className="flex items-center"><ToggleLeft size={14} />&nbsp;Status:&nbsp;&nbsp;
+                        <div className="flex items-center"><ToggleLeft size={14} />&nbsp;{t("modelCustomerProfile.status")}:&nbsp;&nbsp;
                            <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
                               {capitalize(customer.status)}
                            </Badge>
                         </div>
                      )}
                      {customer.relationshipStatus && (
-                        <div className="flex items-center"><Heart size={14} />&nbsp;Relationship:&nbsp;&nbsp;
+                        <div className="flex items-center"><Heart size={14} />&nbsp;{t("modelCustomerProfile.relationship")}:&nbsp;&nbsp;
                            <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200 px-3 py-1">
                               {capitalize(customer.relationshipStatus)}
                            </Badge>
                         </div>
                      )}
                      {customer.country && (
-                        <p className="flex items-center"><MapPin size={14} />&nbsp;Country: {customer.country}</p>
+                        <p className="flex items-center"><MapPin size={14} />&nbsp;{t("modelCustomerProfile.country")}: {customer.country}</p>
                      )}
-                     <p className="flex items-center"><Calendar size={14} />&nbsp;Member Since: {new Date(customer.createdAt).toDateString()}</p>
-                     {customer.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;Career: {customer.career}</p>}
-                     {customer.education && <p className="flex items-center"><Book size={14} />&nbsp;Education: {customer.education}</p>}
-                     {customer.bio && <p className="flex items-center"><User size={14} />&nbsp;Bio: {customer.bio}</p>}
+                     <p className="flex items-center"><Calendar size={14} />&nbsp;{t("modelCustomerProfile.memberSince")}: {new Date(customer.createdAt).toDateString()}</p>
+                     {customer.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;{t("modelCustomerProfile.career")}: {customer.career}</p>}
+                     {customer.education && <p className="flex items-center"><Book size={14} />&nbsp;{t("modelCustomerProfile.education")}: {customer.education}</p>}
+                     {customer.bio && <p className="flex items-center"><User size={14} />&nbsp;{t("modelCustomerProfile.bio")}: {customer.bio}</p>}
                   </div>
 
                   {/* Interests */}
                   {customer.interests && (Array.isArray(customer.interests) ? customer.interests.length > 0 : Object.keys(customer.interests).length > 0) && (
                      <div className='space-y-2'>
-                        <h3 className="text-sm uppercase text-gray-800 font-bold">Interests:</h3>
+                        <h3 className="text-sm uppercase text-gray-800 font-bold">{t("modelCustomerProfile.interests")}:</h3>
                         <div className="flex flex-wrap gap-2">
                            {(Array.isArray(customer.interests) ? customer.interests : Object.values(customer.interests)).map((interest, index) => (
                               <Badge
@@ -394,7 +396,7 @@ export default function CustomerProfilePage() {
                </div>
 
                <div className='w-full sm:w-3/5 p-2'>
-                  <h3 className="text-sm uppercase text-gray-800 font-bold mb-3">Photos:</h3>
+                  <h3 className="text-sm uppercase text-gray-800 font-bold mb-3">{t("modelCustomerProfile.photos")}:</h3>
                   {images.length > 0 ? (
                      <div className="grid grid-cols-3 gap-3">
                         {images.map((image, index) => (
@@ -413,7 +415,7 @@ export default function CustomerProfilePage() {
                      </div>
                   ) : (
                      <div className="flex items-center justify-center h-40 text-gray-400">
-                        No photos available
+                        {t("modelCustomerProfile.noPhotos")}
                      </div>
                   )}
                </div>

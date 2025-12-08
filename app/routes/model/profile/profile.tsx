@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useNavigate, useNavigation, useSearchParams, redirect, useFetcher } from 'react-router';
 import { BadgeCheck, Settings, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, Pencil, Book, BriefcaseBusiness, Trash2, Upload, Loader, Info, Building2, Plus, CreditCard, UserRoundPen, MoreVertical, UserPen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // components
 import {
@@ -73,7 +74,7 @@ export async function action({ request }: ActionFunctionArgs) {
         const qrCodeFile = formData.get("qr_code_file") as File;
 
         if (!bankName || !bankAccountName || !bankAccountNumber) {
-            return redirect(`/model/profile?error=${encodeURIComponent("All required fields must be filled!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent("modelProfile.errors.allFieldsRequired")}&tab=banks`);
         }
 
         try {
@@ -91,9 +92,9 @@ export async function action({ request }: ActionFunctionArgs) {
                 bank_account_number: Number(bankAccountNumber),
                 qr_code: qrCodeUrl,
             });
-            return redirect(`/model/profile?success=${encodeURIComponent("Bank created successfully!")}&tab=banks`);
+            return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.bankCreated")}&tab=banks`);
         } catch (error: any) {
-            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "Failed to create bank!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "modelProfile.errors.bankCreateFailed")}&tab=banks`);
         }
     }
 
@@ -107,7 +108,7 @@ export async function action({ request }: ActionFunctionArgs) {
         const existingQrCode = formData.get("existing_qr_code") as string;
 
         if (!bankId || !bankName || !bankAccountName || !bankAccountNumber) {
-            return redirect(`/model/profile?error=${encodeURIComponent("All required fields must be filled!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent("modelProfile.errors.allFieldsRequired")}&tab=banks`);
         }
 
         try {
@@ -129,9 +130,9 @@ export async function action({ request }: ActionFunctionArgs) {
                 bank_account_number: Number(bankAccountNumber),
                 qr_code: qrCodeUrl,
             });
-            return redirect(`/model/profile?success=${encodeURIComponent("Bank updated successfully!")}&tab=banks`);
+            return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.bankUpdated")}&tab=banks`);
         } catch (error: any) {
-            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "Failed to update bank!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "modelProfile.errors.bankUpdateFailed")}&tab=banks`);
         }
     }
 
@@ -139,13 +140,13 @@ export async function action({ request }: ActionFunctionArgs) {
     if (actionType === "deleteBank") {
         const bankId = formData.get("bankId") as string;
         if (!bankId) {
-            return redirect(`/model/profile?error=${encodeURIComponent("Bank ID is required!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent("modelProfile.errors.bankIdRequired")}&tab=banks`);
         }
         try {
             await deleteModelBank(bankId, modelId);
-            return redirect(`/model/profile?success=${encodeURIComponent("Bank deleted successfully!")}&tab=banks`);
+            return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.bankDeleted")}&tab=banks`);
         } catch (error: any) {
-            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "Failed to delete bank!")}&tab=banks`);
+            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "modelProfile.errors.bankDeleteFailed")}&tab=banks`);
         }
     }
 
@@ -157,7 +158,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // Handle delete action
     if (actionType === "delete") {
         if (!imageId) {
-            return redirect(`/model/profile?error=${encodeURIComponent("Image ID is required!")}&tab=images`);
+            return redirect(`/model/profile?error=${encodeURIComponent("modelProfile.errors.imageIdRequired")}&tab=images`);
         }
 
         try {
@@ -166,9 +167,9 @@ export async function action({ request }: ActionFunctionArgs) {
                 await deleteFileFromBunny(extractFilenameFromCDNSafe(imageName));
             }
             await deleteModelImage(imageId, modelId);
-            return redirect(`/model/profile?success=${encodeURIComponent("Image deleted successfully!")}&tab=images`);
+            return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.imageDeleted")}&tab=images`);
         } catch (error: any) {
-            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "Failed to delete image!")}&tab=images`);
+            return redirect(`/model/profile?error=${encodeURIComponent(error.message || "modelProfile.errors.imageDeleteFailed")}&tab=images`);
         }
     }
 
@@ -192,18 +193,18 @@ export async function action({ request }: ActionFunctionArgs) {
                 // Create new image record in database
                 const res = await createModelImage(modelId, imageUrl);
                 if (res.id) {
-                    return redirect(`/model/profile?success=${encodeURIComponent("Image uploaded successfully!")}&tab=images`);
+                    return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.imageUploaded")}&tab=images`);
                 }
             } else {
                 // Update existing image record in database
                 const res = await updateModelImage(imageId, modelId, imageUrl);
                 if (res.id) {
-                    return redirect(`/model/profile?success=${encodeURIComponent("Image updated successfully!")}&tab=images`);
+                    return redirect(`/model/profile?success=${encodeURIComponent("modelProfile.success.imageUpdated")}&tab=images`);
                 }
             }
         } catch (error: any) {
             console.error("Error uploading/updating image:", error);
-            return redirect(`/model/profile?error=${encodeURIComponent(error?.message || "Failed to upload image!")}&tab=images`);
+            return redirect(`/model/profile?error=${encodeURIComponent(error?.message || "modelProfile.errors.imageUploadFailed")}&tab=images`);
         }
     }
 
@@ -211,6 +212,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ModelProfilePage() {
+    const { t } = useTranslation();
     const fetcher = useFetcher();
     const navigate = useNavigate();
     const navigation = useNavigation();
@@ -257,6 +259,23 @@ export default function ModelProfilePage() {
     const remainingSlots = MAX_IMAGES - images.length;
 
     const isSubmitting = navigation.state !== "idle" || fetcher.state !== "idle";
+
+    // Helper function to get translated service name
+    const getServiceName = (nameKey: string) => {
+        const translatedName = t(`modelServices.serviceItems.${nameKey}.name`);
+        // If translation not found, return the original key
+        return translatedName.includes('modelServices.serviceItems') ? nameKey : translatedName;
+    };
+
+    // Helper function to get translated service description
+    const getServiceDescription = (nameKey: string, fallbackDescription: string | null) => {
+        const translatedDesc = t(`modelServices.serviceItems.${nameKey}.description`);
+        // If translation not found, return the original description or noDescription
+        if (translatedDesc.includes('modelServices.serviceItems')) {
+            return fallbackDescription || t("modelServices.noDescription");
+        }
+        return translatedDesc;
+    };
 
     // Handle file selection and upload
     const handleFileInputClick = (imageId: string, imageName: string) => {
@@ -513,15 +532,15 @@ export default function ModelProfilePage() {
                             <div className="flex items-center gap-6 mb-4">
                                 <div className='flex items-center gap-1'>
                                     <span className="text-lg text-black font-bold">{formatNumber(model.totalLikes)}</span>
-                                    <span className="text-md text-gray-500 ml-1">Likes</span>
+                                    <span className="text-md text-gray-500 ml-1">{t("modelProfile.likes")}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <span className="text-lg text-black font-bold">{formatNumber(model.totalFriends)}</span>
-                                    <span className="text-md text-gray-500 ml-1">Friends</span>
+                                    <span className="text-md text-gray-500 ml-1">{t("modelProfile.friends")}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <span className="text-lg text-black font-bold">{formatNumber(model.total_review)}</span>
-                                    <span className="text-md text-gray-500 ml-1">Reviews</span>
+                                    <span className="text-md text-gray-500 ml-1">{t("modelProfile.reviews")}</span>
                                 </div>
                             </div>
 
@@ -533,7 +552,7 @@ export default function ModelProfilePage() {
                                     onClick={() => navigate('/model/profile/edit')}
                                 >
                                     <UserPen />
-                                    Edit Profile
+                                    {t("modelProfile.editProfile")}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -542,7 +561,7 @@ export default function ModelProfilePage() {
                                     onClick={() => navigate('/model/settings')}
                                 >
                                     <Settings />
-                                    Settings
+                                    {t("modelProfile.settings")}
                                 </Button>
                             </div>
                         </div>
@@ -550,15 +569,15 @@ export default function ModelProfilePage() {
                     <div className="flex sm:hidden items-center justify-around w-full mb-4">
                         <div className="w-1/3 text-center flex items-center justify-center gap-3 border-r">
                             <div className="text-lg text-black font-bold">{formatNumber(model.totalLikes)}</div>
-                            <div className="text-md text-gray-500">Likes</div>
+                            <div className="text-md text-gray-500">{t("modelProfile.likes")}</div>
                         </div>
                         <div className="w-1/3 text-center flex items-center justify-center gap-3 border-r">
                             <div className="text-lg text-black font-bold">{formatNumber(model.totalFriends)}</div>
-                            <div className="text-md text-gray-500">Friends</div>
+                            <div className="text-md text-gray-500">{t("modelProfile.friends")}</div>
                         </div>
                         <div className="w-1/3 text-center flex items-center justify-center gap-3">
                             <div className="text-lg text-black font-bold">{formatNumber(model.total_review)}</div>
-                            <div className="text-md text-gray-500">Reviews</div>
+                            <div className="text-md text-gray-500">{t("modelProfile.reviews")}</div>
                         </div>
                     </div>
                 </div>
@@ -566,43 +585,43 @@ export default function ModelProfilePage() {
                 <div className="pb-4">
                     <Tabs defaultValue={activeTab} className="w-full">
                         <TabsList className='w-full mb-2'>
-                            <TabsTrigger value="account">Account Info</TabsTrigger>
-                            <TabsTrigger value="banks">Bank Accounts</TabsTrigger>
-                            <TabsTrigger value="services">Services</TabsTrigger>
-                            <TabsTrigger value="images">Images</TabsTrigger>
+                            <TabsTrigger value="account">{t("modelProfile.tabs.accountInfo")}</TabsTrigger>
+                            <TabsTrigger value="banks">{t("modelProfile.tabs.bankAccounts")}</TabsTrigger>
+                            <TabsTrigger value="services">{t("modelProfile.tabs.services")}</TabsTrigger>
+                            <TabsTrigger value="images">{t("modelProfile.tabs.images")}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="account">
                             <div className="flex flex-col sm:flex-row items-start justify-between space-y-2">
                                 <div className="w-full flex items-start justify-start flex-col space-y-3 text-sm p-2">
-                                    <h3 className="text-gray-800 font-bold uppercase">Personal Information:</h3>
-                                    <p className='flex items-center'><User size={14} />&nbsp;Full Name: {model.firstName}&nbsp;{model.lastName || ''}</p>
-                                    <p className="flex items-center"> <Calendar size={14} />&nbsp;Age: {calculateAgeFromDOB(model.dob)} years old</p>
-                                    <div className="flex items-center"><MarsStroke size={14} />&nbsp;Gender:&nbsp;&nbsp;
+                                    <h3 className="text-gray-800 font-bold uppercase">{t("modelProfile.account.personalInfo")}</h3>
+                                    <p className='flex items-center'><User size={14} />&nbsp;{t("modelProfile.account.fullName")}: {model.firstName}&nbsp;{model.lastName || ''}</p>
+                                    <p className="flex items-center"> <Calendar size={14} />&nbsp;{t("modelProfile.account.age")}: {calculateAgeFromDOB(model.dob)} {t("modelProfile.account.yearsOld")}</p>
+                                    <div className="flex items-center"><MarsStroke size={14} />&nbsp;{t("modelProfile.account.gender")}:&nbsp;&nbsp;
                                         <Badge variant="outline" className={`${model.gender === "male" ? "bg-gray-700 text-gray-300" : "bg-rose-100 text-rose-500"} px-3 py-1`}>
                                             {capitalize(model.gender)}
                                         </Badge>
                                     </div>
-                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;Status:&nbsp;&nbsp;
+                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;{t("modelProfile.account.status")}:&nbsp;&nbsp;
                                         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
                                             {capitalize(model.status)}
                                         </Badge>
                                     </div>
-                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;Availability:&nbsp;&nbsp;
+                                    <div className="flex items-center"><ToggleLeft size={14} />&nbsp;{t("modelProfile.account.availability")}:&nbsp;&nbsp;
                                         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
                                             {capitalize(model.available_status)}
                                         </Badge>
                                     </div>
-                                    <p className="flex items-center"><MapPin size={14} />&nbsp;Address: {model.address || 'Not set'}</p>
-                                    <p className="flex items-center"><Calendar size={14} />&nbsp;Member Since: {new Date(model.createdAt).toDateString()}</p>
-                                    {model.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;Career: {model.career}</p>}
-                                    {model.education && <p className="flex items-center"><Book size={14} />&nbsp;Education: {model.education}</p>}
-                                    {model.bio && <p className="flex items-center"><User size={14} />&nbsp;Bio: {model.bio}</p>}
+                                    <p className="flex items-center"><MapPin size={14} />&nbsp;{t("modelProfile.account.address")}: {model.address || t("modelProfile.account.notSet")}</p>
+                                    <p className="flex items-center"><Calendar size={14} />&nbsp;{t("modelProfile.account.memberSince")}: {new Date(model.createdAt).toDateString()}</p>
+                                    {model.career && <p className="flex items-center"><BriefcaseBusiness size={14} />&nbsp;{t("modelProfile.account.career")}: {model.career}</p>}
+                                    {model.education && <p className="flex items-center"><Book size={14} />&nbsp;{t("modelProfile.account.education")}: {model.education}</p>}
+                                    {model.bio && <p className="flex items-center"><User size={14} />&nbsp;{t("modelProfile.account.bio")}: {model.bio}</p>}
                                 </div>
                                 <Separator className="block sm:hidden" />
                                 <div className="w-full mb-8 space-y-4">
                                     {model.interests &&
                                         <div className='space-y-2'>
-                                            <h3 className="text-sm uppercase text-gray-800 font-bold">Interests:</h3>
+                                            <h3 className="text-sm uppercase text-gray-800 font-bold">{t("modelProfile.account.interests")}:</h3>
                                             <div className="flex flex-wrap gap-2">
                                                 {Object.values(model.interests ?? {}).map((interest, index) => (
                                                     <Badge
@@ -617,11 +636,11 @@ export default function ModelProfilePage() {
                                         </div>
                                     }
                                     <div className='space-y-2'>
-                                        <h3 className="text-sm text-gray-800 font-bold">Total Rating</h3>
+                                        <h3 className="text-sm text-gray-800 font-bold">{t("modelProfile.account.totalRating")}</h3>
                                         <div className="flex items-center">
-                                            <Star size={14} />&nbsp;Rating: &nbsp; {model.rating === 0 ?
+                                            <Star size={14} />&nbsp;{t("modelProfile.account.rating")}: &nbsp; {model.rating === 0 ?
                                                 <Badge variant="outline" className="bg-rose-100 text-rose-700 border-rose-200 px-3 py-1">
-                                                    {capitalize('No Rating')}
+                                                    {t("modelProfile.account.noRating")}
                                                 </Badge> : <Rating value={model.rating} />}
                                         </div>
                                     </div>
@@ -630,7 +649,7 @@ export default function ModelProfilePage() {
                         </TabsContent>
                         <TabsContent value="banks" className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-bold text-gray-800 uppercase">My Bank Accounts</h3>
+                                <h3 className="text-sm font-bold text-gray-800 uppercase">{t("modelProfile.banks.myBankAccounts")}</h3>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -638,18 +657,18 @@ export default function ModelProfilePage() {
                                     onClick={handleOpenCreateBankModal}
                                 >
                                     <Plus size={16} />
-                                    Add New
+                                    {t("modelProfile.banks.addNew")}
                                 </Button>
                             </div>
 
                             {successMessage && activeTab === "banks" && (
                                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                                    <p className="text-sm text-green-800">{successMessage}</p>
+                                    <p className="text-sm text-green-800">{t(successMessage)}</p>
                                 </div>
                             )}
                             {errorMessage && activeTab === "banks" && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <p className="text-sm text-red-800">{errorMessage}</p>
+                                    <p className="text-sm text-red-800">{t(errorMessage)}</p>
                                 </div>
                             )}
 
@@ -663,7 +682,7 @@ export default function ModelProfilePage() {
                                                     <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-lg">
                                                         <div className="flex flex-col items-center gap-2">
                                                             <Loader className="w-6 h-6 text-rose-500 animate-spin" />
-                                                            <span className="text-xs text-rose-500">Deleting...</span>
+                                                            <span className="text-xs text-rose-500">{t("modelProfile.banks.deleting")}</span>
                                                         </div>
                                                     </div>
                                                 )}
@@ -684,16 +703,16 @@ export default function ModelProfilePage() {
                                                                 className="cursor-pointer"
                                                                 onClick={() => handleOpenEditBankModal(bank)}
                                                             >
-                                                                <Pencil size={14} className="mr-2" />
-                                                                Edit
+                                                                <Pencil size={14} />
+                                                                {t("modelProfile.banks.edit")}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
                                                                 className="cursor-pointer text-red-500 focus:text-red-500"
                                                                 onClick={() => handleOpenDeleteBankModal(bank)}
                                                                 disabled={isSubmitting}
                                                             >
-                                                                <Trash2 size={14} className="mr-2" />
-                                                                Delete
+                                                                <Trash2 size={14} />
+                                                                {t("modelProfile.banks.delete")}
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -709,17 +728,17 @@ export default function ModelProfilePage() {
                                                                 />
                                                             </div>
                                                         )}
-                                                        <span className='text-gray-500 text-sm'>Qr code</span>
+                                                        <span className='text-gray-500 text-sm'>{t("modelProfile.banks.qrCode")}</span>
                                                     </div>
                                                     <div className='space-y-2'>
                                                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <span className="text-sm">Bank name:&nbsp; {bank.bank_name}</span>
+                                                            <span className="text-sm">{t("modelProfile.banks.bankName")}:&nbsp; {bank.bank_name}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <span className="text-sm">Account name:&nbsp; {bank.bank_account_name}</span>
+                                                            <span className="text-sm">{t("modelProfile.banks.accountName")}:&nbsp; {bank.bank_account_name}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <span className="text-sm">Account number:&nbsp;{bank.bank_account_number}</span>
+                                                            <span className="text-sm">{t("modelProfile.banks.accountNumber")}:&nbsp;{bank.bank_account_number}</span>
                                                         </div>
                                                     </div>
                                                 </CardContent>
@@ -730,8 +749,8 @@ export default function ModelProfilePage() {
                             ) : (
                                 <div className="w-full">
                                     <EmptyPage
-                                        title="No Bank Accounts"
-                                        description="You have not added any bank accounts yet. Add one to receive payments."
+                                        title={t("modelProfile.banks.noBankAccounts")}
+                                        description={t("modelProfile.banks.noBankAccountsDesc")}
                                     />
                                     <div className="flex justify-center">
                                         <Button
@@ -741,7 +760,7 @@ export default function ModelProfilePage() {
                                             onClick={handleOpenCreateBankModal}
                                         >
                                             <Plus size={16} />
-                                            Add Your First Bank
+                                            {t("modelProfile.banks.addFirstBank")}
                                         </Button>
                                     </div>
                                 </div>
@@ -750,24 +769,35 @@ export default function ModelProfilePage() {
                         <TabsContent value="services" className="space-y-4">
                             {model.ModelService.length > 0 ?
                                 <div className="w-full">
-                                    <h3 className="text-sm font-semibold text-gray-800 mb-3 uppercase">My Services</h3>
+                                    <div className='flex items-center justify-between py-2'>
+                                        <h3 className="text-sm font-semibold text-gray-800 mb-3 uppercase">{t("modelProfile.services.myServices")}</h3>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="bg-rose-500 text-white hover:bg-rose-500 hover:text-white"
+                                            onClick={() => navigate("/model/settings/services")}
+                                        >
+                                            <Settings size={16} />
+                                            {t("modelProfile.banks.addNew")}
+                                        </Button>
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mx-auto ">
                                         {model.ModelService.map((service) => {
                                             const name = getFirstWord(service.service.name).toLowerCase();
                                             return (
                                                 <Card key={service.id} className={`cursor-pointer w-full max-w-sm ${name === "sleep" ? "border-cyan-500" : name === "drinking" ? "border-green-500" : "border-rose-500"}`}>
                                                     <CardHeader>
-                                                        <CardTitle className='text-sm'>{service.service.name}</CardTitle>
+                                                        <CardTitle className='text-sm'>{getServiceName(service.service.name)}</CardTitle>
                                                         <CardDescription className='text-xs sm:text-sm'>
-                                                            {service.service.description}
+                                                            {getServiceDescription(service.service.name, service.service.description)}
                                                         </CardDescription>
                                                     </CardHeader>
                                                     <CardContent>
-                                                        <strong className="text-sm">{formatCurrency(Number(service.customRate ? service.customRate : service.service.baseRate))} /time</strong>
+                                                        <strong className="text-sm">{formatCurrency(Number(service.customRate ? service.customRate : service.service.baseRate))} {t("modelProfile.services.perTime")}</strong>
                                                     </CardContent>
                                                     <CardFooter className="flex-col gap-2">
-                                                        <Badge variant="outline" className={`${service.isAvailable ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-700 border-gray-200"} px-3 py-1`}>
-                                                            {service.isAvailable ? 'Available' : 'Unavailable'}
+                                                        <Badge variant="outline" className={`${service.isAvailable ? "bg-green-100 text-green-700 border-green-200" : "bg-orange-100 text-orange-700 border-orange-200"} px-3 py-1`}>
+                                                            {service.isAvailable ? t("modelProfile.services.available") : t("modelProfile.services.unavailable")}
                                                         </Badge>
                                                     </CardFooter>
                                                 </Card>
@@ -778,8 +808,8 @@ export default function ModelProfilePage() {
                                 :
                                 <div className="w-full">
                                     <EmptyPage
-                                        title="No Services"
-                                        description="You have not added any services yet."
+                                        title={t("modelProfile.services.noServices")}
+                                        description={t("modelProfile.services.noServicesDesc")}
                                     />
                                     <div className="flex justify-center mt-4">
                                         <Button
@@ -788,7 +818,7 @@ export default function ModelProfilePage() {
                                             className="border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white"
                                             onClick={() => navigate('/model/settings/services')}
                                         >
-                                            Add Services
+                                            {t("modelProfile.services.addServices")}
                                         </Button>
                                     </div>
                                 </div>
@@ -797,12 +827,12 @@ export default function ModelProfilePage() {
                         <TabsContent value="images" className='w-full space-y-4'>
                             {successMessage && (
                                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                                    <p className="text-sm text-green-800">{successMessage}</p>
+                                    <p className="text-sm text-green-800">{t(successMessage)}</p>
                                 </div>
                             )}
                             {errorMessage && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <p className="text-sm text-red-800">{errorMessage}</p>
+                                    <p className="text-sm text-red-800">{t(errorMessage)}</p>
                                 </div>
                             )}
 
@@ -835,7 +865,7 @@ export default function ModelProfilePage() {
                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                                                     <div className="flex flex-col items-center gap-2 text-white">
                                                         <Loader className="w-8 h-8 animate-spin" />
-                                                        <p className="text-sm font-medium">Uploading...</p>
+                                                        <p className="text-sm font-medium">{t("modelProfile.images.uploading")}</p>
                                                     </div>
                                                 </div>
                                             )}
@@ -844,7 +874,7 @@ export default function ModelProfilePage() {
                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                                                     <div className="flex flex-col items-center gap-2 text-white">
                                                         <Loader className="w-8 h-8 animate-spin" />
-                                                        <p className="text-sm font-medium">Deleting...</p>
+                                                        <p className="text-sm font-medium">{t("modelProfile.images.deleting")}</p>
                                                     </div>
                                                 </div>
                                             )}
@@ -860,7 +890,7 @@ export default function ModelProfilePage() {
                                                         }}
                                                     >
                                                         <Upload size={14} />
-                                                        Upload New
+                                                        {t("modelProfile.images.uploadNew")}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -872,11 +902,10 @@ export default function ModelProfilePage() {
                                                         }}
                                                     >
                                                         <Trash2 size={14} />
-                                                        Delete
+                                                        {t("modelProfile.images.delete")}
                                                     </button>
                                                 </div>
                                             )}
-                                            {/* Image number badge */}
                                             <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                                                 {index + 1}/{MAX_IMAGES}
                                             </div>
@@ -900,14 +929,14 @@ export default function ModelProfilePage() {
                                         >
                                             {isUploading ? (
                                                 <>
-                                                    <Loader className="w-8 h-8 text-rose-500 animate-spin" />
-                                                    <span className="text-xs text-rose-500">Uploading...</span>
+                                                    <Loader className="w-4 h-4 text-rose-500 animate-spin" />
+                                                    <span className="text-xs text-rose-500">{t("modelProfile.images.uploading")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Upload className={`w-8 h-8 ${canUploadMore ? 'text-gray-400' : 'text-gray-300'}`} />
+                                                    <Upload className={`w-4 h-4 ${canUploadMore ? 'text-gray-400' : 'text-gray-300'}`} />
                                                     <span className={`text-xs ${canUploadMore ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                        Click to upload
+                                                        {t("modelProfile.images.clickToUpload")}
                                                     </span>
                                                 </>
                                             )}
@@ -920,11 +949,11 @@ export default function ModelProfilePage() {
                                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-sm text-blue-800 font-medium">
-                                        Image Upload Limit
+                                        {t("modelProfile.images.uploadLimit")}
                                     </p>
                                     <p className="text-sm text-blue-700">
-                                        You can upload up to {MAX_IMAGES} images. Currently using {images.length}/{MAX_IMAGES} slots.
-                                        {remainingSlots > 0 && ` (${remainingSlots} ${remainingSlots === 1 ? 'slot' : 'slots'} remaining)`}
+                                        {t("modelProfile.images.uploadLimitDesc", { max: MAX_IMAGES, current: images.length })}
+                                        {remainingSlots > 0 && ` (${remainingSlots} ${remainingSlots === 1 ? t("modelProfile.images.slot") : t("modelProfile.images.slots")} ${t("modelProfile.images.remaining")})`}
                                     </p>
                                 </div>
                             </div>
@@ -973,42 +1002,42 @@ export default function ModelProfilePage() {
                 <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
                     <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
-                            <DialogTitle className="text-md font-normal">{editingBank ? 'Edit Bank Account' : 'Add Bank Account'}</DialogTitle>
+                            <DialogTitle className="text-md font-normal">{editingBank ? t("modelProfile.bankModal.editTitle") : t("modelProfile.bankModal.addTitle")}</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 pb-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="bank_name">Bank Name <span className="text-red-500">*</span></Label>
+                                <Label htmlFor="bank_name">{t("modelProfile.bankModal.bankNameLabel")} <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="bank_name"
-                                    placeholder="Enter bank name..."
+                                    placeholder={t("modelProfile.bankModal.bankNamePlaceholder")}
                                     value={bankFormData.bank_name}
                                     className="text-sm"
                                     onChange={(e) => setBankFormData({ ...bankFormData, bank_name: e.target.value })}
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="bank_account_name">Account Name <span className="text-red-500">*</span></Label>
+                                <Label htmlFor="bank_account_name">{t("modelProfile.bankModal.accountNameLabel")} <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="bank_account_name"
                                     className="text-sm"
-                                    placeholder="Enter account holder name..."
+                                    placeholder={t("modelProfile.bankModal.accountNamePlaceholder")}
                                     value={bankFormData.bank_account_name}
                                     onChange={(e) => setBankFormData({ ...bankFormData, bank_account_name: e.target.value })}
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="bank_account_number">Account Number <span className="text-red-500">*</span></Label>
+                                <Label htmlFor="bank_account_number">{t("modelProfile.bankModal.accountNumberLabel")} <span className="text-red-500">*</span></Label>
                                 <Input
                                     type="number"
                                     className="text-sm"
                                     id="bank_account_number"
-                                    placeholder="Enter account number..."
+                                    placeholder={t("modelProfile.bankModal.accountNumberPlaceholder")}
                                     value={bankFormData.bank_account_number}
                                     onChange={(e) => setBankFormData({ ...bankFormData, bank_account_number: e.target.value })}
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>QR Code Image (Optional)</Label>
+                                <Label>{t("modelProfile.bankModal.qrCodeLabel")}</Label>
                                 <input
                                     type="file"
                                     ref={qrCodeInputRef}
@@ -1049,7 +1078,7 @@ export default function ModelProfilePage() {
                                                 onClick={() => qrCodeInputRef.current?.click()}
                                             >
                                                 <Upload size={14} />
-                                                Change
+                                                {t("modelProfile.bankModal.change")}
                                             </button>
                                             <button
                                                 type="button"
@@ -1057,7 +1086,7 @@ export default function ModelProfilePage() {
                                                 onClick={handleRemoveQrCode}
                                             >
                                                 <Trash2 size={14} />
-                                                Remove
+                                                {t("modelProfile.bankModal.remove")}
                                             </button>
                                         </div>
                                     </div>
@@ -1067,7 +1096,7 @@ export default function ModelProfilePage() {
                                         onClick={() => qrCodeInputRef.current?.click()}
                                     >
                                         <Upload className="w-6 h-6 text-gray-400" />
-                                        <span className="text-xs text-gray-500">Upload QR</span>
+                                        <span className="text-xs text-gray-500">{t("modelProfile.bankModal.uploadQr")}</span>
                                     </div>
                                 )}
                             </div>
@@ -1079,7 +1108,7 @@ export default function ModelProfilePage() {
                                 onClick={handleCloseBankModal}
                                 disabled={isBankSubmitting}
                             >
-                                Cancel
+                                {t("modelProfile.bankModal.cancel")}
                             </Button>
                             <Button
                                 type="button"
@@ -1090,10 +1119,10 @@ export default function ModelProfilePage() {
                                 {isBankSubmitting ? (
                                     <>
                                         <Loader className="w-4 h-4 animate-spin" />
-                                        {editingBank ? 'Updating...' : 'Creating...'}
+                                        {editingBank ? t("modelProfile.bankModal.updating") : t("modelProfile.bankModal.creating")}
                                     </>
                                 ) : (
-                                    editingBank ? 'Update' : 'Add Now'
+                                    editingBank ? t("modelProfile.bankModal.update") : t("modelProfile.bankModal.addNow")
                                 )}
                             </Button>
                         </div>
@@ -1103,9 +1132,9 @@ export default function ModelProfilePage() {
                 <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
                     <DialogContent className="sm:max-w-[500px]">
                         <DialogHeader>
-                            <DialogTitle className="text-md font-normal text-red-600">Delete Bank Account</DialogTitle>
+                            <DialogTitle className="text-md font-normal text-red-600">{t("modelProfile.deleteModal.title")}</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete this bank account? This action cannot be undone.
+                                {t("modelProfile.deleteModal.description")}
                             </DialogDescription>
                         </DialogHeader>
                         {bankToDelete && (
@@ -1131,7 +1160,7 @@ export default function ModelProfilePage() {
                                 variant="outline"
                                 onClick={handleCloseDeleteBankModal}
                             >
-                                Cancel
+                                {t("modelProfile.deleteModal.cancel")}
                             </Button>
                             <Button
                                 type="button"
@@ -1139,7 +1168,7 @@ export default function ModelProfilePage() {
                                 onClick={handleConfirmDeleteBank}
                             >
                                 <Trash2 className="w-4 h-4" />
-                                Delete Bank
+                                {t("modelProfile.deleteModal.deleteBank")}
                             </Button>
                         </div>
                     </DialogContent>

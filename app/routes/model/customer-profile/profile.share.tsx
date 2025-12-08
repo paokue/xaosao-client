@@ -11,6 +11,7 @@ import {
     MessageCircle,
 } from 'lucide-react';
 import { useLoaderData, useNavigate, useParams, type LoaderFunction } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 
 // components
@@ -44,6 +45,7 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 };
 
 export default function ShareCustomerProfilePage({ loaderData }: ProfileShareProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { VITE_FRONTEND_URL } = useLoaderData() as { VITE_FRONTEND_URL: string };
@@ -149,7 +151,7 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
     };
 
     const shareToWhatsApp = () => {
-        const message = `Check out ${customer.firstName}'s profile: ${url}`;
+        const message = t("modelCustomerProfileShare.whatsappMessage", { name: customer.firstName, url });
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -159,12 +161,12 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
 
     const shareToInstagram = () => {
         copyProfileUrl();
-        alert('Link copied! You can now paste it on Instagram.');
+        alert(t("modelCustomerProfileShare.instagramAlert"));
     };
 
     const shareViaEmail = () => {
-        const subject = `Check out ${customer.firstName}'s Profile`;
-        const body = `Hi,\n\nI wanted to share ${customer.firstName}'s profile with you.\n\nCheck it out here: ${url}`;
+        const subject = t("modelCustomerProfileShare.emailSubject", { name: customer.firstName });
+        const body = t("modelCustomerProfileShare.emailBody", { name: customer.firstName, url });
         window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     };
 
@@ -178,13 +180,13 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
                 <div className="flex items-center justify-between block sm:hidden mb-4">
                     <div className="flex items-center cursor-pointer" onClick={() => navigate(`/model/customer-profile/${id}`)}>
                         <ChevronLeft />
-                        <span className="text-sm">Back</span>
+                        <span className="text-sm">{t("modelCustomerProfileShare.back")}</span>
                     </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
                     <div className="text-center">
-                        <h3 className="hidden sm:block text-md font-semibold text-gray-900 mb-4">QR Code</h3>
+                        <h3 className="hidden sm:block text-md font-semibold text-gray-900 mb-4">{t("modelCustomerProfileShare.qrCode")}</h3>
                         <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-4">
                             <div className="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                                 {qrCodeDataUrl ? (
@@ -194,11 +196,11 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
                                         className="w-full h-full object-contain"
                                     />
                                 ) : (
-                                    <div className="text-gray-400">Generating QR...</div>
+                                    <div className="text-gray-400">{t("modelCustomerProfileShare.generatingQr")}</div>
                                 )}
                             </div>
                             <p className="text-sm text-gray-600 mb-4">
-                                Scan to view profile
+                                {t("modelCustomerProfileShare.scanToView")}
                             </p>
                             <button
                                 onClick={downloadQRCode}
@@ -206,16 +208,16 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
                                 className="text-sm inline-flex items-center space-x-2 px-4 py-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Download className="w-4 h-4" />
-                                <span>{qrDownloaded ? 'Downloaded!' : 'Download QR'}</span>
+                                <span>{qrDownloaded ? t("modelCustomerProfileShare.downloaded") : t("modelCustomerProfileShare.downloadQr")}</span>
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="text-md font-semibold text-gray-900 mb-2 sm:mb-4">Share Options</h3>
+                        <h3 className="text-md font-semibold text-gray-900 mb-2 sm:mb-4">{t("modelCustomerProfileShare.shareOptions")}</h3>
                         <div className="bg-gray-50 rounded-xl p-4 mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Profile Link
+                                {t("modelCustomerProfileShare.profileLink")}
                             </label>
                             <div className="flex items-center space-x-2">
                                 <div className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2">
@@ -233,12 +235,12 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
                                     {linkCopied ? (
                                         <>
                                             <Check className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Copied!</span>
+                                            <span className="hidden sm:inline">{t("modelCustomerProfileShare.copied")}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Copy className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Copy</span>
+                                            <span className="hidden sm:inline">{t("modelCustomerProfileShare.copy")}</span>
                                         </>
                                     )}
                                 </button>
@@ -247,7 +249,7 @@ export default function ShareCustomerProfilePage({ loaderData }: ProfileSharePro
 
                         <div>
                             <label className="block text-md font-bold text-gray-700 mb-2 sm:mb-4">
-                                Share on Social
+                                {t("modelCustomerProfileShare.shareOnSocial")}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                                 {socialPlatforms.map((platform) => (

@@ -97,8 +97,8 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         location.pathname.includes("realtime-chat") ||
         location.pathname.includes("chat");
 
-    // 👇 Show mobile header only on main navigation routes
-    const showMobileHeader = mobileNavigationItems.some(item => {
+    // 👇 Show mobile header only on main navigation routes (except profile page)
+    const showMobileHeader = !location.pathname.startsWith("/model/profile") && mobileNavigationItems.some(item => {
         if (item.url === "/model" && location.pathname === "/model") return true;
         if (item.url !== "/model" && location.pathname.startsWith(item.url)) return true;
         return false;

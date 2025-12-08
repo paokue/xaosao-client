@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Route } from "./+types/edit";
 import { AlertCircle, Camera, ChevronLeft, Loader, X } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, type LoaderFunction } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -89,7 +90,7 @@ export async function action({ request }: Route.ActionArgs) {
                     console.error("Failed to sync model chat profile:", chatError);
                 }
 
-                return redirect(`/model/profile?toastMessage=Update+your+profile+successfully!&toastType=success`);
+                return redirect(`/model/profile?toastMessage=${encodeURIComponent("modelProfileEdit.success.updated")}&toastType=success`);
             }
         } catch (error: any) {
             console.error("Error updating model:", error);
@@ -114,15 +115,16 @@ export async function action({ request }: Route.ActionArgs) {
             return {
                 success: false,
                 error: true,
-                message: error || "Failed to update profile!",
+                message: error || "modelProfileEdit.errors.updateFailed",
             };
         }
     }
 
-    return { success: false, error: true, message: "Invalid request method!" };
+    return { success: false, error: true, message: "modelProfileEdit.errors.invalidRequest" };
 }
 
 export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const navigation = useNavigation();
     const actionData = useActionData<typeof action>();
@@ -171,7 +173,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
     if (isLoading) {
         return (
             <div className="h-11/12 flex justify-center items-center min-h-[200px]">
-                <Loader className="w-6 h-6 animate-spin text-rose-500" />&nbsp; Loading...
+                <Loader className="w-6 h-6 animate-spin text-rose-500" />&nbsp; {t("modelProfileEdit.loading")}
             </div>
         );
     }
@@ -183,7 +185,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                     <div className="flex items-center" onClick={() => navigate("/model/profile")}>
                         <ChevronLeft />
                     </div>
-                    <p className="text-md">Edit Profile</p>
+                    <p className="text-md">{t("modelProfileEdit.title")}</p>
                     <div></div>
                 </div>
 
@@ -209,7 +211,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-start">
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="firstName" className="text-gray-500 text-sm">
-                                    First Name<span className="text-rose-500">*</span>
+                                    {t("modelProfileEdit.firstName")}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -217,26 +219,26 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                     id="firstName"
                                     name="firstName"
                                     defaultValue={modelData.firstName}
-                                    placeholder="Enter your first name"
+                                    placeholder={t("modelProfileEdit.firstNamePlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="lastName" className="text-gray-500 text-sm">
-                                    Last Name
+                                    {t("modelProfileEdit.lastName")}
                                 </Label>
                                 <Input
                                     type="text"
                                     id="lastName"
                                     name="lastName"
                                     defaultValue={modelData.lastName || ""}
-                                    placeholder="Enter your last name"
+                                    placeholder={t("modelProfileEdit.lastNamePlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="dob" className="text-gray-500 text-sm">
-                                    Date of Birth<span className="text-rose-500">*</span>
+                                    {t("modelProfileEdit.dateOfBirth")}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -249,55 +251,55 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="gender" className="text-gray-500 text-sm mb-1">
-                                    Gender<span className="text-rose-500">*</span>
+                                    {t("modelProfileEdit.gender")}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Select name="gender" required defaultValue={modelData.gender}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                        <SelectValue placeholder="Select Gender" />
+                                        <SelectValue placeholder={t("modelProfileEdit.selectGender")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
-                                        <SelectItem value="nonbinary">Non-Binary</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        <SelectItem value="male">{t("modelProfileEdit.male")}</SelectItem>
+                                        <SelectItem value="female">{t("modelProfileEdit.female")}</SelectItem>
+                                        <SelectItem value="nonbinary">{t("modelProfileEdit.nonBinary")}</SelectItem>
+                                        <SelectItem value="other">{t("modelProfileEdit.other")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="relationshipStatus" className="text-gray-500 text-sm mb-1">
-                                    Relationship Status
+                                    {t("modelProfileEdit.relationshipStatus")}
                                 </Label>
                                 <Select name="relationshipStatus" defaultValue={modelData.relationshipStatus ?? "Single"}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                        <SelectValue placeholder="Select Status" />
+                                        <SelectValue placeholder={t("modelProfileEdit.selectStatus")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Single">Single</SelectItem>
-                                        <SelectItem value="Married">Married</SelectItem>
-                                        <SelectItem value="Relationship">In Relationship</SelectItem>
-                                        <SelectItem value="Divorced">Divorced</SelectItem>
-                                        <SelectItem value="Widowed">Widowed</SelectItem>
+                                        <SelectItem value="Single">{t("modelProfileEdit.single")}</SelectItem>
+                                        <SelectItem value="Married">{t("modelProfileEdit.married")}</SelectItem>
+                                        <SelectItem value="Relationship">{t("modelProfileEdit.inRelationship")}</SelectItem>
+                                        <SelectItem value="Divorced">{t("modelProfileEdit.divorced")}</SelectItem>
+                                        <SelectItem value="Widowed">{t("modelProfileEdit.widowed")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="available_status" className="text-gray-500 text-sm mb-1">
-                                    Availability Status<span className="text-rose-500">*</span>
+                                    {t("modelProfileEdit.availabilityStatus")}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Select name="available_status" required defaultValue={modelData.available_status}>
                                     <SelectTrigger className="bg-background rounded-md h-14 text-foreground font-medium px-6 w-full">
-                                        <SelectValue placeholder="Select Availability" />
+                                        <SelectValue placeholder={t("modelProfileEdit.selectAvailability")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="available">Available</SelectItem>
-                                        <SelectItem value="busy">Busy</SelectItem>
-                                        <SelectItem value="offline">Offline</SelectItem>
+                                        <SelectItem value="available">{t("modelProfileEdit.available")}</SelectItem>
+                                        <SelectItem value="busy">{t("modelProfileEdit.busy")}</SelectItem>
+                                        <SelectItem value="offline">{t("modelProfileEdit.offline")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="whatsapp" className="text-gray-500 text-sm">
-                                    Whatsapp Number<span className="text-rose-500">*</span>
+                                    {t("modelProfileEdit.whatsapp")}<span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     required
@@ -305,64 +307,64 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                     type="number"
                                     name="whatsapp"
                                     defaultValue={modelData.whatsapp}
-                                    placeholder="Enter your whatsapp number"
+                                    placeholder={t("modelProfileEdit.whatsappPlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="address" className="text-gray-500 text-sm">
-                                    Address
+                                    {t("modelProfileEdit.address")}
                                 </Label>
                                 <Input
                                     id="address"
                                     type="text"
                                     name="address"
                                     defaultValue={modelData.address || ""}
-                                    placeholder="Enter your address"
+                                    placeholder={t("modelProfileEdit.addressPlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="bio" className="text-gray-500 text-sm">
-                                    Bio
+                                    {t("modelProfileEdit.bio")}
                                 </Label>
                                 <Input
                                     id="bio"
                                     type="text"
                                     name="bio"
                                     defaultValue={modelData.bio || ""}
-                                    placeholder="Tell us about yourself"
+                                    placeholder={t("modelProfileEdit.bioPlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="career" className="text-gray-500 text-sm">
-                                    Career
+                                    {t("modelProfileEdit.career")}
                                 </Label>
                                 <Input
                                     id="career"
                                     type="text"
                                     name="career"
                                     defaultValue={modelData.career || ""}
-                                    placeholder="Enter your career"
+                                    placeholder={t("modelProfileEdit.careerPlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="gap-2 sm:gap-4">
                                 <Label htmlFor="education" className="text-gray-500 text-sm">
-                                    Education
+                                    {t("modelProfileEdit.education")}
                                 </Label>
                                 <Input
                                     id="education"
                                     type="text"
                                     name="education"
                                     defaultValue={modelData.education || ""}
-                                    placeholder="Enter your education"
+                                    placeholder={t("modelProfileEdit.educationPlaceholder")}
                                     className="text-sm mt-1 border-gray-200 text-gray-700 placeholder-gray-200 focus:border-pink-500 backdrop-blur-sm"
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <p className="text-gray-500 text-sm mb-2">Interests</p>
+                                <p className="text-gray-500 text-sm mb-2">{t("modelProfileEdit.interests")}</p>
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     {interests.map((interest, index) => (
                                         <div
@@ -384,7 +386,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                 <div className="flex items-center gap-2">
                                     <Input
                                         type="text"
-                                        placeholder="Add an interest..."
+                                        placeholder={t("modelProfileEdit.interestsPlaceholder")}
                                         value={newInterest}
                                         onChange={(e) => setNewInterest(e.target.value)}
                                         className="text-sm border-gray-200 text-gray-700 placeholder-gray-400 focus:border-pink-500"
@@ -394,7 +396,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                         onClick={addInterest}
                                         className="bg-rose-100 border border-rose-200 text-rose-500 hover:bg-rose-300 flex items-center space-x-1"
                                     >
-                                        <span>Add</span>
+                                        <span>{t("modelProfileEdit.add")}</span>
                                     </Button>
                                 </div>
                                 <input type="hidden" name="interests" value={JSON.stringify(interests)} />
@@ -416,7 +418,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                 onClick={() => closeHandler()}
                                 className="flex cursor-pointer text-sm bg-gray-500 text-white hover:bg-gray-600 text-white font-medium"
                             >
-                                Close
+                                {t("modelProfileEdit.close")}
                             </Button>
                             <Button
                                 type="submit"
@@ -424,7 +426,7 @@ export default function ModelProfileEditPage({ loaderData }: ProfileEditProps) {
                                 className="flex cursor-pointer text-sm bg-rose-500 text-rose-500 hover:bg-rose-600 text-white font-medium"
                             >
                                 {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-                                {isSubmitting ? "Saving..." : "Save Changes"}
+                                {isSubmitting ? t("modelProfileEdit.saving") : t("modelProfileEdit.saveChanges")}
                             </Button>
                         </div>
                     </div>
