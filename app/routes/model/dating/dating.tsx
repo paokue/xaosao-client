@@ -241,15 +241,15 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                        </DropdownMenuItem>
                                     )}
 
-                                    {booking.status === "in_progress" && (
-                                       <DropdownMenuItem
-                                          onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
-                                          className="cursor-pointer text-blue-600"
-                                       >
-                                          <Check className="h-4 w-4" />
-                                          {t("modelDating.actions.completeGetPaid")}
-                                       </DropdownMenuItem>
-                                    )}
+                                    {/* {booking.status === "in_progress" && ( */}
+                                    <DropdownMenuItem
+                                       onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
+                                       className="cursor-pointer text-blue-600"
+                                    >
+                                       <Check className="h-4 w-4" />
+                                       {t("modelDating.actions.completeGetPaid")}
+                                    </DropdownMenuItem>
+                                    {/* )} */}
 
                                     {booking.isContact && (
                                        <DropdownMenuItem
