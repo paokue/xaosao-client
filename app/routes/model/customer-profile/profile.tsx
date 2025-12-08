@@ -7,13 +7,13 @@ import { useTranslation } from 'react-i18next';
 // components
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { Separator } from '~/components/ui/separator';
 
 // services and utils
 import { capitalize } from '~/utils/functions/textFormat';
 import { calculateAgeFromDOB, formatNumber } from '~/utils';
 import { getCustomerProfile } from '~/services/profile.server';
 import { requireModelSession, getModelTokenFromSession } from '~/services/model-auth.server';
-import { Separator } from '~/components/ui/separator';
 
 export const meta: MetaFunction = () => {
    return [

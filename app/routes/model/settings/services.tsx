@@ -123,14 +123,12 @@ export default function ServicesSettings() {
   // Helper function to get translated service name
   const getServiceName = (nameKey: string) => {
     const translatedName = t(`modelServices.serviceItems.${nameKey}.name`);
-    // If translation not found, return the original key
     return translatedName.includes('modelServices.serviceItems') ? nameKey : translatedName;
   };
 
   // Helper function to get translated service description
   const getServiceDescription = (nameKey: string, fallbackDescription: string | null) => {
     const translatedDesc = t(`modelServices.serviceItems.${nameKey}.description`);
-    // If translation not found, return the original description or noDescription
     if (translatedDesc.includes('modelServices.serviceItems')) {
       return fallbackDescription || t("modelServices.noDescription");
     }

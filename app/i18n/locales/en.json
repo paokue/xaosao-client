@@ -1444,5 +1444,162 @@
     "instagramAlert": "Link copied! You can now paste it on Instagram.",
     "emailSubject": "Check out {{name}}'s Profile",
     "emailBody": "Hi,\n\nI wanted to share {{name}}'s profile with you.\n\nCheck it out here: {{url}}"
+  },
+  "modelDating": {
+    "loading": "Loading...",
+    "title": "My Dating Requests",
+    "subtitle": "Manage your dating and service booking requests from customers",
+    "serviceUnavailable": "Service Unavailable",
+    "support": "Support",
+    "policy": {
+      "title": "Secure Payment Policy",
+      "paymentHeld": "Payment is held securely when customer books your service",
+      "gpsCheckin": "Both parties must GPS check-in at the location to verify attendance",
+      "customerConfirm": "After completing, customer has 48 hours to confirm (auto-releases if no response)",
+      "rejectRefund": "If you reject a booking, customer will be automatically refunded"
+    },
+    "card": {
+      "to": "to",
+      "duration": "Duration",
+      "day": "day",
+      "days": "days",
+      "price": "Price",
+      "years": "years"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "accept": "Accept",
+      "reject": "Reject",
+      "checkIn": "Check In",
+      "completeGetPaid": "Complete & Get Paid",
+      "messageCustomer": "Message Customer",
+      "delete": "Delete"
+    },
+    "empty": {
+      "title": "No Dating Requests Yet",
+      "description": "You don't have any dating or service booking requests yet. They will appear here when customers book your services."
+    },
+    "accept": {
+      "title": "Accept Booking",
+      "confirmQuestion": "Are you sure you want to accept this booking request?",
+      "confirmTitle": "Confirm Acceptance",
+      "confirmDescription": "By accepting this booking, you agree to provide the service at the specified date, time, and location. The customer will be notified of your acceptance.",
+      "back": "Back",
+      "acceptButton": "Accept",
+      "success": "Booking accepted successfully!",
+      "errors": {
+        "failed": "Failed to accept booking!",
+        "invalidRequest": "Invalid request method!"
+      }
+    },
+    "reject": {
+      "title": "Reject Booking",
+      "confirmQuestion": "Are you sure you want to reject this booking request?",
+      "confirmTitle": "Confirm Rejection",
+      "confirmDescription": "By rejecting this booking, the customer will be notified and will need to find another model. This action cannot be undone.",
+      "reasonLabel": "Reason for rejection (optional)",
+      "reasonPlaceholder": "Please provide a reason for rejecting this booking...",
+      "cancel": "Cancel",
+      "rejectButton": "Reject",
+      "success": "Booking rejected successfully!",
+      "errors": {
+        "failed": "Failed to reject booking!",
+        "invalidRequest": "Invalid request method!"
+      }
+    },
+    "detail": {
+      "title": "Booking Details",
+      "bookingId": "Booking ID",
+      "service": "Service",
+      "date": "Date",
+      "duration": "Duration",
+      "price": "Price",
+      "location": "Location",
+      "preferredAttire": "Preferred Attire",
+      "notSpecified": "Not specified",
+      "status": "Status",
+      "customerName": "Name",
+      "customerAge": "Age",
+      "customerGender": "Gender",
+      "yearsOld": "years old",
+      "viewProfile": "View Profile",
+      "close": "Close",
+      "reject": "Reject",
+      "accept": "Accept",
+      "statusMessages": {
+        "confirmed": {
+          "title": "Booking Confirmed",
+          "description": "You have accepted this booking request. Please prepare for the date."
+        },
+        "completed": {
+          "title": "Booking Completed",
+          "description": "This booking has been completed successfully."
+        },
+        "rejected": {
+          "title": "Booking Rejected",
+          "description": "You have rejected this booking request."
+        },
+        "pending": {
+          "title": "Pending Approval",
+          "description": "This booking is waiting for your approval. Please accept or reject."
+        },
+        "cancelled": {
+          "title": "Booking Cancelled",
+          "description": "This booking has been cancelled by the customer."
+        }
+      }
+    },
+    "checkin": {
+      "title": "Check In",
+      "subtitle": "Verify your presence at the booking location",
+      "gpsVerification": "GPS Verification",
+      "gpsDescription": "Your location will be verified to confirm you are at the booking location (within 500m).",
+      "gettingLocation": "Getting your location...",
+      "locationAcquired": "Location acquired",
+      "geoNotSupported": "Geolocation is not supported by your browser",
+      "permissionDenied": "Please allow location access to check in",
+      "locationUnavailable": "Location information is unavailable",
+      "timeout": "Location request timed out",
+      "locationError": "An error occurred while getting your location",
+      "retry": "Retry",
+      "close": "Close",
+      "checkInButton": "Check In",
+      "success": "Checked in successfully!",
+      "errors": {
+        "locationRequired": "Unable to get your location. Please enable GPS and try again.",
+        "failed": "Failed to check in!",
+        "invalidRequest": "Invalid request method!"
+      }
+    },
+    "complete": {
+      "title": "Complete Booking",
+      "subtitle": "Mark this booking as completed after finishing the service.",
+      "confirmTitle": "Confirm Completion",
+      "confirmDescription": "By marking this booking as completed, you confirm that the service has been successfully delivered to the customer.",
+      "customerConfirmTitle": "Customer Confirmation Required",
+      "customerConfirmDescription": "The customer will have 48 hours to confirm the service was delivered. If they don't respond, payment is automatically released to you.",
+      "paymentTitle": "Payment Release",
+      "paymentDescription": "Payment will be released to your wallet after customer confirms or after 48 hours (auto-release).",
+      "close": "Close",
+      "markCompleted": "Mark as Completed",
+      "success": "Booking marked as completed! Awaiting customer confirmation.",
+      "errors": {
+        "failed": "Failed to complete booking!",
+        "invalidRequest": "Invalid request method!"
+      }
+    },
+    "delete": {
+      "title": "Delete Booking",
+      "confirmQuestion": "Are you sure you want to delete this booking?",
+      "warningTitle": "Warning: This action cannot be undone",
+      "warningDescription": "Deleting this booking will permanently remove it from your records. This action is only available for rejected bookings.",
+      "cancel": "Cancel",
+      "deleteButton": "Delete Booking",
+      "success": "Booking deleted successfully!",
+      "errors": {
+        "failed": "Failed to delete booking!",
+        "invalidRequest": "Invalid request method!"
+      }
+    }
   }
 }

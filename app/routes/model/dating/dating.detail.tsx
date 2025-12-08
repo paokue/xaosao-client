@@ -1,5 +1,6 @@
 import { Clock, Check, X, User } from "lucide-react"
 import { useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router"
+import { useTranslation } from "react-i18next"
 
 // components
 import Modal from "~/components/ui/model"
@@ -49,6 +50,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function DatingDetailModal() {
+   const { t } = useTranslation();
    const navigate = useNavigate();
    const data = useLoaderData<BookingDetail>();
 
@@ -60,43 +62,45 @@ export default function DatingDetailModal() {
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full p-2 sm:w-3/6 border rounded-sm">
          <div className="space-y-4 mt-10 sm:mt-0 p-2">
             <div className="mt-4 sm:mt-0 px-2">
-               <h3 className="flex items-center text-black text-md font-bold">Booking Details</h3>
+               <h3 className="flex items-center text-black text-md font-bold">{t("modelDating.detail.title")}</h3>
             </div>
             <div className="space-y-2 px-2">
                <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Booking ID:</label>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.bookingId")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{data?.id}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Service:</label>
-                        <p className="mt-0 sm:mt-1 text-sm">{data?.modelService.service.name}</p>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.service")}:</label>
+                        <p className="mt-0 sm:mt-1 text-sm">
+                           {t(`modelServices.serviceItems.${data?.modelService.service.name}.name`, { defaultValue: data?.modelService.service.name })}
+                        </p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Date:</label>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.date")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">
                            {formatDate(String(data?.startDate))} {data?.endDate ? "-" : ""} {data?.endDate && formatDate(String(data?.endDate))}
                         </p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Duration:</label>
-                        <p className="mt-0 sm:mt-1 text-sm">{data?.dayAmount} days</p>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.duration")}:</label>
+                        <p className="mt-0 sm:mt-1 text-sm">{data?.dayAmount} {t("modelDating.card.days")}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Price:</label>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.price")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{formatCurrency(data?.price)}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Location:</label>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.location")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{data?.location}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Preferred Attire:</label>
-                        <p className="mt-0 sm:mt-1 text-sm">{data?.preferredAttire || "Not specified"}</p>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.preferredAttire")}:</label>
+                        <p className="mt-0 sm:mt-1 text-sm">{data?.preferredAttire || t("modelDating.detail.notSpecified")}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
-                        <label className="text-sm font-medium text-gray-500">Status:</label>
+                        <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.status")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">{capitalize(data?.status || "")}</p>
                      </div>
                   </div>
@@ -108,9 +112,9 @@ export default function DatingDetailModal() {
                               <Check className="h-4 w-4 text-green-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Booking Confirmed</p>
+                              <p className="font-medium text-sm">{t("modelDating.detail.statusMessages.confirmed.title")}</p>
                               <p className="text-xs text-gray-500">
-                                 You have accepted this booking request. Please prepare for the date.
+                                 {t("modelDating.detail.statusMessages.confirmed.description")}
                               </p>
                            </div>
                         </div>
@@ -122,9 +126,9 @@ export default function DatingDetailModal() {
                               <Check className="h-4 w-4 text-blue-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Booking Completed</p>
+                              <p className="font-medium text-sm">{t("modelDating.detail.statusMessages.completed.title")}</p>
                               <p className="text-xs text-gray-500">
-                                 This booking has been completed successfully.
+                                 {t("modelDating.detail.statusMessages.completed.description")}
                               </p>
                            </div>
                         </div>
@@ -136,9 +140,9 @@ export default function DatingDetailModal() {
                               <X className="h-4 w-4 text-gray-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Booking Rejected</p>
+                              <p className="font-medium text-sm">{t("modelDating.detail.statusMessages.rejected.title")}</p>
                               <p className="text-xs text-gray-500">
-                                 You have rejected this booking request.
+                                 {t("modelDating.detail.statusMessages.rejected.description")}
                               </p>
                            </div>
                         </div>
@@ -150,9 +154,9 @@ export default function DatingDetailModal() {
                               <Clock className="h-4 w-4 text-yellow-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Pending Approval</p>
+                              <p className="font-medium text-sm">{t("modelDating.detail.statusMessages.pending.title")}</p>
                               <p className="text-sm text-gray-500">
-                                 This booking is waiting for your approval. Please accept or reject.
+                                 {t("modelDating.detail.statusMessages.pending.description")}
                               </p>
                            </div>
                         </div>
@@ -164,9 +168,9 @@ export default function DatingDetailModal() {
                               <X className="h-4 w-4 text-red-600" />
                            </div>
                            <div>
-                              <p className="font-medium text-sm">Booking Cancelled</p>
+                              <p className="font-medium text-sm">{t("modelDating.detail.statusMessages.cancelled.title")}</p>
                               <p className="text-xs text-gray-500">
-                                 This booking has been cancelled by the customer.
+                                 {t("modelDating.detail.statusMessages.cancelled.description")}
                               </p>
                            </div>
                         </div>
@@ -188,16 +192,16 @@ export default function DatingDetailModal() {
                         )}
                      </div>
                      <div className="flex items-start justify-center flex-col text-sm">
-                        <h2 className="text-md">Name: {`${data?.customer.firstName} ${data?.customer.lastName}`}</h2>
-                        <p>Age: {calculateAgeFromDOB(String(data?.customer.dob))} years old</p>
-                        <p>Gender: {capitalize(data?.customer.gender || "Not specified")}</p>
+                        <h2 className="text-md">{t("modelDating.detail.customerName")}: {`${data?.customer.firstName} ${data?.customer.lastName}`}</h2>
+                        <p>{t("modelDating.detail.customerAge")}: {calculateAgeFromDOB(String(data?.customer.dob))} {t("modelDating.detail.yearsOld")}</p>
+                        <p>{t("modelDating.detail.customerGender")}: {capitalize(data?.customer.gender || t("modelDating.detail.notSpecified"))}</p>
                         <Button
                            variant="outline"
                            onClick={() => navigate(`/model/customer-profile/${data?.customer.id}`)}
                            className="text-xs mt-4 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                         >
                            <User size={18} className="text-white" />
-                           View Profile
+                           {t("modelDating.detail.viewProfile")}
                         </Button>
                      </div>
                   </div>
@@ -206,7 +210,7 @@ export default function DatingDetailModal() {
 
             <div className="flex justify-end space-x-2 pt-4">
                <Button variant="outline" onClick={closeHandler} className="bg-rose-500 text-white hover:bg-rose-600 hover:text-white">
-                  Close
+                  {t("modelDating.detail.close")}
                </Button>
                {data?.status === "pending" && (
                   <>
@@ -215,14 +219,14 @@ export default function DatingDetailModal() {
                         onClick={() => navigate(`/model/dating/reject/${data?.id}`)}
                         className="border border-gray-500 bg-white text-gray-500 hover:bg-gray-500 hover:text-white"
                      >
-                        Reject
+                        {t("modelDating.detail.reject")}
                      </Button>
                      <Button
                         variant="outline"
                         onClick={() => navigate(`/model/dating/accept/${data?.id}`)}
                         className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
                      >
-                        Accept
+                        {t("modelDating.detail.accept")}
                      </Button>
                   </>
                )}

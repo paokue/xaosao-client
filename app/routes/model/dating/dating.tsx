@@ -79,7 +79,7 @@ interface BookingData {
          description: string;
          baseRate: number;
       };
-   };
+   } | null;
 }
 
 interface LoaderReturn {
@@ -105,12 +105,18 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
    const isLoading = navigation.state === "loading";
    const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
+   const getServiceName = (booking: BookingData): string => {
+      const serviceName = booking.modelService?.service?.name;
+      if (!serviceName) return t("modelDating.serviceUnavailable");
+      return t(`modelServices.serviceItems.${serviceName}.name`, { defaultValue: serviceName });
+   };
+
    if (isLoading) {
       return (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
             <div className="flex items-center justify-center gap-2">
                <Loader className="w-4 h-4 text-rose-500 animate-spin" />
-               <p className="text-rose-600">Loading...</p>
+               <p className="text-rose-600">{t("modelDating.loading")}</p>
             </div>
          </div>
       );
@@ -120,11 +126,11 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
       <div className="container space-y-2 pt-2 sm:pt-8 px-4 sm:px-10">
          <div className="flex items-start justify-between bg-rose-100 sm:bg-white w-full p-3 sm:px-0 rounded-md">
             <div className="space-y-1">
-               <h1 className="text-sm sm:text-md sm:font-bold text-rose-600 sm:text-gray-800 uppercase text-shadow-md">
-                  My Dating Requests
+               <h1 className="text-md sm:text-lg sm:font-bold text-rose-600 sm:text-rose-600 uppercase">
+                  {t("modelDating.title")}
                </h1>
                <p className="text-sm sm:text-md font-normal text-rose-600 sm:text-gray-600">
-                  Manage your dating and service booking requests from customers
+                  {t("modelDating.subtitle")}
                </p>
             </div>
          </div>
@@ -137,7 +143,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
             >
                <div className="flex items-center gap-3">
                   <Shield className="h-5 w-5 text-blue-600 shrink-0" />
-                  <h3 className="text-sm font-semibold text-blue-900">Secure Payment Policy</h3>
+                  <h3 className="text-sm font-semibold text-blue-900">{t("modelDating.policy.title")}</h3>
                </div>
                <div className="sm:hidden">
                   {isPolicyOpen ? (
@@ -148,22 +154,22 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                </div>
             </button>
             <div className={`mt-3 pl-8 ${isPolicyOpen ? 'block' : 'hidden'} sm:block`}>
-               <ul className="text-xs text-blue-800 space-y-1">
+               <ul className="text-xs text-blue-800 space-y-2">
                   <li className="flex items-center gap-2">
                      <Wallet className="h-3 w-3" />
-                     <span>Payment is held securely when customer books your service</span>
+                     <span>{t("modelDating.policy.paymentHeld")}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <MapPin className="h-3 w-3" />
-                     <span>Both parties must GPS check-in at the location to verify attendance</span>
+                     <span>{t("modelDating.policy.gpsCheckin")}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <Check className="h-3 w-3" />
-                     <span>After completing, customer has 48 hours to confirm (auto-releases if no response)</span>
+                     <span>{t("modelDating.policy.customerConfirm")}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <Info className="h-3 w-3" />
-                     <span>If you reject a booking, customer will be automatically refunded</span>
+                     <span>{t("modelDating.policy.rejectRefund")}</span>
                   </li>
                </ul>
             </div>
@@ -171,166 +177,17 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
 
          {bookings && bookings.length > 0 ? (
             <>
-               {/* <div className="hidden lg:block">
-                  <div className="border border-gray-200 rounded-sm overflow-hidden">
-                     <Table>
-                        <TableHeader>
-                           <TableRow className="bg-gray-50/80">
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</TableHead>
-                              <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">Actions</TableHead>
-                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                           {bookings.map((booking) => (
-                              <TableRow key={booking.id} className="hover:bg-rose-50/30">
-                                 <TableCell>
-                                    <div className="flex items-center gap-3">
-                                       {booking.customer.profile ? (
-                                          <img
-                                             src={booking.customer.profile}
-                                             alt={booking.customer.firstName}
-                                             className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                                          />
-                                       ) : (
-                                          <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
-                                             <UserRoundCheck className="w-4 h-4 text-rose-500" />
-                                          </div>
-                                       )}
-                                       <div>
-                                          <p className="text-sm font-medium text-gray-900">
-                                             {booking.customer.firstName} {booking.customer.lastName}
-                                          </p>
-                                          <p className="text-xs text-gray-500">
-                                             {calculateAgeFromDOB(String(booking.customer.dob))} years old
-                                          </p>
-                                       </div>
-                                    </div>
-                                 </TableCell>
-                                 <TableCell>
-                                    <p className="text-sm text-gray-900">{booking.modelService.service.name}</p>
-                                    <p className="text-xs text-gray-500">{booking.dayAmount} {booking.dayAmount !== 1 ? "days" : "day"}</p>
-                                 </TableCell>
-                                 <TableCell>
-                                    <p className="text-sm text-gray-900">{formatDate(String(booking.startDate))}</p>
-                                    {booking.endDate && (
-                                       <p className="text-xs text-gray-500">to {formatDate(String(booking.endDate))}</p>
-                                    )}
-                                 </TableCell>
-                                 <TableCell>
-                                    <p className="text-sm text-gray-700 max-w-[150px] truncate" title={booking.location}>
-                                       {booking.location}
-                                    </p>
-                                 </TableCell>
-                                 <TableCell>
-                                    <p className="text-sm font-medium text-gray-900">{formatCurrency(booking.price)}</p>
-                                 </TableCell>
-                                 <TableCell>
-                                    <Badge
-                                       variant="outline"
-                                       className={`text-xs ${statusConfig[booking.status]?.className || statusConfig.pending.className}`}
-                                    >
-                                       {capitalize(booking.status)}
-                                    </Badge>
-                                 </TableCell>
-                                 <TableCell className="text-right">
-                                    <DropdownMenu>
-                                       <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-100">
-                                             <MoreVertical className="h-4 w-4 text-gray-600" />
-                                             <span className="sr-only">Open menu</span>
-                                          </Button>
-                                       </DropdownMenuTrigger>
-                                       <DropdownMenuContent align="end" className="w-40">
-                                          <DropdownMenuItem
-                                             onClick={() => navigate(`/model/dating/detail/${booking.id}`)}
-                                             className="cursor-pointer"
-                                          >
-                                             View Details
-                                          </DropdownMenuItem>
-
-                                          {booking.status === "pending" && (
-                                             <>
-                                                <DropdownMenuItem
-                                                   onClick={() => navigate(`/model/dating/accept/${booking.id}`)}
-                                                   className="cursor-pointer text-emerald-600"
-                                                >
-                                                   <Check className="h-4 w-4 mr-2" />
-                                                   Accept
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                   onClick={() => navigate(`/model/dating/reject/${booking.id}`)}
-                                                   className="cursor-pointer text-red-600"
-                                                >
-                                                   <X className="h-4 w-4 mr-2" />
-                                                   Reject
-                                                </DropdownMenuItem>
-                                             </>
-                                          )}
-
-                                          {booking.status === "confirmed" && (
-                                             <DropdownMenuItem
-                                                onClick={() => navigate(`/model/dating/checkin/${booking.id}`)}
-                                                className="cursor-pointer text-purple-600"
-                                             >
-                                                <MapPin className="h-4 w-4 mr-2" />
-                                                Check In
-                                             </DropdownMenuItem>
-                                          )}
-
-                                          {booking.status === "in_progress" && (
-                                             <DropdownMenuItem
-                                                onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
-                                                className="cursor-pointer"
-                                             >
-                                                Complete & Get paid
-                                             </DropdownMenuItem>
-                                          )}
-
-                                          {booking.isContact && (
-                                             <DropdownMenuItem
-                                                onClick={() => navigate(`/model/chat?id=${booking.customer.firstName}`)}
-                                                className="cursor-pointer text-blue-600"
-                                             >
-                                                <MessageSquareText className="h-4 w-4 mr-2" />
-                                                Message
-                                             </DropdownMenuItem>
-                                          )}
-
-                                          {["cancelled", "rejected", "completed"].includes(booking.status) && (
-                                             <DropdownMenuItem
-                                                onClick={() => navigate(`/model/dating/delete/${booking.id}`)}
-                                                className="cursor-pointer text-red-600"
-                                             >
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Delete
-                                             </DropdownMenuItem>
-                                          )}
-                                       </DropdownMenuContent>
-                                    </DropdownMenu>
-                                 </TableCell>
-                              </TableRow>
-                           ))}
-                        </TableBody>
-                     </Table>
-                  </div>
-               </div> */}
-
                <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
                   {bookings.map((booking) => (
                      <Card
                         key={booking.id}
-                        className="border border-rose-100 hover:shadow-md transition-shadow rounded-sm py-8"
+                        className="hover:shadow-md transition-shadow rounded-sm py-8"
                      >
                         <CardHeader>
                            <div className="flex items-start justify-between gap-4">
                               <div className="space-y-2 flex-1">
                                  <h3 className="text-md leading-tight text-balance">
-                                    {booking.modelService.service.name}
+                                    {getServiceName(booking)}
                                  </h3>
                                  <Badge
                                     variant="outline"
@@ -353,7 +210,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                        onClick={() => navigate(`/model/dating/detail/${booking.id}`)}
                                        className="cursor-pointer"
                                     >
-                                       View Details
+                                       {t("modelDating.actions.viewDetails")}
                                     </DropdownMenuItem>
 
                                     {booking.status === "pending" && (
@@ -362,15 +219,15 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                              onClick={() => navigate(`/model/dating/accept/${booking.id}`)}
                                              className="cursor-pointer text-emerald-600"
                                           >
-                                             <Check className="h-4 w-4 mr-2" />
-                                             Accept
+                                             <Check className="h-4 w-4" />
+                                             {t("modelDating.actions.accept")}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem
                                              onClick={() => navigate(`/model/dating/reject/${booking.id}`)}
                                              className="cursor-pointer text-red-600"
                                           >
-                                             <X className="h-4 w-4 mr-2" />
-                                             Reject
+                                             <X className="h-4 w-4" />
+                                             {t("modelDating.actions.reject")}
                                           </DropdownMenuItem>
                                        </>
                                     )}
@@ -380,7 +237,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                           onClick={() => navigate(`/model/dating/checkin/${booking.id}`)}
                                           className="cursor-pointer"
                                        >
-                                          Check In
+                                          {t("modelDating.actions.checkIn")}
                                        </DropdownMenuItem>
                                     )}
 
@@ -389,8 +246,8 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                           onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
                                           className="cursor-pointer text-blue-600"
                                        >
-                                          <Check className="h-4 w-4 mr-2" />
-                                          Complete & Get Paid
+                                          <Check className="h-4 w-4" />
+                                          {t("modelDating.actions.completeGetPaid")}
                                        </DropdownMenuItem>
                                     )}
 
@@ -399,7 +256,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                           onClick={() => navigate(`/model/chat?id=${booking.customer.firstName}`)}
                                           className="cursor-pointer"
                                        >
-                                          Message Customer
+                                          {t("modelDating.actions.messageCustomer")}
                                        </DropdownMenuItem>
                                     )}
 
@@ -408,8 +265,8 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                           className="text-destructive cursor-pointer"
                                           onClick={() => navigate(`/model/dating/delete/${booking.id}`)}
                                        >
-                                          <Trash2 className="h-4 w-4 mr-2" />
-                                          Delete
+                                          <Trash2 className="h-4 w-4" />
+                                          {t("modelDating.actions.delete")}
                                        </DropdownMenuItem>
                                     )}
                                  </DropdownMenuContent>
@@ -424,7 +281,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                  {formatDate(String(booking.startDate))}
                                  {booking.endDate && (
                                     <>
-                                       <span className="text-rose-600"> to </span>
+                                       <span className="text-rose-600"> {t("modelDating.card.to")} </span>
                                        {formatDate(String(booking.endDate))}
                                     </>
                                  )}
@@ -435,10 +292,10 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                               <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                               <div className="flex gap-2">
                                  <p className="text-sm font-medium text-muted-foreground">
-                                    Duration:
+                                    {t("modelDating.card.duration")}:
                                  </p>
                                  <p className="text-sm text-muted-foreground">
-                                    {booking.dayAmount} {booking.dayAmount !== 1 ? "days" : "day"}
+                                    {booking.dayAmount} {booking.dayAmount !== 1 ? t("modelDating.card.days") : t("modelDating.card.day")}
                                  </p>
                               </div>
                            </div>
@@ -462,7 +319,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                            <div className="flex items-center gap-2">
                               <DollarSign className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm font-medium text-muted-foreground">
-                                 Price:
+                                 {t("modelDating.card.price")}:
                               </span>
                               <span className="text-sm text-muted-foreground">
                                  {formatCurrency(booking.price)}
@@ -473,7 +330,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                               <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm text-muted-foreground">
                                  {booking.customer.firstName + " " + booking.customer.lastName} (
-                                 {calculateAgeFromDOB(String(booking.customer.dob))} years)
+                                 {calculateAgeFromDOB(String(booking.customer.dob))} {t("modelDating.card.years")})
                               </span>
                            </div>
                         </CardContent>
@@ -486,9 +343,9 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search size={24} className="text-gray-400" />
                </div>
-               <h4 className="text-gray-900 font-medium mb-2">No Dating Requests Yet</h4>
+               <h4 className="text-gray-900 font-medium mb-2">{t("modelDating.empty.title")}</h4>
                <p className="text-gray-600 text-sm">
-                  You don't have any dating or service booking requests yet. They will appear here when customers book your services.
+                  {t("modelDating.empty.description")}
                </p>
             </div>
          )}
@@ -498,7 +355,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
             className="flex gap-2 cursor-pointer fixed bottom-16 right-4 sm:bottom-6 sm:right-4 z-50 p-3 rounded-lg bg-rose-500 text-white shadow-lg hover:bg-rose-600 transition"
          >
             <Headset size={18} className="animate-bounce" />
-            <span className="hidden sm:block">Support</span>
+            <span className="hidden sm:block">{t("modelDating.support")}</span>
          </button>
 
          <Outlet />
