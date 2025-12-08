@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AlertCircle, Send, Loader } from "lucide-react";
 import { Form, useNavigation, useSearchParams, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components:
 import {
@@ -42,7 +43,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (!issueType || !title || !description) {
     return redirect(
-      `/model/settings/report?error=${encodeURIComponent("All fields are required!")}`
+      `/model/settings/report?error=${encodeURIComponent("modelReport.errors.allFieldsRequired")}`
     );
   }
 
@@ -51,21 +52,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (result?.success) {
       return redirect(
-        `/model/settings/report?success=${encodeURIComponent(result.message)}`
+        `/model/settings/report?success=${encodeURIComponent("modelReport.success.submitted")}`
       );
     } else {
       return redirect(
-        `/model/settings/report?error=${encodeURIComponent("Failed to submit report!")}`
+        `/model/settings/report?error=${encodeURIComponent("modelReport.errors.submitFailed")}`
       );
     }
   } catch (error: any) {
     return redirect(
-      `/model/settings/report?error=${encodeURIComponent(error.message || "Failed to submit report!")}`
+      `/model/settings/report?error=${encodeURIComponent(error.message || "modelReport.errors.submitFailed")}`
     );
   }
 }
 
 export default function ReportSettings() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
@@ -109,22 +111,22 @@ export default function ReportSettings() {
           </div>
           <div>
             <h1 className="text-md">
-              Report an Issue
+              {t("modelReport.title")}
             </h1>
-            <p className="text-sm text-gray-600">Let us know about any problems</p>
+            <p className="text-sm text-gray-600">{t("modelReport.subtitle")}</p>
           </div>
         </div>
       </div>
 
       {successMessage && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">{successMessage}</p>
+          <p className="text-sm text-green-800">{t(successMessage)}</p>
         </div>
       )}
 
       {errorMessage && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{errorMessage}</p>
+          <p className="text-sm text-red-800">{t(errorMessage)}</p>
         </div>
       )}
 
@@ -132,7 +134,7 @@ export default function ReportSettings() {
         <Form method="post" className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="issueType">
-              Issue Type <span className="text-rose-500">*</span>
+              {t("modelReport.issueType")} <span className="text-rose-500">*</span>
             </Label>
             <Select
               name="issueType"
@@ -142,28 +144,28 @@ export default function ReportSettings() {
               disabled={isSubmitting}
             >
               <SelectTrigger id="issueType" className="w-full">
-                <SelectValue placeholder="Select an issue type" />
+                <SelectValue placeholder={t("modelReport.selectIssueType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="technical">Technical Problem</SelectItem>
-                <SelectItem value="payment">Payment Issue</SelectItem>
-                <SelectItem value="account">Account Problem</SelectItem>
-                <SelectItem value="chat">Chat/Messaging Issue</SelectItem>
-                <SelectItem value="profile">Profile Issue</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="technical">{t("modelReport.issueTypes.technical")}</SelectItem>
+                <SelectItem value="payment">{t("modelReport.issueTypes.payment")}</SelectItem>
+                <SelectItem value="account">{t("modelReport.issueTypes.account")}</SelectItem>
+                <SelectItem value="chat">{t("modelReport.issueTypes.chat")}</SelectItem>
+                <SelectItem value="profile">{t("modelReport.issueTypes.profile")}</SelectItem>
+                <SelectItem value="other">{t("modelReport.issueTypes.other")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="title">
-              Subject <span className="text-rose-500">*</span>
+              {t("modelReport.subject")} <span className="text-rose-500">*</span>
             </Label>
             <Input
               id="title"
               name="title"
               type="text"
-              placeholder="Brief description of the issue"
+              placeholder={t("modelReport.subjectPlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -174,13 +176,13 @@ export default function ReportSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="description">
-              Description <span className="text-rose-500">*</span>
+              {t("modelReport.description")} <span className="text-rose-500">*</span>
             </Label>
             <Textarea
               id="description"
               name="description"
               rows={6}
-              placeholder="Please provide detailed information about the issue you're experiencing..."
+              placeholder={t("modelReport.descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -189,7 +191,7 @@ export default function ReportSettings() {
               className="resize-none text-sm"
             />
             <p className="text-xs text-gray-500">
-              {description.length}/500 characters
+              {description.length}/500 {t("modelReport.characters")}
             </p>
           </div>
 
@@ -200,7 +202,7 @@ export default function ReportSettings() {
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader size={18} className="animate-spin" /> : <Send className="w-4 h-4" />}
-              {isSubmitting ? "Submitting..." : "Submit Report"}
+              {isSubmitting ? t("modelReport.submitting") : t("modelReport.submitReport")}
             </Button>
           </div>
         </Form>
@@ -210,9 +212,9 @@ export default function ReportSettings() {
         <div className="flex items-start gap-3">
           <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-md text-blue-700 font-medium mb-1">Need immediate help?</p>
+            <p className="text-md text-blue-700 font-medium mb-1">{t("modelReport.help.title")}</p>
             <p className="text-sm text-blue-700">
-              For urgent issues, please contact our support team directly at{" "}
+              {t("modelReport.help.message")}{" "}
               <a href="mailto:support@xaosao.com" className="underline font-medium">
                 support@xaosao.com
               </a>

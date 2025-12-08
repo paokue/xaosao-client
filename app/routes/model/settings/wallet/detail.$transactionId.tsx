@@ -1,21 +1,21 @@
-import { Clock, FileText, Check, X, Download, Calendar } from "lucide-react";
 import {
   useLoaderData,
   useNavigate,
   type LoaderFunctionArgs,
 } from "react-router";
+import { useTranslation } from "react-i18next";
+import { Clock, Check, X, Calendar } from "lucide-react";
 
 // components
 import Modal from "~/components/ui/model";
 import { Button } from "~/components/ui/button";
 
 // utils and service
-import { capitalize } from "~/utils/functions/textFormat";
-import { downloadImage } from "~/utils/functions/download";
-import { requireModelSession } from "~/services/model-auth.server";
-import { getModelTransaction } from "~/services/wallet.server";
-import type { ITransactionResponse } from "~/interfaces/transaction";
 import { formatCurrency } from "~/utils";
+import { capitalize } from "~/utils/functions/textFormat";
+import { getModelTransaction } from "~/services/wallet.server";
+import { requireModelSession } from "~/services/model-auth.server";
+import type { ITransactionResponse } from "~/interfaces/transaction";
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
   const modelId = await requireModelSession(request);
@@ -24,17 +24,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function ModelTransactionDetails() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const transaction = useLoaderData<ITransactionResponse>();
-
-  const handleDownloadSlip = async () => {
-    if (transaction?.paymentSlip) {
-      downloadImage(
-        transaction.paymentSlip,
-        `payment-slip-${transaction.identifier}.jpg`
-      );
-    }
-  };
 
   function closeHandler() {
     navigate("/model/settings/wallet");
@@ -48,10 +40,10 @@ export default function ModelTransactionDetails() {
       <div className="space-y-4 mt-10 sm:mt-0">
         <div className="mt-4 sm:mt-0 px-4">
           <h3 className="flex items-center text-black text-md font-bold">
-            Transaction Details
+            {t("modelWallet.detail.title")}
           </h3>
           <p className="text-gray-500 text-sm">
-            View your withdrawal information
+            {t("modelWallet.detail.subtitle")}
           </p>
         </div>
         <div className="space-y-2 px-4">
@@ -60,7 +52,7 @@ export default function ModelTransactionDetails() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                 <label className="text-sm font-medium text-gray-500">
-                  Transaction ID:
+                  {t("modelWallet.detail.transactionId")}
                 </label>
                 <p className="mt-0 sm:mt-1 text-sm font-mono">
                   {transaction?.id}
@@ -68,7 +60,7 @@ export default function ModelTransactionDetails() {
               </div>
               <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                 <label className="text-sm font-medium text-gray-500">
-                  Type:
+                  {t("modelWallet.detail.type")}
                 </label>
                 <p className="mt-0 sm:mt-1 text-sm font-mono">
                   {transaction?.identifier}
@@ -76,14 +68,13 @@ export default function ModelTransactionDetails() {
               </div>
               <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                 <label className="text-sm font-medium text-gray-500">
-                  Amount:
+                  {t("modelWallet.detail.amount")}
                 </label>
                 <p
-                  className={`mt-0 sm:mt-1 text-lg font-semibold ${
-                    transaction?.identifier === "withdrawal"
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }`}
+                  className={`mt-0 sm:mt-1 text-lg font-semibold ${transaction?.identifier === "withdrawal"
+                    ? "text-red-600"
+                    : "text-green-600"
+                    }`}
                 >
                   {transaction?.identifier === "withdrawal" ? "- " : "+ "}
                   {formatCurrency(transaction?.amount)}
@@ -91,7 +82,7 @@ export default function ModelTransactionDetails() {
               </div>
               <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                 <label className="text-sm font-medium text-gray-500">
-                  Created At:
+                  {t("modelWallet.detail.createdAt")}
                 </label>
                 <p className="mt-0 sm:mt-1 text-sm">
                   {transaction?.createdAt.toDateString()}
@@ -99,17 +90,16 @@ export default function ModelTransactionDetails() {
               </div>
               <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                 <label className="text-sm font-medium text-gray-500">
-                  Status:
+                  {t("modelWallet.detail.status")}
                 </label>
                 <br />
                 <button
-                  className={`text-center text-xs px-2 py-1 rounded-sm ${
-                    transaction.status === "approved"
-                      ? "bg-green-100 text-green-600"
-                      : transaction.status === "rejected"
+                  className={`text-center text-xs px-2 py-1 rounded-sm ${transaction.status === "approved"
+                    ? "bg-green-100 text-green-600"
+                    : transaction.status === "rejected"
                       ? "bg-red-100 text-red-600"
                       : "bg-orange-100 text-orange-600"
-                  }`}
+                    }`}
                 >
                   {capitalize(transaction.status)}
                 </button>
@@ -117,7 +107,7 @@ export default function ModelTransactionDetails() {
               {transaction?.rejectReason && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    Reject Reason:
+                    {t("modelWallet.detail.rejectReason")}
                   </label>
                   <p className="mt-1 text-sm">{transaction?.rejectReason}</p>
                 </div>
@@ -130,7 +120,7 @@ export default function ModelTransactionDetails() {
                   <Calendar className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Created</p>
+                  <p className="font-medium text-sm">{t("modelWallet.detail.created")}</p>
                   <p className="text-xs text-gray-500">
                     {transaction?.createdAt.toDateString()}
                   </p>
@@ -143,7 +133,7 @@ export default function ModelTransactionDetails() {
                     <Check className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">Approved</p>
+                    <p className="font-medium text-sm">{t("modelWallet.detail.approved")}</p>
                     <p className="text-xs text-gray-500">
                       {transaction?.updatedAt.toDateString()}
                     </p>
@@ -157,7 +147,7 @@ export default function ModelTransactionDetails() {
                     <X className="h-4 w-4 text-red-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">Rejected</p>
+                    <p className="font-medium text-sm">{t("modelWallet.detail.rejected")}</p>
                     <p className="text-xs text-gray-500">
                       {transaction?.updatedAt.toDateString()}
                     </p>
@@ -171,34 +161,13 @@ export default function ModelTransactionDetails() {
                     <Clock className="h-4 w-4 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">Pending</p>
+                    <p className="font-medium text-sm">{t("modelWallet.detail.pending")}</p>
                     <p className="text-xs text-gray-500">
-                      Waiting for admin approval
+                      {t("modelWallet.detail.waitingApproval")}
                     </p>
                   </div>
                 </div>
               )}
-            </div>
-            <hr />
-            <div className="flex sm:items-center justify-between sm:space-x-3 space-y-2 sm:space-y-0">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium">Payment Slip Available</p>
-                  <p className="text-sm text-gray-500">
-                    Uploaded with transaction
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex"
-                onClick={handleDownloadSlip}
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </Button>
             </div>
           </div>
         </div>
@@ -209,7 +178,7 @@ export default function ModelTransactionDetails() {
             onClick={closeHandler}
             className="bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
           >
-            Close
+            {t("modelWallet.detail.close")}
           </Button>
         </div>
       </div>

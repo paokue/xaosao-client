@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, Shield, Loader } from "lucide-react";
 import { Form, useNavigation, useSearchParams, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components:
 import { Input } from "~/components/ui/input";
@@ -35,19 +36,19 @@ export async function action({ request }: ActionFunctionArgs) {
   // Validation
   if (!currentPassword || !newPassword || !confirmPassword) {
     return redirect(
-      `/model/settings/password?error=${encodeURIComponent("All fields are required!")}`
+      `/model/settings/password?error=${encodeURIComponent("modelPassword.errors.allFieldsRequired")}`
     );
   }
 
   if (newPassword !== confirmPassword) {
     return redirect(
-      `/model/settings/password?error=${encodeURIComponent("New passwords do not match!")}`
+      `/model/settings/password?error=${encodeURIComponent("modelPassword.errors.passwordsDoNotMatch")}`
     );
   }
 
   if (newPassword.length < 8) {
     return redirect(
-      `/model/settings/password?error=${encodeURIComponent("Password must be at least 8 characters long!")}`
+      `/model/settings/password?error=${encodeURIComponent("modelPassword.errors.passwordTooShort")}`
     );
   }
 
@@ -56,16 +57,16 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (result?.success) {
       return redirect(
-        `/model/settings/password?success=${encodeURIComponent(result.message)}`
+        `/model/settings/password?success=${encodeURIComponent("modelPassword.success.updated")}`
       );
     } else {
       return redirect(
-        `/model/settings/password?error=${encodeURIComponent("Failed to update password!")}`
+        `/model/settings/password?error=${encodeURIComponent("modelPassword.errors.updateFailed")}`
       );
     }
   } catch (error: any) {
     return redirect(
-      `/model/settings/password?error=${encodeURIComponent(error.message || "Failed to update password!")}`
+      `/model/settings/password?error=${encodeURIComponent(error.message || "modelPassword.errors.updateFailed")}`
     );
   }
 }
@@ -93,6 +94,7 @@ const checkPasswordStrength = (password: string): { strength: 'weak' | 'medium' 
 };
 
 export default function PasswordSettings() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
@@ -146,22 +148,22 @@ export default function PasswordSettings() {
           </div>
           <div>
             <h1 className="text-md">
-              Password Change
+              {t("modelPassword.title")}
             </h1>
-            <p className="text-sm text-gray-600">Update your account password</p>
+            <p className="text-sm text-gray-600">{t("modelPassword.subtitle")}</p>
           </div>
         </div>
       </div>
 
       {successMessage && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">{successMessage}</p>
+          <p className="text-sm text-green-800">{t(successMessage)}</p>
         </div>
       )}
 
       {errorMessage && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{errorMessage}</p>
+          <p className="text-sm text-red-800">{t(errorMessage)}</p>
         </div>
       )}
 
@@ -169,14 +171,14 @@ export default function PasswordSettings() {
         <Form method="post" className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="currentPassword">
-              Current Password <span className="text-rose-500">*</span>
+              {t("modelPassword.currentPassword")} <span className="text-rose-500">*</span>
             </Label>
             <div className="relative">
               <Input
                 id="currentPassword"
                 name="currentPassword"
                 type={showCurrentPassword ? "text" : "password"}
-                placeholder="Enter current password"
+                placeholder={t("modelPassword.enterCurrentPassword")}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
@@ -199,14 +201,14 @@ export default function PasswordSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="newPassword">
-              New Password <span className="text-rose-500">*</span>
+              {t("modelPassword.newPassword")} <span className="text-rose-500">*</span>
             </Label>
             <div className="relative">
               <Input
                 id="newPassword"
                 name="newPassword"
                 type={showNewPassword ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder={t("modelPassword.enterNewPassword")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -230,14 +232,14 @@ export default function PasswordSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">
-              Confirm New Password <span className="text-rose-500">*</span>
+              {t("modelPassword.confirmPassword")} <span className="text-rose-500">*</span>
             </Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm new password"
+                placeholder={t("modelPassword.confirmNewPassword")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -281,9 +283,9 @@ export default function PasswordSettings() {
                 : passwordStrength.strength === 'medium' ? 'text-yellow-600'
                   : 'text-green-600'
                 }`}>
-                Password strength: {passwordStrength.strength === 'weak' ? 'Weak'
-                  : passwordStrength.strength === 'medium' ? 'Medium'
-                    : 'Strong'}
+                {t("modelPassword.passwordStrength")}: {passwordStrength.strength === 'weak' ? t("modelPassword.strength.weak")
+                  : passwordStrength.strength === 'medium' ? t("modelPassword.strength.medium")
+                    : t("modelPassword.strength.strong")}
               </p>
             </div>
           )}
@@ -295,7 +297,7 @@ export default function PasswordSettings() {
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader size={18} className="animate-spin" /> : null}
-              {isSubmitting ? "Updating..." : "Update Password"}
+              {isSubmitting ? t("modelPassword.updating") : t("modelPassword.updatePassword")}
             </Button>
           </div>
         </Form>
@@ -305,12 +307,12 @@ export default function PasswordSettings() {
         <div className="flex items-start gap-3">
           <Shield className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-md text-blue-700 font-medium mb-1">Password security tips:</p>
+            <p className="text-md text-blue-700 font-medium mb-1">{t("modelPassword.securityTips.title")}</p>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Use at least 8 characters</li>
-              <li>• Include uppercase and lowercase letters</li>
-              <li>• Add numbers and special characters</li>
-              <li>• Avoid common words or patterns</li>
+              <li>• {t("modelPassword.securityTips.tip1")}</li>
+              <li>• {t("modelPassword.securityTips.tip2")}</li>
+              <li>• {t("modelPassword.securityTips.tip3")}</li>
+              <li>• {t("modelPassword.securityTips.tip4")}</li>
             </ul>
           </div>
         </div>

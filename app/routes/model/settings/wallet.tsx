@@ -6,7 +6,6 @@ import {
   Search,
   Loader,
   EyeIcon,
-  DollarSign,
   FilePenLine,
   MoreVertical,
   ArrowDownToLine,
@@ -22,6 +21,7 @@ import {
   useLoaderData,
 } from "react-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
 // Services and Utils
@@ -103,11 +103,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (result?.success) {
       return redirect(
-        `/model/settings/wallet?toastMessage=${encodeURIComponent(result.message)}&toastType=success`
+        `/model/settings/wallet?toastMessage=${encodeURIComponent("modelWallet.success.withdrawalSubmitted")}&toastType=success`
       );
     } else {
       return redirect(
-        `/model/settings/wallet?toastMessage=${encodeURIComponent(result?.message || "Failed to process withdrawal")}&toastType=error`
+        `/model/settings/wallet?toastMessage=${encodeURIComponent(result?.message || "modelWallet.errors.withdrawalFailed")}&toastType=error`
       );
     }
   }
@@ -116,6 +116,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ModelWalletPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
@@ -147,11 +148,25 @@ export default function ModelWalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [selectedBank, setSelectedBank] = useState<string>("");
 
+  // Safety reset: ensure body styles are clean when wallet page renders
+  // This handles cases where modal cleanup didn't run properly during navigation
+  React.useEffect(() => {
+    // Only reset if body has modal-related styles applied
+    if (document.body.style.position === 'fixed') {
+      const scrollY = Math.abs(parseInt(document.body.style.top || '0', 10));
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    }
+  }, []);
+
   const tabs = [
-    { key: "All", label: "All" },
-    { key: "Approved", label: "Approved" },
-    { key: "Pending", label: "Pending" },
-    { key: "Failed", label: "Failed" },
+    { key: "All", label: t("modelWallet.tabs.all") },
+    { key: "Approved", label: t("modelWallet.tabs.approved") },
+    { key: "Pending", label: t("modelWallet.tabs.pending") },
+    { key: "Failed", label: t("modelWallet.tabs.failed") },
   ];
 
   // Close withdraw modal when form submission starts
@@ -175,7 +190,7 @@ export default function ModelWalletPage() {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-2">
           <Loader className="w-4 h-4 text-rose-500 animate-spin" />
-          <p className="text-rose-600">Loading....</p>
+          <p className="text-rose-600">{t("modelWallet.loading")}</p>
         </div>
       </div>
     );
@@ -193,7 +208,7 @@ export default function ModelWalletPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wallet size={24} />
-                    <span className="font-medium">Total Balance</span>
+                    <span className="font-medium">{t("modelWallet.totalBalance")}</span>
                   </div>
                   <button
                     onClick={() => setIsBalanceVisible(!isBalanceVisible)}
@@ -214,7 +229,7 @@ export default function ModelWalletPage() {
                         ? formatCurrency(wallet.totalBalance)
                         : "******"}
                     </h2>
-                    <p className="text-white/80 text-sm">Available Balance</p>
+                    <p className="text-white/80 text-sm">{t("modelWallet.availableBalance")}</p>
                   </div>
 
                   <div className="">
@@ -223,7 +238,7 @@ export default function ModelWalletPage() {
                         ? formatCurrency(wallet.totalDeposit)
                         : "******"}
                     </p>
-                    <p className="text-white/80 text-sm">Total Earnings</p>
+                    <p className="text-white/80 text-sm">{t("modelWallet.totalEarnings")}</p>
                   </div>
                 </div>
               </div>
@@ -233,7 +248,7 @@ export default function ModelWalletPage() {
               className="hidden cursor-pointer sm:flex items-center justify-center border border-rose-500 rounded-md gap-2 hover:bg-rose-50"
             >
               <ArrowDownToLine className="text-gray-500" size={18} />
-              <span className="text-gray-500">Withdraw Funds</span>
+              <span className="text-gray-500">{t("modelWallet.withdrawFunds")}</span>
             </button>
           </div>
 
@@ -241,7 +256,7 @@ export default function ModelWalletPage() {
             <div className="py-2 sm:py-4 px-0 sm:px-2">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-md sm:text-md font-normal text-gray-600">
-                  Withdrawal History
+                  {t("modelWallet.withdrawalHistory")}
                 </h3>
               </div>
 
@@ -284,8 +299,7 @@ export default function ModelWalletPage() {
                                 : "bg-orange-100"
                               }`}
                           >
-                            <DollarSign
-                              size={18}
+                            <span
                               className={
                                 transaction.status === "approved"
                                   ? "text-green-600"
@@ -293,7 +307,9 @@ export default function ModelWalletPage() {
                                     ? "text-red-600"
                                     : "text-orange-600"
                               }
-                            />
+                            >
+                              LAK
+                            </span>
                           </div>
 
                           <div>
@@ -356,7 +372,7 @@ export default function ModelWalletPage() {
                                 className="flex space-x-2 w-full"
                               >
                                 <EyeIcon className="mr-2 h-3 w-3" />
-                                <span>View Details</span>
+                                <span>{t("modelWallet.menu.viewDetails")}</span>
                               </Link>
                             </DropdownMenuItem>
                             {transaction.status === "pending" && (
@@ -366,7 +382,7 @@ export default function ModelWalletPage() {
                                   className="text-gray-500 flex space-x-2 w-full"
                                 >
                                   <FilePenLine className="mr-2 h-3 w-3" />
-                                  <span>Edit</span>
+                                  <span>{t("modelWallet.menu.edit")}</span>
                                 </Link>
                               </DropdownMenuItem>
                             )}
@@ -377,7 +393,7 @@ export default function ModelWalletPage() {
                                   className="text-gray-500 flex space-x-2 w-full"
                                 >
                                   <Trash className="mr-2 h-3 w-3" />
-                                  <span>Delete</span>
+                                  <span>{t("modelWallet.menu.delete")}</span>
                                 </Link>
                               </DropdownMenuItem>
                             )}
@@ -393,10 +409,10 @@ export default function ModelWalletPage() {
                     <Search size={24} className="text-gray-400" />
                   </div>
                   <h4 className="text-gray-900 font-medium mb-2">
-                    No Transactions Found
+                    {t("modelWallet.noTransactions")}
                   </h4>
                   <p className="text-gray-600 text-sm">
-                    Your withdrawal history will appear here
+                    {t("modelWallet.noTransactionsHint")}
                   </p>
                 </div>
               )}
@@ -419,7 +435,7 @@ export default function ModelWalletPage() {
             onClick={() => setWithdrawModal(true)}
             className="sm:hidden fixed bottom-18 right-4 bg-rose-500 hover:bg-rose-600 text-white rounded-lg py-2 px-4 shadow-lg flex items-center justify-center z-9"
           >
-            <ArrowDownToLine className="h-4 w-4" /> Withdraw
+            <ArrowDownToLine className="h-4 w-4" /> {t("modelWallet.withdraw")}
           </button>
         </div>
       </div>
@@ -427,13 +443,12 @@ export default function ModelWalletPage() {
       <Dialog open={withdrawModal} onOpenChange={setWithdrawModal}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-md font-normal">Withdraw Funds</DialogTitle>
+            <DialogTitle className="text-md font-normal">{t("modelWallet.withdrawFunds")}</DialogTitle>
           </DialogHeader>
 
           <div className="mb-4 p-4 bg-rose-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Available Balance</p>
+            <p className="text-sm text-gray-600 mb-1">{t("modelWallet.availableBalance")}</p>
             <h3 className="text-lg font-bold text-rose-600 flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
               {formatCurrency(wallet.totalBalance)}
             </h3>
           </div>
@@ -443,7 +458,7 @@ export default function ModelWalletPage() {
 
             <div className="space-y-2">
               <Label htmlFor="bankAccount">
-                Bank Account <span className="text-rose-500">*</span>
+                {t("modelWallet.modal.bankAccount")} <span className="text-rose-500">*</span>
               </Label>
               <Select
                 name="bankAccount"
@@ -452,7 +467,7 @@ export default function ModelWalletPage() {
                 required
               >
                 <SelectTrigger id="bankAccount" className="w-full">
-                  <SelectValue placeholder="Select bank account" />
+                  <SelectValue placeholder={t("modelWallet.modal.selectBank")} />
                 </SelectTrigger>
                 <SelectContent>
                   {banks.length > 0 ? (
@@ -463,27 +478,27 @@ export default function ModelWalletPage() {
                     ))
                   ) : (
                     <SelectItem value="" disabled>
-                      No bank accounts found
+                      {t("modelWallet.modal.noBanks")}
                     </SelectItem>
                   )}
                 </SelectContent>
               </Select>
               {banks.length === 0 && (
                 <p className="text-xs text-orange-500">
-                  Please add a bank account in your profile settings first.
+                  {t("modelWallet.modal.addBankHint")}
                 </p>
               )}
               <p className="text-xs text-gray-500">
-                Select the bank account for transfer
+                {t("modelWallet.modal.selectBankHint")}
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Withdrawal Amount <span className="text-rose-500">*</span>
+                {t("modelWallet.modal.withdrawalAmount")} <span className="text-rose-500">*</span>
               </Label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">Kip</span>
                 <Input
                   id="amount"
                   type="number"
@@ -495,16 +510,14 @@ export default function ModelWalletPage() {
                   max={wallet.totalBalance}
                   required
                   className="pl-10 text-sm"
-                  placeholder="Enter amount"
+                  placeholder={t("modelWallet.modal.enterAmount")}
                 />
               </div>
             </div>
 
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-sm">
               <p className="text-xs text-blue-800">
-                <strong>Note:</strong> Your withdrawal request will be
-                reviewed by the admin. Funds will be transferred to your
-                selected account once approved.
+                <strong>{t("modelWallet.modal.note")}</strong> {t("modelWallet.modal.withdrawNote")}
               </p>
             </div>
 
@@ -514,13 +527,13 @@ export default function ModelWalletPage() {
                 variant="outline"
                 onClick={() => setWithdrawModal(false)}
               >
-                Close
+                {t("modelWallet.modal.close")}
               </Button>
               <Button
                 type="submit"
                 className="bg-rose-500 text-white cursor-pointer hover:bg-rose-600"
               >
-                Withdraw
+                {t("modelWallet.withdraw")}
               </Button>
             </DialogFooter>
           </Form>

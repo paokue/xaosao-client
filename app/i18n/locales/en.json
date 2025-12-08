@@ -1026,5 +1026,210 @@
         "description": "Find comfort with a calming sleep companion for peaceful rest and relaxation (non-romantic companionship)."
       }
     }
+  },
+  "modelWallet": {
+    "loading": "Loading...",
+    "totalBalance": "Total Balance",
+    "availableBalance": "Available Balance",
+    "totalEarnings": "Total Earnings",
+    "withdrawFunds": "Withdraw Funds",
+    "withdraw": "Withdraw",
+    "withdrawalHistory": "Withdrawal History",
+    "noTransactions": "No Transactions Found",
+    "noTransactionsHint": "Your withdrawal history will appear here",
+    "tabs": {
+      "all": "All",
+      "approved": "Approved",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "menu": {
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "modal": {
+      "bankAccount": "Bank Account",
+      "selectBank": "Select bank account",
+      "noBanks": "No bank accounts found",
+      "addBankHint": "Please add a bank account in your profile settings first.",
+      "selectBankHint": "Select the bank account for transfer",
+      "withdrawalAmount": "Withdrawal Amount",
+      "enterAmount": "Enter amount",
+      "note": "Note:",
+      "withdrawNote": "Your withdrawal request will be reviewed by the admin. Funds will be transferred to your selected account once approved.",
+      "close": "Close"
+    },
+    "detail": {
+      "title": "Transaction Details",
+      "subtitle": "View your withdrawal information",
+      "transactionId": "Transaction ID:",
+      "type": "Type:",
+      "amount": "Amount:",
+      "createdAt": "Created At:",
+      "status": "Status:",
+      "rejectReason": "Reject Reason:",
+      "created": "Created",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending",
+      "waitingApproval": "Waiting for admin approval",
+      "slipAvailable": "Payment Slip Available",
+      "uploadedWithTransaction": "Uploaded with transaction",
+      "download": "Download",
+      "close": "Close"
+    },
+    "edit": {
+      "title": "Edit Withdrawal",
+      "subtitle": "Update your withdrawal information",
+      "transactionId": "Transaction ID",
+      "type": "Type",
+      "amount": "Amount",
+      "quickAmount": "Quick Amount",
+      "paymentSlip": "Payment Slip",
+      "newFile": "New File",
+      "noSlip": "No slip uploaded",
+      "download": "Download",
+      "uploadNew": "Upload New",
+      "close": "Close",
+      "saving": "Saving...",
+      "saveChange": "Save Change"
+    },
+    "delete": {
+      "title": "Delete Transaction",
+      "confirmMessage": "Are you sure you want to delete this transaction?",
+      "warning": "Warning",
+      "warningMessage": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "deleteButton": "Delete"
+    },
+    "success": {
+      "withdrawalSubmitted": "Withdrawal request submitted successfully!",
+      "updated": "Transaction updated successfully!",
+      "deleted": "Transaction deleted successfully!"
+    },
+    "errors": {
+      "withdrawalFailed": "Failed to process withdrawal",
+      "updateFailed": "Failed to edit withdrawal information!",
+      "deleteFailed": "Failed to delete transaction!",
+      "invalidRequest": "Invalid request method!"
+    }
+  },
+  "modelPassword": {
+    "title": "Password Change",
+    "subtitle": "Update your account password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "enterCurrentPassword": "Enter current password",
+    "enterNewPassword": "Enter new password",
+    "confirmNewPassword": "Confirm new password",
+    "passwordStrength": "Password strength",
+    "updatePassword": "Update Password",
+    "updating": "Updating...",
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "securityTips": {
+      "title": "Password security tips:",
+      "tip1": "Use at least 8 characters",
+      "tip2": "Include uppercase and lowercase letters",
+      "tip3": "Add numbers and special characters",
+      "tip4": "Avoid common words or patterns"
+    },
+    "success": {
+      "updated": "Password updated successfully!"
+    },
+    "errors": {
+      "allFieldsRequired": "All fields are required!",
+      "passwordsDoNotMatch": "New passwords do not match!",
+      "passwordTooShort": "Password must be at least 8 characters long!",
+      "updateFailed": "Failed to update password!",
+      "incorrectCurrentPassword": "Current password is incorrect!"
+    }
+  },
+  "modelReport": {
+    "title": "Report an Issue",
+    "subtitle": "Let us know about any problems",
+    "issueType": "Issue Type",
+    "selectIssueType": "Select an issue type",
+    "subject": "Subject",
+    "subjectPlaceholder": "Brief description of the issue",
+    "description": "Description",
+    "descriptionPlaceholder": "Please provide detailed information about the issue you're experiencing...",
+    "characters": "characters",
+    "submitting": "Submitting...",
+    "submitReport": "Submit Report",
+    "issueTypes": {
+      "technical": "Technical Problem",
+      "payment": "Payment Issue",
+      "account": "Account Problem",
+      "chat": "Chat/Messaging Issue",
+      "profile": "Profile Issue",
+      "other": "Other"
+    },
+    "help": {
+      "title": "Need immediate help?",
+      "message": "For urgent issues, please contact our support team directly at"
+    },
+    "success": {
+      "submitted": "Report submitted successfully! We will review your issue shortly."
+    },
+    "errors": {
+      "allFieldsRequired": "All fields are required!",
+      "submitFailed": "Failed to submit report!"
+    }
+  },
+  "modelDeleteAccount": {
+    "title": "Delete Account",
+    "subtitle": "Permanently remove your account",
+    "confirmLabel": "Type",
+    "toConfirm": "to confirm",
+    "confirmPlaceholder": "Type DELETE",
+    "passwordLabel": "Enter your password to confirm",
+    "passwordPlaceholder": "Enter your password",
+    "reasonLabel": "Why are you deleting your account? (Optional)",
+    "reasonPlaceholder": "Help us improve by telling us why you're leaving...",
+    "deleteButton": "Permanently Delete Account",
+    "deleting": "Deleting Account...",
+    "warning": {
+      "title": "Warning: This Action Cannot Be Undone",
+      "description": "Deleting your account will permanently remove ALL of your data from our system. This includes:",
+      "item1": "Your profile information, photos, and personal details",
+      "item2": "All service history, bookings, and reviews",
+      "item3": "Your wallet balance and transaction history",
+      "item4": "All messages and conversations",
+      "item5": "Friend connections and contacts",
+      "item6": "Any pending payments or withdrawals",
+      "finalWarning": "This action is IRREVERSIBLE and IMMEDIATE. Your account cannot be recovered once deleted."
+    },
+    "success": {
+      "deleted": "Your account has been permanently deleted."
+    },
+    "errors": {
+      "allFieldsRequired": "All required fields must be filled!",
+      "confirmTextMismatch": "You must type DELETE exactly as shown to confirm!",
+      "deleteFailed": "Failed to delete account!"
+    }
+  },
+  "modelSettings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "backToSettings": "Back to Settings",
+    "tabs": {
+      "services": "Services Apply",
+      "servicesDesc": "Manage your service offerings",
+      "wallet": "My Wallet",
+      "walletDesc": "View balance and transactions",
+      "password": "Password Change",
+      "passwordDesc": "Update your password",
+      "report": "Report an Issue",
+      "reportDesc": "Report technical issues",
+      "delete": "Delete Account",
+      "deleteDesc": "Permanently delete account"
+    }
   }
 }

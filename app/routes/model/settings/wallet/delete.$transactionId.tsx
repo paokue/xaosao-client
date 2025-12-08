@@ -8,6 +8,7 @@ import {
   useParams,
   type ActionFunctionArgs,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -29,7 +30,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
       const res = await deleteModelTransaction(transactionId!, modelId);
       if (res.id) {
         return redirect(
-          `/model/settings/wallet?toastMessage=Delete+your+transaction+successfully!&toastType=success`
+          `/model/settings/wallet?toastMessage=${encodeURIComponent("modelWallet.success.deleted")}&toastType=success`
         );
       }
     } catch (error: any) {
@@ -39,15 +40,16 @@ export async function action({ params, request }: ActionFunctionArgs) {
       return {
         success: false,
         error: true,
-        message: error || "Failed to delete transaction!",
+        message: error || "modelWallet.errors.deleteFailed",
       };
     }
   }
 
-  return { success: false, error: true, message: "Invalid request method!" };
+  return { success: false, error: true, message: "modelWallet.errors.invalidRequest" };
 }
 
 export default function ModelTransactionDelete() {
+  const { t } = useTranslation();
   const { transactionId } = useParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -61,9 +63,9 @@ export default function ModelTransactionDelete() {
 
   return (
     <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
-      <h1 className="text-xl font-bold">Delete Transaction</h1>
+      <h1 className="text-xl font-bold">{t("modelWallet.delete.title")}</h1>
       <p className="hidden sm:block text-sm text-gray-500 my-2">
-        Are you sure you want to delete this transaction?&nbsp;{" "}
+        {t("modelWallet.delete.confirmMessage")}&nbsp;{" "}
         <span className="font-bold text-primary">" {transactionId} "</span>
       </p>
       <Form method="delete" className="space-y-4 mt-4">
@@ -71,8 +73,8 @@ export default function ModelTransactionDelete() {
           <div className="flex items-start space-x-2">
             <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
             <div className="text-sm text-red-800">
-              <p className="font-medium">Warning</p>
-              <p>This action cannot be undone.</p>
+              <p className="font-medium">{t("modelWallet.delete.warning")}</p>
+              <p>{t("modelWallet.delete.warningMessage")}</p>
             </div>
           </div>
         </div>
@@ -81,14 +83,14 @@ export default function ModelTransactionDelete() {
             <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
               <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
               <span className="text-red-500 text-sm">
-                {capitalize(actionData.message)}
+                {t(actionData.message)}
               </span>
             </div>
           )}
         </div>
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={closeHandler}>
-            Cancel
+            {t("modelWallet.delete.cancel")}
           </Button>
           <Button
             type="submit"
@@ -97,7 +99,7 @@ export default function ModelTransactionDelete() {
             className="text-white bg-rose-500"
           >
             {isSubmitting && <Loader className="h-4 w-4 mr-2 animate-spin" />}
-            {isSubmitting ? "Deleting..." : "Delete"}
+            {isSubmitting ? t("modelWallet.delete.deleting") : t("modelWallet.delete.deleteButton")}
           </Button>
         </div>
       </Form>

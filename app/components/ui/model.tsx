@@ -18,14 +18,21 @@ export default function Modal({ children, onClose, className }: ModalProps) {
 
     // Lock body scroll and set viewport meta tag for mobile
     useEffect(() => {
-        // Save original body overflow
+        // Save original scroll position before fixing the body
+        const scrollY = window.scrollY;
+        const scrollX = window.scrollX;
+
+        // Save original body styles
         const originalOverflow = document.body.style.overflow;
         const originalPosition = document.body.style.position;
+        const originalWidth = document.body.style.width;
+        const originalTop = document.body.style.top;
 
-        // Lock body scroll
+        // Lock body scroll - use top offset to maintain visual position
         document.body.style.overflow = 'hidden';
         document.body.style.position = 'fixed';
         document.body.style.width = '100%';
+        document.body.style.top = `-${scrollY}px`;
 
         // Set viewport meta for mobile browser UI auto-hide
         let viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -40,9 +47,14 @@ export default function Modal({ children, onClose, className }: ModalProps) {
 
         // Cleanup
         return () => {
+            // Restore body styles
             document.body.style.overflow = originalOverflow;
             document.body.style.position = originalPosition;
-            document.body.style.width = '';
+            document.body.style.width = originalWidth;
+            document.body.style.top = originalTop;
+
+            // Restore scroll position
+            window.scrollTo(scrollX, scrollY);
 
             if (viewportMeta && originalContent) {
                 viewportMeta.setAttribute('content', originalContent);

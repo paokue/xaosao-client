@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import { AlertCircle, Loader } from "lucide-react";
 import type { Route } from "./+types/edit.$transactionId";
-import { AlertCircle, FileText, Loader, Upload } from "lucide-react";
 import {
   Form,
   redirect,
@@ -10,15 +10,14 @@ import {
   useNavigation,
   type LoaderFunctionArgs,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
 import { Button } from "~/components/ui/button";
 
 // utils and service
-import { downloadImage } from "~/utils/functions/download";
 import {
-  capitalize,
   extractFilenameFromCDNSafe,
 } from "~/utils/functions/textFormat";
 import {
@@ -82,7 +81,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       );
       if (res.id) {
         return redirect(
-          `/model/settings/wallet?toastMessage=Update+your+transaction+successfully!&toastType=success`
+          `/model/settings/wallet?toastMessage=${encodeURIComponent("modelWallet.success.updated")}&toastType=success`
         );
       }
     } catch (error: any) {
@@ -108,14 +107,15 @@ export async function action({ params, request }: Route.ActionArgs) {
       return {
         success: false,
         error: true,
-        message: error || "Failed to edit withdrawal information!",
+        message: error || "modelWallet.errors.updateFailed",
       };
     }
   }
-  return { success: false, error: true, message: "Invalid request method!" };
+  return { success: false, error: true, message: "modelWallet.errors.invalidRequest" };
 }
 
 export default function ModelTransactionEdit() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const navigation = useNavigation();
   const actionData = useActionData<typeof action>();
@@ -126,15 +126,6 @@ export default function ModelTransactionEdit() {
 
   const [previewSlip, setPreviewSlip] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleDownloadSlip = async () => {
-    if (transaction?.paymentSlip) {
-      downloadImage(
-        transaction.paymentSlip,
-        `payment-slip-${transaction.identifier}.jpg`
-      );
-    }
-  };
 
   function closeHandler() {
     navigate("/model/settings/wallet");
@@ -198,10 +189,10 @@ export default function ModelTransactionEdit() {
       <Form method="patch" className="space-y-4" encType="multipart/form-data">
         <div className="mt-10 sm:mt-0">
           <h3 className="flex items-center text-black text-md font-bold">
-            Edit Withdrawal
+            {t("modelWallet.edit.title")}
           </h3>
           <p className="text-gray-500 text-sm ml-2">
-            Update your withdrawal information
+            {t("modelWallet.edit.subtitle")}
           </p>
         </div>
 
@@ -212,13 +203,13 @@ export default function ModelTransactionEdit() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-500">
-                  Transaction ID
+                  {t("modelWallet.edit.transactionId")}
                 </label>
                 <p className="mt-1 text-sm font-mono">{transaction?.id}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">
-                  Type
+                  {t("modelWallet.edit.type")}
                 </label>
                 <p className="mt-1 text-sm font-mono">
                   {transaction?.identifier}
@@ -230,7 +221,7 @@ export default function ModelTransactionEdit() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount <span className="text-rose-500">*</span>
+                  {t("modelWallet.edit.amount")} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -255,7 +246,7 @@ export default function ModelTransactionEdit() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Quick Amount
+                  {t("modelWallet.edit.quickAmount")}
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {quickAmounts.map((quickAmount) => (
@@ -269,53 +260,6 @@ export default function ModelTransactionEdit() {
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between sm:space-x-3 space-y-4 sm:space-y-0">
-              <div className="flex flex-col space-y-2 w-full sm:w-auto">
-                <p className="text-sm font-medium">Payment Slip</p>
-                {previewSlip ? (
-                  <div className="space-y-2">
-                    <img
-                      src={previewSlip}
-                      alt="New slip preview"
-                      className="mt-2 w-full sm:w-auto h-48 sm:h-28 object-contain rounded-md border border-green-500"
-                    />
-                    <p className="text-xs text-green-600">
-                      New File: {selectedFile?.name}
-                    </p>
-                  </div>
-                ) : transaction?.paymentSlip ? (
-                  <img
-                    src={transaction.paymentSlip}
-                    alt="Existing slip"
-                    className="mt-2 w-full sm:w-auto h-48 sm:h-28 object-contain rounded-md border"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">No slip uploaded</p>
-                )}
-              </div>
-              <div className="flex space-x-2">
-                {transaction?.paymentSlip && !previewSlip && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadSlip}
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    Download
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={triggerFileSelect}
-                >
-                  <Upload className="h-3 w-3 mr-1" />
-                  Upload New
-                </Button>
               </div>
             </div>
 
@@ -341,7 +285,7 @@ export default function ModelTransactionEdit() {
             <div className="mb-4 p-3 bg-red-100 border border-red-500 rounded-lg flex items-center space-x-2 backdrop-blur-sm">
               <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
               <span className="text-red-500 text-sm">
-                {capitalize(actionData.message)}
+                {t(actionData.message)}
               </span>
             </div>
           )}
@@ -354,7 +298,7 @@ export default function ModelTransactionEdit() {
             onClick={closeHandler}
             className="bg-gray-500 text-white hover:bg-gray-600 hover:text-white"
           >
-            Close
+            {t("modelWallet.edit.close")}
           </Button>
           <Button
             type="submit"
@@ -362,7 +306,7 @@ export default function ModelTransactionEdit() {
             className="flex gap-2 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
           >
             {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-            {isSubmitting ? "Saving..." : "Save Change"}
+            {isSubmitting ? t("modelWallet.edit.saving") : t("modelWallet.edit.saveChange")}
           </Button>
         </div>
       </Form>

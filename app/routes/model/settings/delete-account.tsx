@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Trash2, ShieldAlert, Eye, EyeOff, Loader } from "lucide-react";
 import { Form, useNavigation, useSearchParams, redirect } from "react-router";
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { useTranslation } from "react-i18next";
 
 // components:
 import { Input } from "~/components/ui/input";
@@ -37,13 +38,13 @@ export async function action({ request }: ActionFunctionArgs) {
   // Validation
   if (!confirmText || !password) {
     return redirect(
-      `/model/settings/delete-account?error=${encodeURIComponent("All required fields must be filled!")}`
+      `/model/settings/delete-account?error=${encodeURIComponent("modelDeleteAccount.errors.allFieldsRequired")}`
     );
   }
 
   if (confirmText !== "DELETE") {
     return redirect(
-      `/model/settings/delete-account?error=${encodeURIComponent("You must type DELETE exactly as shown to confirm!")}`
+      `/model/settings/delete-account?error=${encodeURIComponent("modelDeleteAccount.errors.confirmTextMismatch")}`
     );
   }
 
@@ -54,21 +55,22 @@ export async function action({ request }: ActionFunctionArgs) {
       await destroyModelSession(request);
 
       return redirect(
-        `/model/login?message=${encodeURIComponent("Your account has been permanently deleted.")}`
+        `/model/login?message=${encodeURIComponent("modelDeleteAccount.success.deleted")}`
       );
     } else {
       return redirect(
-        `/model/settings/delete-account?error=${encodeURIComponent("Failed to delete account!")}`
+        `/model/settings/delete-account?error=${encodeURIComponent("modelDeleteAccount.errors.deleteFailed")}`
       );
     }
   } catch (error: any) {
     return redirect(
-      `/model/settings/delete-account?error=${encodeURIComponent(error.message || "Failed to delete account!")}`
+      `/model/settings/delete-account?error=${encodeURIComponent(error.message || "modelDeleteAccount.errors.deleteFailed")}`
     );
   }
 }
 
 export default function DeleteAccountSettings() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
@@ -95,16 +97,16 @@ export default function DeleteAccountSettings() {
           </div>
           <div>
             <h1 className="text-md">
-              Delete Account
+              {t("modelDeleteAccount.title")}
             </h1>
-            <p className="text-sm text-gray-600">Permanently remove your account</p>
+            <p className="text-sm text-gray-600">{t("modelDeleteAccount.subtitle")}</p>
           </div>
         </div>
       </div>
 
       {errorMessage && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{errorMessage}</p>
+          <p className="text-sm text-red-800">{t(errorMessage)}</p>
         </div>
       )}
 
@@ -112,14 +114,14 @@ export default function DeleteAccountSettings() {
         <Form method="post" className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="confirmText">
-              Type <span className="font-bold text-red-600">DELETE</span> to confirm{" "}
+              {t("modelDeleteAccount.confirmLabel")} <span className="font-bold text-red-600">DELETE</span> {t("modelDeleteAccount.toConfirm")}{" "}
               <span className="text-rose-500">*</span>
             </Label>
             <Input
               id="confirmText"
               name="confirmText"
               type="text"
-              placeholder="Type DELETE"
+              placeholder={t("modelDeleteAccount.confirmPlaceholder")}
               required
               disabled={isSubmitting}
               className="text-sm"
@@ -128,7 +130,7 @@ export default function DeleteAccountSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="password">
-              Enter your password to confirm{" "}
+              {t("modelDeleteAccount.passwordLabel")}{" "}
               <span className="text-rose-500">*</span>
             </Label>
             <div className="relative">
@@ -136,7 +138,7 @@ export default function DeleteAccountSettings() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder={t("modelDeleteAccount.passwordPlaceholder")}
                 required
                 disabled={isSubmitting}
                 className="text-sm"
@@ -157,13 +159,13 @@ export default function DeleteAccountSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="reason">
-              Why are you deleting your account? (Optional)
+              {t("modelDeleteAccount.reasonLabel")}
             </Label>
             <Textarea
               id="reason"
               name="reason"
               rows={3}
-              placeholder="Help us improve by telling us why you're leaving..."
+              placeholder={t("modelDeleteAccount.reasonPlaceholder")}
               disabled={isSubmitting}
               className="resize-none text-sm"
             />
@@ -176,7 +178,7 @@ export default function DeleteAccountSettings() {
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader size={18} className="animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              {isSubmitting ? "Deleting Account..." : "Permanently Delete Account"}
+              {isSubmitting ? t("modelDeleteAccount.deleting") : t("modelDeleteAccount.deleteButton")}
             </Button>
           </div>
         </Form>
@@ -187,39 +189,39 @@ export default function DeleteAccountSettings() {
           <ShieldAlert className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
             <h3 className="text-red-700 mb-2 text-md">
-              Warning: This Action Cannot Be Undone
+              {t("modelDeleteAccount.warning.title")}
             </h3>
             <p className="text-red-700 text-sm mb-3">
-              Deleting your account will permanently remove ALL of your data from our system. This includes:
+              {t("modelDeleteAccount.warning.description")}
             </p>
             <ul className="space-y-1 text-red-700 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>Your profile information, photos, and personal details</span>
+                <span>{t("modelDeleteAccount.warning.item1")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>All service history, bookings, and reviews</span>
+                <span>{t("modelDeleteAccount.warning.item2")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>Your wallet balance and transaction history</span>
+                <span>{t("modelDeleteAccount.warning.item3")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>All messages and conversations</span>
+                <span>{t("modelDeleteAccount.warning.item4")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>Friend connections and contacts</span>
+                <span>{t("modelDeleteAccount.warning.item5")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-500">•</span>
-                <span>Any pending payments or withdrawals</span>
+                <span>{t("modelDeleteAccount.warning.item6")}</span>
               </li>
             </ul>
             <p className="text-red-700 text-sm font-bold mt-3 bg-red-100 p-2 rounded">
-              This action is IRREVERSIBLE and IMMEDIATE. Your account cannot be recovered once deleted.
+              {t("modelDeleteAccount.warning.finalWarning")}
             </p>
           </div>
         </div>

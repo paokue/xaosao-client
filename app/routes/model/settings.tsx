@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import type { MetaFunction } from "react-router";
 import { Separator } from "~/components/ui/separator";
 import { useNavigate, useLocation, Outlet } from "react-router";
+import { useTranslation } from "react-i18next";
 
 export const meta: MetaFunction = () => {
   return [
@@ -21,15 +22,16 @@ export const meta: MetaFunction = () => {
 };
 
 export default function ModelSettings() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
   const tabs = [
-    { id: "services", label: "Services Apply", icon: Briefcase, path: "/model/settings/services", description: "Manage your service offerings" },
-    { id: "wallet", label: "My Wallet", icon: Wallet, path: "/model/settings/wallet", description: "View balance and transactions" },
-    { id: "password", label: "Password Change", icon: Lock, path: "/model/settings/password", description: "Update your password" },
-    { id: "report", label: "Report an Issue", icon: AlertCircle, path: "/model/settings/report", description: "Report technical issues" },
-    { id: "delete", label: "Delete Account", icon: Trash2, path: "/model/settings/delete-account", description: "Permanently delete account" },
+    { id: "services", label: t("modelSettings.tabs.services"), icon: Briefcase, path: "/model/settings/services", description: t("modelSettings.tabs.servicesDesc") },
+    { id: "wallet", label: t("modelSettings.tabs.wallet"), icon: Wallet, path: "/model/settings/wallet", description: t("modelSettings.tabs.walletDesc") },
+    { id: "password", label: t("modelSettings.tabs.password"), icon: Lock, path: "/model/settings/password", description: t("modelSettings.tabs.passwordDesc") },
+    { id: "report", label: t("modelSettings.tabs.report"), icon: AlertCircle, path: "/model/settings/report", description: t("modelSettings.tabs.reportDesc") },
+    { id: "delete", label: t("modelSettings.tabs.delete"), icon: Trash2, path: "/model/settings/delete-account", description: t("modelSettings.tabs.deleteDesc") },
   ];
 
   // Redirect to first tab if on settings index (only on desktop)
@@ -60,9 +62,9 @@ export default function ModelSettings() {
               </div>
               <div>
                 <h1 className="text-md font-bold">
-                  Settings
+                  {t("modelSettings.title")}
                 </h1>
-                <p className="text-gray-600 text-sm">Manage your account and preferences</p>
+                <p className="text-gray-600 text-sm">{t("modelSettings.subtitle")}</p>
               </div>
             </div>
           </div>
@@ -102,7 +104,7 @@ export default function ModelSettings() {
               className="flex items-center gap-2 text-gray-600 hover:text-rose-500 mb-4 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="text-sm">Back to Settings</span>
+              <span className="text-sm">{t("modelSettings.backToSettings")}</span>
             </button>
             <Outlet />
           </div>
