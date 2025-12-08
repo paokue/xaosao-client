@@ -40,7 +40,7 @@ interface BookingDetail {
          description: string;
          baseRate: number;
       };
-   };
+   } | null;
 }
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -74,7 +74,9 @@ export default function DatingDetailModal() {
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t("modelDating.detail.service")}:</label>
                         <p className="mt-0 sm:mt-1 text-sm">
-                           {t(`modelServices.serviceItems.${data?.modelService.service.name}.name`, { defaultValue: data?.modelService.service.name })}
+                           {data?.modelService?.service?.name
+                              ? t(`modelServices.serviceItems.${data.modelService.service.name}.name`, { defaultValue: data.modelService.service.name })
+                              : t("modelDating.serviceUnavailable")}
                         </p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">

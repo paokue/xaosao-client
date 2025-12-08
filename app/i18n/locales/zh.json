@@ -733,5 +733,30 @@
     "close": "关闭",
     "booking": "正在预订....",
     "bookNow": "立即预订"
+  },
+  "customerConfirmQR": {
+    "title": "确认服务完成",
+    "subtitle": "请确认服务已圆满完成",
+    "errorTitle": "无法加载",
+    "alreadyCompletedTitle": "已完成",
+    "alreadyCompletedDescription": "此预订已确认完成。",
+    "expiredTitle": "二维码已过期",
+    "expiredDescription": "此二维码已过期。付款将在24小时内自动转给模特。",
+    "modelLabel": "模特",
+    "serviceLabel": "服务",
+    "amountLabel": "待转金额",
+    "paymentTitle": "确认付款",
+    "paymentDescription": "确认后，您同意服务已按预期完成。付款将立即转给模特。",
+    "confirmButton": "确认并转款",
+    "confirming": "确认中...",
+    "cancel": "取消",
+    "goToBookings": "前往我的预订",
+    "success": "服务已确认！付款已转出。",
+    "errors": {
+      "invalidToken": "二维码无效或已过期",
+      "invalidQR": "此二维码无效或已被使用",
+      "failed": "无法确认服务",
+      "invalidRequest": "无效请求"
+    }
   }
 }

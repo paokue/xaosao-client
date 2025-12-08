@@ -733,5 +733,30 @@
     "close": "Đóng",
     "booking": "Đang đặt....",
     "bookNow": "Đặt ngay"
+  },
+  "customerConfirmQR": {
+    "title": "Xác nhận hoàn thành dịch vụ",
+    "subtitle": "Vui lòng xác nhận dịch vụ đã được hoàn thành tốt đẹp",
+    "errorTitle": "Không thể tải",
+    "alreadyCompletedTitle": "Đã hoàn thành",
+    "alreadyCompletedDescription": "Đặt chỗ này đã được xác nhận và hoàn thành.",
+    "expiredTitle": "Mã QR đã hết hạn",
+    "expiredDescription": "Mã QR này đã hết hạn. Thanh toán sẽ tự động được chuyển cho người mẫu trong 24 giờ.",
+    "modelLabel": "Người mẫu",
+    "serviceLabel": "Dịch vụ",
+    "amountLabel": "Số tiền cần chuyển",
+    "paymentTitle": "Xác nhận thanh toán",
+    "paymentDescription": "Bằng cách xác nhận, bạn đồng ý rằng dịch vụ đã được cung cấp như mong đợi. Thanh toán sẽ được chuyển cho người mẫu ngay lập tức.",
+    "confirmButton": "Xác nhận & Chuyển thanh toán",
+    "confirming": "Đang xác nhận...",
+    "cancel": "Hủy",
+    "goToBookings": "Đi đến đặt chỗ của tôi",
+    "success": "Dịch vụ đã xác nhận! Thanh toán đã được chuyển.",
+    "errors": {
+      "invalidToken": "Mã QR không hợp lệ hoặc đã hết hạn",
+      "invalidQR": "Mã QR này không hợp lệ hoặc đã được sử dụng",
+      "failed": "Không thể xác nhận dịch vụ",
+      "invalidRequest": "Yêu cầu không hợp lệ"
+    }
   }
 }

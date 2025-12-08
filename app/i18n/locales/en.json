@@ -1472,6 +1472,7 @@
       "reject": "Reject",
       "checkIn": "Check In",
       "completeGetPaid": "Complete & Get Paid",
+      "viewQRCode": "View QR Code",
       "messageCustomer": "Message Customer",
       "delete": "Delete"
     },
@@ -1553,7 +1554,7 @@
       "title": "Check In",
       "subtitle": "Verify your presence at the booking location",
       "gpsVerification": "GPS Verification",
-      "gpsDescription": "Your location will be verified to confirm you are at the booking location (within 500m).",
+      "gpsDescription": "Your location will be verified to confirm you are at the booking location (within 50m).",
       "gettingLocation": "Getting your location...",
       "locationAcquired": "Location acquired",
       "geoNotSupported": "Geolocation is not supported by your browser",
@@ -1576,17 +1577,30 @@
       "subtitle": "Mark this booking as completed after finishing the service.",
       "confirmTitle": "Confirm Completion",
       "confirmDescription": "By marking this booking as completed, you confirm that the service has been successfully delivered to the customer.",
-      "customerConfirmTitle": "Customer Confirmation Required",
-      "customerConfirmDescription": "The customer will have 48 hours to confirm the service was delivered. If they don't respond, payment is automatically released to you.",
+      "qrTitle": "QR Code Confirmation",
+      "qrDescription": "A QR code will be generated for the customer to scan and confirm the service completion.",
       "paymentTitle": "Payment Release",
-      "paymentDescription": "Payment will be released to your wallet after customer confirms or after 48 hours (auto-release).",
+      "paymentDescription": "Payment will be released to your wallet after customer scans QR or after 24 hours (auto-release).",
       "close": "Close",
-      "markCompleted": "Mark as Completed",
-      "success": "Booking marked as completed! Awaiting customer confirmation.",
+      "generateQR": "Generate QR Code",
+      "success": "QR code generated! Let the customer scan to complete.",
       "errors": {
         "failed": "Failed to complete booking!",
         "invalidRequest": "Invalid request method!"
       }
+    },
+    "completeQR": {
+      "title": "Scan to Complete",
+      "subtitle": "Show this QR code to your customer to confirm service completion",
+      "customerLabel": "Customer",
+      "serviceLabel": "Service",
+      "amountLabel": "Amount",
+      "autoReleaseIn": "Auto-release in",
+      "autoReleaseNote": "If customer doesn't scan, payment will be auto-released after 24 hours",
+      "autoReleased": "Auto-releasing soon...",
+      "instructionTitle": "How to complete",
+      "instructionDescription": "Ask your customer to scan this QR code with their phone camera or the app. Once they confirm, payment will be released to your wallet.",
+      "close": "Close"
     },
     "delete": {
       "title": "Delete Booking",
@@ -1600,6 +1614,31 @@
         "failed": "Failed to delete booking!",
         "invalidRequest": "Invalid request method!"
       }
+    }
+  },
+  "customerConfirmQR": {
+    "title": "Confirm Service Completion",
+    "subtitle": "Please confirm that the service has been completed satisfactorily",
+    "errorTitle": "Unable to Load",
+    "alreadyCompletedTitle": "Already Completed",
+    "alreadyCompletedDescription": "This booking has already been confirmed and completed.",
+    "expiredTitle": "QR Code Expired",
+    "expiredDescription": "This QR code has expired. The payment will be automatically released to the model within 24 hours.",
+    "modelLabel": "Model",
+    "serviceLabel": "Service",
+    "amountLabel": "Amount to Release",
+    "paymentTitle": "Payment Confirmation",
+    "paymentDescription": "By confirming, you agree that the service was delivered as expected. The payment will be released to the model immediately.",
+    "confirmButton": "Confirm & Release Payment",
+    "confirming": "Confirming...",
+    "cancel": "Cancel",
+    "goToBookings": "Go to My Bookings",
+    "success": "Service confirmed! Payment has been released.",
+    "errors": {
+      "invalidToken": "Invalid or expired QR code",
+      "invalidQR": "This QR code is invalid or has already been used",
+      "failed": "Failed to confirm service",
+      "invalidRequest": "Invalid request"
     }
   }
 }

@@ -1,6 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, Loader } from "lucide-react";
 import { Form, redirect, useActionData, useLoaderData, useNavigate, useNavigation, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
-import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";

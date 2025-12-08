@@ -152,6 +152,10 @@ export default [
       "book-service/dispute/:id",
       "./routes/customer/booking-history/booking.dispute.tsx"
     ),
+    route(
+      "confirm-booking/:token",
+      "./routes/customer/booking-history/booking.confirm-qr.tsx"
+    ),
 
     // setting
     route("setting", "./routes/customer/setting/setting.tsx"),

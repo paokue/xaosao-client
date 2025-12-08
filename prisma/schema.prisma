@@ -531,7 +531,9 @@ model service_booking {
 
   // Completion & Dispute fields
   modelCompletedAt    DateTime? // When model marked as complete
-  autoReleaseAt       DateTime? // When payment will auto-release (48h after model completes)
+  autoReleaseAt       DateTime? // When payment will auto-release (24h after model completes)
+  completionToken     String? // Unique token for QR-based completion confirmation
+  completionTokenExpiresAt DateTime? // When the completion token expires (24h)
   disputeReason       String?   // Customer's dispute reason
   disputedAt          DateTime? // When customer disputed
   disputeResolvedAt   DateTime? // When admin resolved dispute

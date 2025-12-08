@@ -1,14 +1,13 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useNavigation, Outlet, type LoaderFunction } from "react-router"
-import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, Check, X, Info, Shield, Wallet, ChevronDown, ChevronUp } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Clock, Shirt, MoreVertical, UserRoundCheck, Headset, Loader, Search, Trash2, Check, X, Info, Shield, Wallet, ChevronDown, ChevronUp, QrCode } from "lucide-react"
 
 // components:
 import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
-// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
 
 // interface and service
 import { capitalize } from "~/utils/functions/textFormat"
@@ -43,7 +42,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
    },
    rejected: {
       label: "Rejected",
-      className: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+      className: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
    },
    disputed: {
       label: "Disputed",
@@ -62,6 +61,7 @@ interface BookingData {
    dayAmount: number;
    createdAt: string;
    isContact: boolean;
+   modelCheckedInAt: string | null;
    customer: {
       id: string;
       firstName: string;
@@ -232,7 +232,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                        </>
                                     )}
 
-                                    {booking.status === "confirmed" && (
+                                    {booking.status === "confirmed" && !booking.modelCheckedInAt && (
                                        <DropdownMenuItem
                                           onClick={() => navigate(`/model/dating/checkin/${booking.id}`)}
                                           className="cursor-pointer"
@@ -241,15 +241,26 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                        </DropdownMenuItem>
                                     )}
 
-                                    {/* {booking.status === "in_progress" && ( */}
-                                    <DropdownMenuItem
-                                       onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
-                                       className="cursor-pointer text-blue-600"
-                                    >
-                                       <Check className="h-4 w-4" />
-                                       {t("modelDating.actions.completeGetPaid")}
-                                    </DropdownMenuItem>
-                                    {/* )} */}
+                                    {(booking.modelCheckedInAt || booking.status === "in_progress") &&
+                                       !["completed", "awaiting_confirmation", "cancelled", "rejected", "disputed"].includes(booking.status) && (
+                                          <DropdownMenuItem
+                                             onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
+                                             className="cursor-pointer text-green-600"
+                                          >
+                                             <Check className="h-4 w-4" />
+                                             {t("modelDating.actions.completeGetPaid")}
+                                          </DropdownMenuItem>
+                                       )}
+
+                                    {booking.status === "awaiting_confirmation" && (
+                                       <DropdownMenuItem
+                                          onClick={() => navigate(`/model/dating/complete/${booking.id}`)}
+                                          className="cursor-pointer text-emerald-600"
+                                       >
+                                          <QrCode className="h-4 w-4" />
+                                          {t("modelDating.actions.viewQRCode")}
+                                       </DropdownMenuItem>
+                                    )}
 
                                     {booking.isContact && (
                                        <DropdownMenuItem

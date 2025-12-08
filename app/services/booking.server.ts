@@ -16,6 +16,21 @@ import {
   notifyAutoReleasePayment,
 } from "./notification.server";
 
+import crypto from "crypto";
+
+// ========================================
+// Token Generation Helper Functions
+// ========================================
+
+/**
+ * Generate a unique completion token for QR-based confirmation
+ * Format: prefix_randomBytes (e.g., "xao_a1b2c3d4e5f6...")
+ */
+function generateCompletionToken(): string {
+  const randomPart = crypto.randomBytes(24).toString("base64url");
+  return `xao_${randomPart}`;
+}
+
 // ========================================
 // GPS & Location Helper Functions
 // ========================================
@@ -49,14 +64,14 @@ function calculateDistance(
  * @param userLng User's current longitude
  * @param bookingLat Booking location latitude
  * @param bookingLng Booking location longitude
- * @param radiusKm Acceptable radius in kilometers (default 0.5km = 500m)
+ * @param radiusKm Acceptable radius in kilometers (default 0.05km = 50m)
  */
 export function isWithinCheckInRadius(
   userLat: number,
   userLng: number,
   bookingLat: number,
   bookingLng: number,
-  radiusKm: number = 0.5
+  radiusKm: number = 0.05
 ): { isWithin: boolean; distance: number } {
   const distance = calculateDistance(userLat, userLng, bookingLat, bookingLng);
   return {
@@ -827,6 +842,7 @@ export async function getAllModelBookings(modelId: string) {
         status: true,
         dayAmount: true,
         createdAt: true,
+        modelCheckedInAt: true,
         customer: {
           select: {
             id: true,
@@ -1166,11 +1182,12 @@ export async function deleteModelBooking(id: string, modelId: string) {
       });
     }
 
-    if (booking.status !== "rejected") {
+    const deletableStatuses = ["cancelled", "rejected", "completed"];
+    if (!deletableStatuses.includes(booking.status)) {
       throw new FieldValidationError({
         success: false,
         error: true,
-        message: "Only rejected bookings can be deleted!",
+        message: "Only cancelled, rejected, or completed bookings can be deleted!",
       });
     }
 
@@ -1259,8 +1276,12 @@ export async function completeBooking(id: string, modelId: string) {
       });
     }
 
-    // Set auto-release time to 48 hours from now
-    const autoReleaseAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    // Generate unique completion token for QR-based confirmation
+    const completionToken = generateCompletionToken();
+
+    // Set auto-release time to 24 hours from now
+    const autoReleaseAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tokenExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     // Update to awaiting_confirmation - DO NOT release payment yet
     const updatedBooking = await prisma.service_booking.update({
@@ -1270,6 +1291,8 @@ export async function completeBooking(id: string, modelId: string) {
         paymentStatus: "pending_release",
         modelCompletedAt: now,
         autoReleaseAt: autoReleaseAt,
+        completionToken: completionToken,
+        completionTokenExpiresAt: tokenExpiresAt,
       },
     });
 
@@ -1407,7 +1430,7 @@ export async function modelCheckIn(
         throw new FieldValidationError({
           success: false,
           error: true,
-          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 500m) to check in.`,
+          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 50m) to check in.`,
         });
       }
     }
@@ -1548,7 +1571,7 @@ export async function customerCheckIn(
         throw new FieldValidationError({
           success: false,
           error: true,
-          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 500m) to check in.`,
+          message: `You are ${locationCheck.distance}m away from the booking location. Please move closer (within 50m) to check in.`,
         });
       }
     }
@@ -1733,6 +1756,249 @@ export async function customerConfirmCompletion(id: string, customerId: string) 
 }
 
 /**
+ * Confirm booking completion via QR token scan
+ * Customer scans QR code shown by model to confirm service completion
+ */
+export async function confirmBookingByToken(token: string, customerId: string) {
+  if (!token) throw new Error("Missing completion token!");
+  if (!customerId) throw new Error("Missing customer id!");
+
+  const auditBase = {
+    action: "CONFIRM_BOOKING_BY_TOKEN",
+    customer: customerId,
+  };
+
+  try {
+    // Find booking by completion token
+    const booking = await prisma.service_booking.findFirst({
+      where: { completionToken: token },
+      include: {
+        model: { select: { firstName: true } },
+        modelService: { include: { service: true } },
+      },
+    });
+
+    if (!booking) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "Invalid or expired QR code. Please ask the model to generate a new one.",
+      });
+    }
+
+    // Verify customer ownership
+    if (booking.customerId !== customerId) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This booking does not belong to you!",
+      });
+    }
+
+    // Check if already completed
+    if (booking.status === "completed") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This booking has already been completed!",
+      });
+    }
+
+    // Check if booking is awaiting confirmation
+    if (booking.status !== "awaiting_confirmation") {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This booking is not awaiting confirmation!",
+      });
+    }
+
+    // Check if token is expired
+    const now = new Date();
+    if (booking.completionTokenExpiresAt && booking.completionTokenExpiresAt < now) {
+      throw new FieldValidationError({
+        success: false,
+        error: true,
+        message: "This QR code has expired. The booking will be auto-completed within 24 hours.",
+      });
+    }
+
+    // Release payment to model
+    let releaseTransaction = null;
+    if (booking.paymentStatus === "pending_release" && booking.holdTransactionId && booking.modelId) {
+      releaseTransaction = await releasePaymentToModel(
+        booking.modelId,
+        booking.price,
+        booking.id,
+        booking.holdTransactionId
+      );
+    }
+
+    // Complete the booking and clear the token
+    const completedBooking = await prisma.service_booking.update({
+      where: { id: booking.id },
+      data: {
+        status: "completed",
+        paymentStatus: "released",
+        completedAt: now,
+        releaseTransactionId: releaseTransaction?.id || null,
+        completionToken: null, // Clear token after use
+        completionTokenExpiresAt: null,
+      },
+    });
+
+    await createAuditLogs({
+      ...auditBase,
+      description: `Customer confirmed booking ${booking.id} via QR scan. Payment released to model.`,
+      status: "success",
+      onSuccess: completedBooking,
+    });
+
+    // Send notification to model
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { firstName: true },
+      });
+      if (customer && booking.modelId && booking.modelService?.service) {
+        await notifyCompletionConfirmed(
+          booking.modelId,
+          customerId,
+          booking.id,
+          booking.modelService.service.name,
+          customer.firstName,
+          booking.price
+        );
+      }
+    } catch (notifyError) {
+      console.error("NOTIFY_COMPLETION_CONFIRMED_FAILED", notifyError);
+    }
+
+    return {
+      ...completedBooking,
+      modelName: booking.model?.firstName,
+      serviceName: booking.modelService?.service?.name,
+    };
+  } catch (error) {
+    console.error("CONFIRM_BOOKING_BY_TOKEN_FAILED", error);
+    await createAuditLogs({
+      ...auditBase,
+      description: `Confirm booking by token failed!`,
+      status: "failed",
+      onError: error,
+    });
+
+    if (error instanceof FieldValidationError) {
+      throw error;
+    }
+
+    throw new FieldValidationError({
+      success: false,
+      error: true,
+      message: "Failed to confirm booking!",
+    });
+  }
+}
+
+/**
+ * Get booking details by completion token (for QR scan preview)
+ */
+export async function getBookingByToken(token: string) {
+  if (!token) return null;
+
+  try {
+    const booking = await prisma.service_booking.findFirst({
+      where: { completionToken: token },
+      select: {
+        id: true,
+        price: true,
+        status: true,
+        completionTokenExpiresAt: true,
+        model: {
+          select: {
+            firstName: true,
+            lastName: true,
+            profile: true,
+          },
+        },
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+          },
+        },
+        modelService: {
+          select: {
+            service: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking) return null;
+
+    // Check if expired
+    const now = new Date();
+    const isExpired = booking.completionTokenExpiresAt
+      ? booking.completionTokenExpiresAt < now
+      : false;
+
+    return {
+      ...booking,
+      isExpired,
+      isAlreadyCompleted: booking.status === "completed",
+    };
+  } catch (error) {
+    console.error("GET_BOOKING_BY_TOKEN_FAILED", error);
+    return null;
+  }
+}
+
+/**
+ * Get booking with completion token for model (to display QR)
+ */
+export async function getBookingWithToken(id: string, modelId: string) {
+  try {
+    return await prisma.service_booking.findFirst({
+      where: {
+        id,
+        modelId,
+      },
+      select: {
+        id: true,
+        price: true,
+        status: true,
+        completionToken: true,
+        completionTokenExpiresAt: true,
+        autoReleaseAt: true,
+        modelService: {
+          select: {
+            service: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        customer: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("GET_BOOKING_WITH_TOKEN_FAILED", error);
+    throw new Error("Failed to get booking details!");
+  }
+}
+
+/**
  * Customer disputes booking - goes to admin review
  */
 export async function customerDisputeBooking(
@@ -1851,7 +2117,7 @@ export async function customerDisputeBooking(
 // ========================================
 
 /**
- * Process auto-release for bookings past 48h confirmation window
+ * Process auto-release for bookings past 24h confirmation window
  * Call this on page load or via scheduled job
  */
 export async function processAutoRelease() {
