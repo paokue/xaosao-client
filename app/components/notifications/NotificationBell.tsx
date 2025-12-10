@@ -41,7 +41,16 @@ export function NotificationBell({
 }: NotificationBellProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const fetcher = useFetcher();
+
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Use the store directly for reading state
   const { notifications, isConnected, isInitialized, getUnreadCount, markAsRead } = useNotificationStore();
@@ -104,7 +113,7 @@ export function NotificationBell({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-70 p-0" align="end">
+      <PopoverContent className="w-80 p-0 ml-4 sm:ml-0" align={isMobile ? "end" : "start"}>
         <div className="flex items-center justify-between p-3">
           <h4 className="font-medium text-sm">{t("modelNotifications.title")}</h4>
           {isConnected && (
