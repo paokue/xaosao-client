@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
 
 // interface and service
-import { capitalize } from "~/utils/functions/textFormat"
 import { getAllModelBookings } from "~/services/booking.server"
 import { requireModelSession } from "~/services/model-auth.server"
 import { calculateAgeFromDOB, formatCurrency, formatDate } from "~/utils"
@@ -111,6 +110,10 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
       return t(`modelServices.serviceItems.${serviceName}.name`, { defaultValue: serviceName });
    };
 
+   const getStatusLabel = (status: string): string => {
+      return t(`booking.status.${status}`, { defaultValue: statusConfig[status]?.label || status });
+   };
+
    if (isLoading) {
       return (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
@@ -193,7 +196,7 @@ export default function ModelDatingPage({ loaderData }: DatingPageProps) {
                                     variant="outline"
                                     className={statusConfig[booking.status]?.className || statusConfig.pending.className}
                                  >
-                                    {capitalize(booking.status)}
+                                    {getStatusLabel(booking.status)}
                                  </Badge>
                               </div>
 

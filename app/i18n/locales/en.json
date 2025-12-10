@@ -137,6 +137,7 @@
   },
   "booking": {
     "loading": "Loading....",
+    "serviceUnavailable": "Service Unavailable",
     "title": "Your Love Plans Ahead:",
     "subtitle": "Got some dates lined up? Don not let the moment slip away — great connections start with one meeting.",
     "viewDetails": "View Details",
@@ -144,6 +145,9 @@
     "editBooking": "Edit Booking",
     "cancelBooking": "Cancel Booking",
     "deleteBooking": "Delete Booking",
+    "checkIn": "Check In",
+    "confirmRelease": "Confirm & Release Payment",
+    "dispute": "Dispute",
     "to": "To",
     "duration": "Duration",
     "day": "day",
@@ -153,6 +157,23 @@
     "emptyTitle": "No date bookings yet!",
     "emptyMessage": "Don't wait too long — your perfect match might just be one booking away!",
     "support": "Support",
+    "policy": {
+      "title": "Booking & Payment Policy",
+      "paymentHeld": "Payment is held from your wallet when you book a service",
+      "gpsCheckin": "Both parties must GPS check-in at the location to verify attendance",
+      "confirmOrDispute": "After model completes, you have 48 hours to confirm or dispute",
+      "cancellationNotice": "Cancellation not allowed within 2 hours of booking start time"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "in_progress": "In Progress",
+      "awaiting_confirmation": "Awaiting Confirmation",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected",
+      "disputed": "Disputed"
+    },
     "detail": {
       "title": "Date booking service:",
       "bookingId": "Booking ID",
@@ -210,7 +231,49 @@
       "title": "Cancel Dating Booking!",
       "description": "Once you cancel this booking, you will not be able to undo it.",
       "close": "Close",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "cancellationPolicy": "Cancellation Policy",
+      "cancellationPolicyMessage": "You cannot cancel within 2 hours of the booking start time. Please contact support if you need assistance.",
+      "refundPolicy": "Refund Policy",
+      "refundPolicyMessage": "If cancelled successfully, your payment will be refunded to your wallet immediately."
+    },
+    "checkin": {
+      "title": "Check In",
+      "description": "Verify your presence at the booking location",
+      "gpsVerification": "GPS Verification",
+      "gpsVerificationMessage": "Your location will be verified to confirm you are at the booking location (within 500m).",
+      "gettingLocation": "Getting your location...",
+      "locationAcquired": "Location acquired",
+      "retry": "Retry",
+      "close": "Close",
+      "checkInButton": "Check In"
+    },
+    "confirmModal": {
+      "title": "Confirm Completion",
+      "description": "Confirm that the date service was completed successfully",
+      "serviceCompletion": "Confirm Service Completion",
+      "serviceCompletionMessage": "By confirming, you acknowledge that the model provided the service as agreed.",
+      "paymentRelease": "Payment Release",
+      "paymentReleaseMessage": "The payment will be released from escrow to the model immediately after you confirm.",
+      "autoRelease": "Auto-Release Notice",
+      "autoReleaseMessage": "If you don't confirm or dispute within 48 hours, payment will be automatically released to the model.",
+      "close": "Close",
+      "confirmButton": "Confirm & Release Payment"
+    },
+    "disputeModal": {
+      "title": "Dispute Booking",
+      "description": "Report an issue with this booking",
+      "beforeDisputing": "Before Disputing",
+      "beforeDisputingMessage": "Please only dispute if the model did not show up or the service was not as agreed. False disputes may affect your account.",
+      "evidenceAvailable": "Evidence Available",
+      "evidenceAvailableMessage": "Our team will review GPS check-in records from both parties to verify the dispute.",
+      "reviewTimeline": "Review Timeline",
+      "reviewTimelineMessage": "Disputes are typically reviewed within 24-48 hours. Payment remains on hold until resolved.",
+      "reasonLabel": "Reason for Dispute",
+      "reasonPlaceholder": "Please describe what happened in detail (minimum 10 characters)...",
+      "reasonHint": "Be specific about what went wrong. This helps us resolve the issue faster.",
+      "close": "Close",
+      "submitButton": "Submit Dispute"
     }
   },
   "packages": {
@@ -632,7 +695,31 @@
       "accountInfo": "Account Info",
       "service": "Service",
       "images": "Images",
-      "interest": "Interest"
+      "interest": "Interest",
+      "reviews": "Reviews"
+    },
+    "review": {
+      "writeReview": "Write a Review",
+      "shareExperience": "Share your experience with this model",
+      "rating": "Rating",
+      "selectRating": "Click to select your rating",
+      "title": "Title (Optional)",
+      "titlePlaceholder": "Brief summary of your experience",
+      "reviewText": "Your Review (Optional)",
+      "reviewTextPlaceholder": "Share details about your experience...",
+      "submitAnonymously": "Submit anonymously",
+      "submitReview": "Submit Review",
+      "yourReview": "Your Review",
+      "cannotReview": "Cannot write a review",
+      "needCompletedBooking": "You need to complete a booking with this model before you can leave a review.",
+      "alreadyReviewed": "You have already reviewed this model.",
+      "allReviews": "All Reviews",
+      "noReviews": "No Reviews Yet",
+      "noReviewsDesc": "Be the first to share your experience with this model!",
+      "anonymous": "Anonymous",
+      "submitting": "Submitting...",
+      "success": "Review submitted successfully!",
+      "error": "Failed to submit review. Please try again."
     },
     "personalInfo": "Personal Information:",
     "id": "ID",

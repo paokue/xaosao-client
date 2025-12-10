@@ -21,6 +21,12 @@ export default function BookingServiceDetails() {
    const navigate = useNavigate();
    const data = useLoaderData<IServiceBooking>();
 
+   const getServiceName = (): string => {
+      const serviceName = data?.modelService?.service?.name;
+      if (!serviceName) return t("booking.serviceUnavailable");
+      return t(`modelServices.serviceItems.${serviceName}.name`, { defaultValue: serviceName });
+   };
+
    function closeHandler() {
       navigate("/customer/dates-history");
    }
@@ -40,7 +46,7 @@ export default function BookingServiceDetails() {
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t('booking.detail.service')}:</label>
-                        <p className="mt-0 sm:mt-1 text-sm">{data?.modelService.service.name}</p>
+                        <p className="mt-0 sm:mt-1 text-sm">{getServiceName()}</p>
                      </div>
                      <div className="flex flow-row sm:flex-col items-start justify-start space-x-3 sm:space-x-0">
                         <label className="text-sm font-medium text-gray-500">{t('booking.detail.date')}:</label>

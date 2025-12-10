@@ -96,6 +96,18 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
    const actionData = useActionData<typeof action>()
    const { dateBooking, service } = loaderData;
 
+   const getServiceName = (): string => {
+      const serviceName = service?.service?.name;
+      if (!serviceName) return t("booking.serviceUnavailable");
+      return t(`modelServices.serviceItems.${serviceName}.name`, { defaultValue: serviceName });
+   };
+
+   const getServiceDescription = (): string => {
+      const serviceName = service?.service?.name;
+      if (!serviceName) return "";
+      return t(`modelServices.serviceItems.${serviceName}.description`, { defaultValue: service?.service?.description || "" });
+   };
+
    const [startDate, setStartDate] = useState<Date | undefined>(
       dateBooking?.startDate ? new Date(dateBooking.startDate) : undefined
    );
@@ -115,9 +127,9 @@ export default function EditServiceBooking({ loaderData }: TransactionProps) {
       <Modal onClose={closeHandler} className="h-screen sm:h-auto w-full sm:w-3/6 py-8 sm:py-4 px-4 border rounded-xl">
          <div className="space-y-6">
             <div className="space-y-2">
-               <div className="text-md font-bold text-balance">{service.service.name}</div>
+               <div className="text-md font-bold text-balance">{getServiceName()}</div>
                <div className="text-sm leading-relaxed">
-                  {service.service.description}
+                  {getServiceDescription()}
                </div>
             </div>
 

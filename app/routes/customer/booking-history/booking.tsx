@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
 
 // interface and service
-import { capitalize } from "~/utils/functions/textFormat"
 import type { IServiceBooking } from "~/interfaces/service"
 import { requireUserSession } from "~/services/auths.server";
 import { getAllMyServiceBookings } from "~/services/booking.server"
@@ -74,6 +73,16 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
    const isLoading = navigation.state === "loading";
    const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
+   const getServiceName = (booking: IServiceBooking): string => {
+      const serviceName = booking.modelService?.service?.name;
+      if (!serviceName) return t("booking.serviceUnavailable");
+      return t(`modelServices.serviceItems.${serviceName}.name`, { defaultValue: serviceName });
+   };
+
+   const getStatusLabel = (status: string): string => {
+      return t(`booking.status.${status}`, { defaultValue: statusConfig[status]?.label || status });
+   };
+
    if (isLoading) {
       return (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
@@ -104,7 +113,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
             >
                <div className="flex items-center gap-3">
                   <Shield className="h-5 w-5 text-amber-600 shrink-0" />
-                  <h3 className="text-sm font-semibold text-amber-900">Booking & Payment Policy</h3>
+                  <h3 className="text-sm font-semibold text-amber-900">{t('booking.policy.title')}</h3>
                </div>
                <div className="sm:hidden">
                   {isPolicyOpen ? (
@@ -115,22 +124,22 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                </div>
             </button>
             <div className={`mt-3 pl-8 ${isPolicyOpen ? 'block' : 'hidden'} sm:block`}>
-               <ul className="text-xs text-amber-800 space-y-1">
+               <ul className="text-xs text-amber-800 space-y-2">
                   <li className="flex items-center gap-2">
                      <Wallet className="h-3 w-3" />
-                     <span>Payment is held from your wallet when you book a service</span>
+                     <span>{t('booking.policy.paymentHeld')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <MapPin className="h-3 w-3" />
-                     <span>Both parties must GPS check-in at the location to verify attendance</span>
+                     <span>{t('booking.policy.gpsCheckin')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <Info className="h-3 w-3" />
-                     <span>After model completes, you have 48 hours to confirm or dispute</span>
+                     <span>{t('booking.policy.confirmOrDispute')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                      <AlertTriangle className="h-3 w-3" />
-                     <span className="font-medium">Cancellation not allowed within 2 hours of booking start time</span>
+                     <span className="font-medium">{t('booking.policy.cancellationNotice')}</span>
                   </li>
                </ul>
             </div>
@@ -147,13 +156,13 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                         <div className="flex items-start justify-between gap-4">
                            <div className="space-y-2 flex-1">
                               <h3 className="text-md leading-tight text-balance">
-                                 {booking.modelService.service.name}
+                                 {getServiceName(booking)}
                               </h3>
                               <Badge
                                  variant="outline"
                                  className={statusConfig[booking.status]?.className || "bg-gray-500/10 text-gray-700 border-gray-500/20"}
                               >
-                                 {statusConfig[booking.status]?.label || capitalize(booking.status)}
+                                 {getStatusLabel(booking.status)}
                               </Badge>
                            </div>
 
@@ -214,7 +223,7 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                        }
                                        className="cursor-pointer"
                                     >
-                                       Check In
+                                       {t('booking.checkIn')}
                                     </DropdownMenuItem>
                                  )}
 
@@ -222,12 +231,12 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                     <>
                                        <DropdownMenuItem
                                           onClick={() =>
-                                             navigate(`/customer/book-service/confirm/${booking.id}`)
+                                             navigate(`/customer/confirm-booking/${booking.id}`)
                                           }
                                           className="cursor-pointer text-emerald-600"
                                        >
-                                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                                          Confirm & Release Payment
+                                          <CheckCircle2 className="h-4 w-4" />
+                                          {t('booking.confirmRelease')}
                                        </DropdownMenuItem>
                                        <DropdownMenuItem
                                           onClick={() =>
@@ -235,8 +244,8 @@ export default function BookingsList({ loaderData }: DiscoverPageProps) {
                                           }
                                           className="cursor-pointer text-red-600"
                                        >
-                                          <AlertTriangle className="h-4 w-4 mr-2" />
-                                          Dispute
+                                          <AlertTriangle className="h-4 w-4" />
+                                          {t('booking.dispute')}
                                        </DropdownMenuItem>
                                     </>
                                  )}

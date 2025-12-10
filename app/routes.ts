@@ -145,10 +145,6 @@ export default [
       "./routes/customer/booking-history/booking.checkin.tsx"
     ),
     route(
-      "book-service/confirm/:id",
-      "./routes/customer/booking-history/booking.confirm.tsx"
-    ),
-    route(
       "book-service/dispute/:id",
       "./routes/customer/booking-history/booking.dispute.tsx"
     ),

@@ -60,6 +60,31 @@ export interface ICustomerInteraction {
   action: "LIKE" | "PASS";
 }
 
+export interface IReviewResponse {
+  id: string;
+  rating: number;
+  title: string | null;
+  reviewText: string | null;
+  isAnonymous: boolean;
+  createdAt: Date;
+  customer: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+    profile: string | null;
+  } | null;
+}
+
+export interface IReviewData {
+  reviews: IReviewResponse[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  canReview: boolean;
+  reviewReason?: string;
+  customerReview?: IReviewResponse | null;
+}
+
 export interface ISinglemodelProfileResponse {
   id: string;
   firstName: string;
@@ -86,6 +111,7 @@ export interface ISinglemodelProfileResponse {
   isContact: boolean;
   totalFriends: number;
   totalLikes: number;
+  reviewData?: IReviewData;
 }
 
 export interface ISinglemodelResponse {

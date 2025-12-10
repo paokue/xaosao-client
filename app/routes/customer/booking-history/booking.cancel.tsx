@@ -61,8 +61,8 @@ export default function CancelBookingService() {
                   <div className="flex items-start space-x-2">
                      <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
                      <div className="text-sm text-amber-800">
-                        <p className="font-medium">Cancellation Policy</p>
-                        <p>You cannot cancel within 2 hours of the booking start time. Please contact support if you need assistance.</p>
+                        <p className="font-medium">{t('booking.cancel.cancellationPolicy')}</p>
+                        <p>{t('booking.cancel.cancellationPolicyMessage')}</p>
                      </div>
                   </div>
                </div>
@@ -71,8 +71,8 @@ export default function CancelBookingService() {
                   <div className="flex items-start space-x-2">
                      <Wallet className="h-4 w-4 text-emerald-600 mt-0.5" />
                      <div className="text-sm text-emerald-800">
-                        <p className="font-medium">Refund Policy</p>
-                        <p>If cancelled successfully, your payment will be refunded to your wallet immediately.</p>
+                        <p className="font-medium">{t('booking.cancel.refundPolicy')}</p>
+                        <p>{t('booking.cancel.refundPolicyMessage')}</p>
                      </div>
                   </div>
                </div>

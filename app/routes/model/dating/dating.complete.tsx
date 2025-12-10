@@ -82,7 +82,7 @@ export default function CompleteBookingModal() {
       : t("modelDating.serviceUnavailable");
 
    const hasQRCode = booking?.completionToken && booking?.status === "awaiting_confirmation";
-   const qrUrl = hasQRCode ? `${VITE_FRONTEND_URL}/customer/confirm-booking/${booking.completionToken}` : "";
+   const qrUrl = hasQRCode ? `${VITE_FRONTEND_URL}customer/confirm-booking/${booking.completionToken}` : "";
 
    useEffect(() => {
       if (qrUrl) {
@@ -242,8 +242,8 @@ export default function CompleteBookingModal() {
                   {t("modelDating.complete.close")}
                </Button>
                <Button type="submit" disabled={isSubmitting} className="text-white bg-rose-500 hover:bg-rose-600">
-                  {isSubmitting && <Loader className="h-4 w-4 animate-spin mr-1" />}
-                  <QrCode className="h-4 w-4 mr-1" />
+                  {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
+                  <QrCode className="h-4 w-4" />
                   {t("modelDating.complete.generateQR")}
                </Button>
             </div>

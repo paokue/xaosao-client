@@ -269,8 +269,13 @@ export default function DiscoverPage({ loaderData }: DiscoverPageProps) {
         <div className="space-y-6 sm:space-y-8 p-0 sm:p-6">
             <div>
                 <div className="flex items-start justify-between bg-gray-100 sm:bg-white w-full p-3 sm:px-0">
-                    <div className="space-y-1">
-                        <h1 className="text-sm sm:text-md sm:font-bold text-gray-800 uppercase text-shadow-md">{t('discover.onlineMatchers')}</h1>
+                    <div className="space-y-1 sm:space-y-2">
+                        <h1 className="text-lg sm:text-xl text-rose-500 text-shadow-sm">
+                            {t("modelDashboard.title")}
+                        </h1>
+                        <p className="text-sm text-gray-600">
+                            {t("modelDashboard.subtitle")}
+                        </p>
                     </div>
                 </div>
                 <div

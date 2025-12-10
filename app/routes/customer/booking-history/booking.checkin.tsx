@@ -115,9 +115,9 @@ export default function CustomerCheckInModal() {
 
    return (
       <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
-         <h1 className="text-md font-bold">Check In</h1>
+         <h1 className="text-md font-bold">{t('booking.checkin.title')}</h1>
          <p className="hidden sm:block text-sm text-gray-500 my-2">
-            Verify your presence at the booking location
+            {t('booking.checkin.description')}
          </p>
 
          <Form method="post" className="space-y-4 mt-4">
@@ -128,8 +128,8 @@ export default function CustomerCheckInModal() {
                <div className="flex items-start space-x-2">
                   <MapPin className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-800">
-                     <p className="font-medium">GPS Verification</p>
-                     <p>Your location will be verified to confirm you are at the booking location (within 500m).</p>
+                     <p className="font-medium">{t('booking.checkin.gpsVerification')}</p>
+                     <p>{t('booking.checkin.gpsVerificationMessage')}</p>
                   </div>
                </div>
             </div>
@@ -139,12 +139,12 @@ export default function CustomerCheckInModal() {
                {isGettingLocation ? (
                   <div className="flex items-center space-x-2 text-gray-600">
                      <Loader className="h-4 w-4 animate-spin" />
-                     <span className="text-sm">Getting your location...</span>
+                     <span className="text-sm">{t('booking.checkin.gettingLocation')}</span>
                   </div>
                ) : location ? (
                   <div className="flex items-center space-x-2 text-emerald-600">
                      <CheckCircle2 className="h-4 w-4" />
-                     <span className="text-sm">Location acquired</span>
+                     <span className="text-sm">{t('booking.checkin.locationAcquired')}</span>
                   </div>
                ) : locationError ? (
                   <div className="space-y-2">
@@ -160,7 +160,7 @@ export default function CustomerCheckInModal() {
                         className="mt-2"
                      >
                         <Navigation className="h-3 w-3 mr-1" />
-                        Retry
+                        {t('booking.checkin.retry')}
                      </Button>
                   </div>
                ) : null}
@@ -179,7 +179,7 @@ export default function CustomerCheckInModal() {
 
             <div className="flex justify-end space-x-2 pt-4">
                <Button type="button" variant="outline" onClick={closeHandler}>
-                  Close
+                  {t('booking.checkin.close')}
                </Button>
                <Button
                   type="submit"
@@ -188,7 +188,7 @@ export default function CustomerCheckInModal() {
                >
                   {isSubmitting && <Loader className="h-4 w-4 animate-spin mr-1" />}
                   <MapPin className="h-4 w-4 mr-1" />
-                  Check In
+                  {t('booking.checkin.checkInButton')}
                </Button>
             </div>
          </Form>

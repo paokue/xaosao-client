@@ -53,7 +53,7 @@ export default function DeleteBookingService() {
    return (
       <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
          <h1 className="text-md font-bold">{t('booking.delete.title')}</h1>
-         <p className="hidden sm:block text-sm text-gray-500 my-2">{t('booking.delete.description')}&nbsp; <span className="font-bold text-primary">" {id} "</span></p>
+         <p className="hidden sm:block text-sm text-gray-500 my-2">{t('booking.delete.description')}&nbsp;</p>
          <Form method="delete" className="space-y-4 mt-4">
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                <div className="flex items-start space-x-2">

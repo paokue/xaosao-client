@@ -4,9 +4,6 @@ import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import lo from './locales/lo.json';
 import th from './locales/th.json';
-import zh from './locales/zh.json';
-import vi from './locales/vi.json';
-import ko from './locales/ko.json';
 
 // Initialize i18n without LanguageDetector to avoid hydration issues
 // Language will be detected and set on client-side by useLanguageInit hook
@@ -17,9 +14,6 @@ i18n
       en: { translation: en },
       lo: { translation: lo },
       th: { translation: th },
-      zh: { translation: zh },
-      vi: { translation: vi },
-      ko: { translation: ko },
     },
     lng: 'en', // Always start with English for SSR consistency
     fallbackLng: 'en',

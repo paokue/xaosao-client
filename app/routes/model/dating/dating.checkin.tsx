@@ -209,8 +209,8 @@ export default function ModelCheckInModal() {
                   disabled={isSubmitting || !location}
                   className="text-white bg-emerald-500 hover:bg-emerald-600"
                >
-                  {isSubmitting && <Loader className="h-4 w-4 animate-spin mr-1" />}
-                  <MapPin className="h-4 w-4 mr-1" />
+                  {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
+                  <MapPin className="h-4 w-4" />
                   {t("modelDating.checkin.checkInButton")}
                </Button>
             </div>

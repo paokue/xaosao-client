@@ -1,6 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { AlertCircle, AlertTriangle, Loader, Shield, Clock } from "lucide-react";
 import { Form, redirect, useActionData, useNavigate, useNavigation, useParams, type ActionFunctionArgs } from "react-router";
-import { useTranslation } from "react-i18next";
 
 // components
 import Modal from "~/components/ui/model";
@@ -64,9 +64,9 @@ export default function DisputeBookingModal() {
 
    return (
       <Modal onClose={closeHandler} className="w-11/12 sm:w-2/5 rounded-xl border">
-         <h1 className="text-md font-bold">Dispute Booking</h1>
+         <h1 className="text-md font-bold">{t('booking.disputeModal.title')}</h1>
          <p className="hidden sm:block text-sm text-gray-500 my-2">
-            Report an issue with this booking
+            {t('booking.disputeModal.description')}
          </p>
 
          <Form method="post" className="space-y-4 mt-4">
@@ -74,8 +74,8 @@ export default function DisputeBookingModal() {
                <div className="flex items-start space-x-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
                   <div className="text-sm text-amber-800">
-                     <p className="font-medium">Before Disputing</p>
-                     <p>Please only dispute if the model did not show up or the service was not as agreed. False disputes may affect your account.</p>
+                     <p className="font-medium">{t('booking.disputeModal.beforeDisputing')}</p>
+                     <p>{t('booking.disputeModal.beforeDisputingMessage')}</p>
                   </div>
                </div>
             </div>
@@ -84,8 +84,8 @@ export default function DisputeBookingModal() {
                <div className="flex items-start space-x-2">
                   <Shield className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-800">
-                     <p className="font-medium">Evidence Available</p>
-                     <p>Our team will review GPS check-in records from both parties to verify the dispute.</p>
+                     <p className="font-medium">{t('booking.disputeModal.evidenceAvailable')}</p>
+                     <p>{t('booking.disputeModal.evidenceAvailableMessage')}</p>
                   </div>
                </div>
             </div>
@@ -94,25 +94,25 @@ export default function DisputeBookingModal() {
                <div className="flex items-start space-x-2">
                   <Clock className="h-4 w-4 text-gray-600 mt-0.5" />
                   <div className="text-sm text-gray-700">
-                     <p className="font-medium">Review Timeline</p>
-                     <p>Disputes are typically reviewed within 24-48 hours. Payment remains on hold until resolved.</p>
+                     <p className="font-medium">{t('booking.disputeModal.reviewTimeline')}</p>
+                     <p>{t('booking.disputeModal.reviewTimelineMessage')}</p>
                   </div>
                </div>
             </div>
 
             <div className="space-y-2">
                <label className="text-sm font-medium text-gray-700">
-                  Reason for Dispute <span className="text-red-500">*</span>
+                  {t('booking.disputeModal.reasonLabel')} <span className="text-red-500">*</span>
                </label>
                <Textarea
                   name="reason"
-                  placeholder="Please describe what happened in detail (minimum 10 characters)..."
-                  className="min-h-[100px] resize-none"
+                  placeholder={t('booking.disputeModal.reasonPlaceholder')}
+                  className="text-sm min-h-[100px] resize-none"
                   required
                   minLength={10}
                />
                <p className="text-xs text-gray-500">
-                  Be specific about what went wrong. This helps us resolve the issue faster.
+                  {t('booking.disputeModal.reasonHint')}
                </p>
             </div>
 
@@ -129,7 +129,7 @@ export default function DisputeBookingModal() {
 
             <div className="flex justify-end space-x-2 pt-4">
                <Button type="button" variant="outline" onClick={closeHandler}>
-                  Close
+                  {t('booking.disputeModal.close')}
                </Button>
                <Button
                   type="submit"
@@ -139,7 +139,7 @@ export default function DisputeBookingModal() {
                >
                   {isSubmitting && <Loader className="h-4 w-4 animate-spin mr-1" />}
                   <AlertTriangle className="h-4 w-4 mr-1" />
-                  Submit Dispute
+                  {t('booking.disputeModal.submitButton')}
                </Button>
             </div>
          </Form>

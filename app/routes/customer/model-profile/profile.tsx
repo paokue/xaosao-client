@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Route } from './+types/profile';
 import { Form, redirect, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
-import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, Loader, Book, BriefcaseBusiness, Heart } from 'lucide-react';
+import { BadgeCheck, UserPlus, Forward, User, Calendar, MarsStroke, ToggleLeft, MapPin, Star, ChevronLeft, ChevronRight, X, MessageSquareText, Loader, Book, BriefcaseBusiness, Heart, MessageSquare, Eye, EyeOff, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 // components
@@ -15,20 +15,25 @@ import {
 } from "~/components/ui/card"
 import Rating from '~/components/ui/rating';
 import { Badge } from '~/components/ui/badge';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
 import EmptyPage from '~/components/ui/empty';
 import { Button } from '~/components/ui/button';
+import { Textarea } from '~/components/ui/textarea';
 import { Separator } from '~/components/ui/separator';
+import { Checkbox } from '~/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // interface, services and utils
 import { getModelProfile } from '~/services/model.server';
-import type { ISinglemodelProfileResponse } from '~/interfaces';
+import type { ISinglemodelProfileResponse, IReviewData } from '~/interfaces';
 import { capitalize, getFirstWord } from '~/utils/functions/textFormat';
-import { calculateAgeFromDOB, formatCurrency, formatNumber } from '~/utils';
+import { calculateAgeFromDOB, formatCurrency, formatNumber, formatDateRelative } from '~/utils';
 import { getUserTokenFromSession, requireUserSession } from '~/services/auths.server';
+import { getModelReviews, canCustomerReviewModel, getCustomerReviewForModel, createReview } from '~/services/review.server';
 
 interface LoaderReturn {
-    model: ISinglemodelProfileResponse
+    model: ISinglemodelProfileResponse & { reviewData?: IReviewData }
 }
 
 interface ProfilePageProps {
@@ -37,10 +42,27 @@ interface ProfilePageProps {
 
 export const loader: LoaderFunction = async ({ params, request }) => {
     const customerId = await requireUserSession(request)
-    const modelId = params.userId
-    const model = await getModelProfile(modelId as string, customerId)
+    const modelId = params.userId as string
+    const model = await getModelProfile(modelId, customerId)
 
-    return { model }
+    // Fetch review data
+    const [reviewsResult, canReviewResult, customerReview] = await Promise.all([
+        getModelReviews(modelId, 1, 10),
+        canCustomerReviewModel(customerId, modelId),
+        getCustomerReviewForModel(customerId, modelId)
+    ]);
+
+    const reviewData: IReviewData = {
+        reviews: reviewsResult.reviews,
+        totalCount: reviewsResult.totalCount,
+        totalPages: reviewsResult.totalPages,
+        currentPage: reviewsResult.currentPage,
+        canReview: canReviewResult.canReview,
+        reviewReason: canReviewResult.reason,
+        customerReview: customerReview as any
+    };
+
+    return { model: { ...model, reviewData } }
 }
 
 export async function action({
@@ -51,12 +73,43 @@ export async function action({
     const modelId = formData.get("modelId") as string
     const isInteraction = formData.get("interaction")
     const addFriend = formData.get("isFriend") === "true";
+    const submitReview = formData.get("submitReview") === "true";
     const token = await getUserTokenFromSession(request)
     const { createCustomerInteraction, customerAddFriend } = await import(
         "~/services/interaction.server"
     );
 
     if (request.method === "POST") {
+        // Handle review submission
+        if (submitReview) {
+            const rating = Number(formData.get("rating"));
+            const title = formData.get("title") as string | null;
+            const reviewText = formData.get("reviewText") as string | null;
+            const isAnonymous = formData.get("isAnonymous") === "true";
+
+            // Validation
+            if (!rating || rating < 1 || rating > 5) {
+                return redirect(`/customer/user-profile/${modelId}?toastMessage=Please+select+a+rating+between+1+and+5&toastType=error`);
+            }
+
+            try {
+                const res = await createReview({
+                    rating,
+                    title: title || undefined,
+                    reviewText: reviewText || undefined,
+                    isAnonymous,
+                    modelId,
+                    customerId
+                });
+                if (res?.success) {
+                    return redirect(`/customer/user-profile/${modelId}?toastMessage=Review+submitted+successfully!&toastType=success`);
+                }
+            } catch (error: any) {
+                const errorMessage = encodeURIComponent(error.message || "Failed to submit review");
+                return redirect(`/customer/user-profile/${modelId}?toastMessage=${errorMessage}&toastType=error`);
+            }
+        }
+
         if (addFriend === true) {
             try {
                 const res = await customerAddFriend(customerId, modelId, token);
@@ -98,6 +151,11 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
     const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
     const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
     const [touchEndX, setTouchEndX] = React.useState<number | null>(null);
+
+    // Review state
+    const [reviewRating, setReviewRating] = React.useState<number>(0);
+    const [isAnonymous, setIsAnonymous] = React.useState<boolean>(false);
+    const reviewData = model.reviewData;
 
     // For toast messages
     const toastMessage = searchParams.get("toastMessage");
@@ -304,6 +362,7 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                             <TabsTrigger value="account">{t('profile.tabs.accountInfo')}</TabsTrigger>
                             <TabsTrigger value="services">{t('profile.tabs.service')}</TabsTrigger>
                             <TabsTrigger value="images">{t('profile.tabs.images')}</TabsTrigger>
+                            <TabsTrigger value="reviews">{t('profile.tabs.reviews')}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="account">
                             <div className="flex flex-col sm:flex-row items-start justify-between space-y-2">
@@ -488,6 +547,231 @@ export default function ModelProfilePage({ loaderData }: ProfilePageProps) {
                                     </button>
                                 </div>
                             )}
+                        </TabsContent>
+                        <TabsContent value="reviews" className="space-y-6">
+                            {/* Review Form Section */}
+                            {reviewData?.canReview ? (
+                                <Card className="border-rose-200">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <MessageSquare className="w-5 h-5 text-rose-500" />
+                                            {t('profile.review.writeReview')}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            {t('profile.review.shareExperience')}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Form method="post" className="space-y-4">
+                                            <input type="hidden" name="modelId" value={model.id} />
+                                            <input type="hidden" name="submitReview" value="true" />
+                                            <input type="hidden" name="rating" value={reviewRating} />
+                                            <input type="hidden" name="isAnonymous" value={isAnonymous.toString()} />
+
+                                            {/* Rating */}
+                                            <div className="space-y-2">
+                                                <Label>{t('profile.review.rating')} *</Label>
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <button
+                                                            key={star}
+                                                            type="button"
+                                                            onClick={() => setReviewRating(star)}
+                                                            className="transition-transform hover:scale-110"
+                                                        >
+                                                            <Star
+                                                                size={28}
+                                                                className={`cursor-pointer ${star <= reviewRating
+                                                                    ? 'fill-yellow-400 text-yellow-400'
+                                                                    : 'text-gray-300'
+                                                                    }`}
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {reviewRating === 0 && (
+                                                    <p className="text-xs text-gray-500">{t('profile.review.selectRating')}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Title */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="title">{t('profile.review.title')}</Label>
+                                                <Input
+                                                    id="title"
+                                                    name="title"
+                                                    placeholder={t('profile.review.titlePlaceholder')}
+                                                    maxLength={100}
+                                                />
+                                            </div>
+
+                                            {/* Review Text */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="reviewText">{t('profile.review.reviewText')}</Label>
+                                                <Textarea
+                                                    id="reviewText"
+                                                    name="reviewText"
+                                                    placeholder={t('profile.review.reviewTextPlaceholder')}
+                                                    maxLength={500}
+                                                    rows={4}
+                                                />
+                                            </div>
+
+                                            {/* Anonymous checkbox */}
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="anonymous"
+                                                    checked={isAnonymous}
+                                                    onCheckedChange={(checked: boolean) => setIsAnonymous(checked)}
+                                                />
+                                                <label
+                                                    htmlFor="anonymous"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1"
+                                                >
+                                                    {isAnonymous ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                    {t('profile.review.submitAnonymously')}
+                                                </label>
+                                            </div>
+
+                                            <Button
+                                                type="submit"
+                                                disabled={reviewRating === 0 || isSubmitting}
+                                                className="w-full bg-rose-500 hover:bg-rose-600 text-white"
+                                            >
+                                                {isSubmitting ? (
+                                                    <Loader className="w-4 h-4 animate-spin mr-2" />
+                                                ) : (
+                                                    <Send className="w-4 h-4 mr-2" />
+                                                )}
+                                                {t('profile.review.submitReview')}
+                                            </Button>
+                                        </Form>
+                                    </CardContent>
+                                </Card>
+                            ) : reviewData?.customerReview ? (
+                                <Card className="border-green-200 bg-green-50">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg flex items-center gap-2 text-green-700">
+                                            <BadgeCheck className="w-5 h-5" />
+                                            {t('profile.review.yourReview')}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <Star
+                                                        key={star}
+                                                        size={20}
+                                                        className={star <= reviewData.customerReview!.rating
+                                                            ? 'fill-yellow-400 text-yellow-400'
+                                                            : 'text-gray-300'
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                            {reviewData.customerReview.title && (
+                                                <p className="font-semibold">{reviewData.customerReview.title}</p>
+                                            )}
+                                            {reviewData.customerReview.reviewText && (
+                                                <p className="text-gray-600">{reviewData.customerReview.reviewText}</p>
+                                            )}
+                                            <p className="text-xs text-gray-500">
+                                                {formatDateRelative(new Date(reviewData.customerReview.createdAt))}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <Card className="border-gray-200 bg-gray-50">
+                                    <CardContent className="pt-6">
+                                        <div className="text-center text-gray-500">
+                                            <MessageSquare className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                                            <p className="font-medium">{t('profile.review.cannotReview')}</p>
+                                            <p className="text-sm mt-1">
+                                                {reviewData?.reviewReason === 'no_completed_booking'
+                                                    ? t('profile.review.needCompletedBooking')
+                                                    : t('profile.review.alreadyReviewed')}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Reviews List */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <MessageSquare className="w-5 h-5" />
+                                    {t('profile.review.allReviews')}
+                                    <Badge variant="secondary">{reviewData?.totalCount || 0}</Badge>
+                                </h3>
+
+                                {reviewData?.reviews && reviewData.reviews.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {reviewData.reviews.map((review) => (
+                                            <Card key={review.id} className="border-gray-200">
+                                                <CardContent className="pt-4">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            {review.isAnonymous ? (
+                                                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                    <User className="w-5 h-5 text-gray-500" />
+                                                                </div>
+                                                            ) : review.customer?.profile ? (
+                                                                <img
+                                                                    src={review.customer.profile}
+                                                                    alt={review.customer.firstName}
+                                                                    className="w-10 h-10 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                                                                    <span className="text-rose-600 font-semibold">
+                                                                        {review.customer?.firstName?.charAt(0) || '?'}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <p className="font-medium">
+                                                                    {review.isAnonymous
+                                                                        ? t('profile.review.anonymous')
+                                                                        : `${review.customer?.firstName || ''} ${review.customer?.lastName || ''}`
+                                                                    }
+                                                                </p>
+                                                                <div className="flex items-center gap-1">
+                                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                                        <Star
+                                                                            key={star}
+                                                                            size={14}
+                                                                            className={star <= review.rating
+                                                                                ? 'fill-yellow-400 text-yellow-400'
+                                                                                : 'text-gray-300'
+                                                                            }
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xs text-gray-500">
+                                                            {formatDateRelative(new Date(review.createdAt))}
+                                                        </span>
+                                                    </div>
+                                                    {review.title && (
+                                                        <p className="font-semibold mt-3">{review.title}</p>
+                                                    )}
+                                                    {review.reviewText && (
+                                                        <p className="text-gray-600 mt-2">{review.reviewText}</p>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <EmptyPage
+                                        title={t('profile.review.noReviews')}
+                                        description={t('profile.review.noReviewsDesc')}
+                                    />
+                                )}
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </div>
