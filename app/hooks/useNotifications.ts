@@ -13,6 +13,9 @@ interface UseNotificationsOptions {
 // Notification sound URL
 const NOTIFICATION_SOUND_URL = "/sound/messeger.mp3";
 
+// Global singleton to prevent multiple SSE connections per userType
+const activeConnections: Map<string, { eventSource: EventSource; refCount: number }> = new Map();
+
 export function useNotifications({
   userType,
   onNewNotification,
@@ -31,9 +34,8 @@ export function useNotifications({
     getUnreadCount,
   } = useNotificationStore();
 
-  const eventSourceRef = useRef<EventSource | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isConnectedRef = useRef(false);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize audio element
   useEffect(() => {
@@ -60,82 +62,139 @@ export function useNotifications({
     }
   }, [playSound]);
 
-  // Connect to SSE - only once per user type
+  // Store callbacks in refs to avoid useEffect dependency issues
+  const onNewNotificationRef = useRef(onNewNotification);
+  const playNotificationSoundRef = useRef(playNotificationSound);
+  const addNotificationRef = useRef(addNotification);
+  const setConnectedRef = useRef(setConnected);
+
+  // Keep refs updated
+  useEffect(() => {
+    onNewNotificationRef.current = onNewNotification;
+    playNotificationSoundRef.current = playNotificationSound;
+    addNotificationRef.current = addNotification;
+    setConnectedRef.current = setConnected;
+  });
+
+  // Connect to SSE - singleton per userType
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Prevent multiple connections
-    if (isConnectedRef.current) return;
+    const connectionKey = userType;
+
+    // Check if connection already exists
+    const existingConnection = activeConnections.get(connectionKey);
+    if (existingConnection) {
+      // Increment ref count - another component is using this connection
+      existingConnection.refCount++;
+      return () => {
+        existingConnection.refCount--;
+        // Only close if no one is using it
+        if (existingConnection.refCount <= 0) {
+          existingConnection.eventSource.close();
+          activeConnections.delete(connectionKey);
+          setConnectedRef.current(false);
+        }
+      };
+    }
 
     const sseUrl =
       userType === "model"
         ? "/api/notifications/model-sse"
         : "/api/notifications/customer-sse";
 
-    const eventSource = new EventSource(sseUrl);
-    eventSourceRef.current = eventSource;
-    isConnectedRef.current = true;
+    const createConnection = () => {
+      const eventSource = new EventSource(sseUrl);
 
-    eventSource.onopen = () => {
-      setConnected(true);
-      console.log("SSE connected");
+      eventSource.onopen = () => {
+        setConnectedRef.current(true);
+        console.log("SSE connected for", userType);
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          // Ignore heartbeat and connected messages
+          if (data.type === "heartbeat" || data.type === "connected") {
+            return;
+          }
+
+          // This is a real notification
+          const notification: Notification = {
+            id: data.id,
+            type: data.type,
+            title: data.title,
+            message: data.message,
+            data: data.data,
+            isRead: false,
+            createdAt: data.createdAt || new Date().toISOString(),
+          };
+
+          addNotificationRef.current(notification);
+
+          // Play sound
+          playNotificationSoundRef.current();
+
+          // Callback
+          if (onNewNotificationRef.current) {
+            onNewNotificationRef.current(notification);
+          }
+        } catch (error) {
+          console.error("Error parsing SSE message:", error);
+        }
+      };
+
+      eventSource.onerror = () => {
+        console.error("SSE error for", userType);
+        setConnectedRef.current(false);
+
+        // Clean up and reconnect after delay
+        const connection = activeConnections.get(connectionKey);
+        if (connection && connection.refCount > 0) {
+          connection.eventSource.close();
+          activeConnections.delete(connectionKey);
+
+          // Clear any existing reconnect timeout
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
+
+          // Reconnect after 5 seconds
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (activeConnections.get(connectionKey) === undefined) {
+              const newConnection = createConnection();
+              activeConnections.set(connectionKey, { eventSource: newConnection, refCount: connection.refCount });
+            }
+          }, 5000);
+        }
+      };
+
+      return eventSource;
     };
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        // Ignore heartbeat and connected messages
-        if (data.type === "heartbeat" || data.type === "connected") {
-          return;
-        }
-
-        // This is a real notification
-        const notification: Notification = {
-          id: data.id,
-          type: data.type,
-          title: data.title,
-          message: data.message,
-          data: data.data,
-          isRead: false,
-          createdAt: data.createdAt || new Date().toISOString(),
-        };
-
-        addNotification(notification);
-
-        // Play sound
-        playNotificationSound();
-
-        // Callback
-        if (onNewNotification) {
-          onNewNotification(notification);
-        }
-      } catch (error) {
-        console.error("Error parsing SSE message:", error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("SSE error:", error);
-      setConnected(false);
-
-      // Reconnect after a delay
-      setTimeout(() => {
-        if (eventSourceRef.current === eventSource) {
-          eventSource.close();
-          isConnectedRef.current = false;
-          // The useEffect will reconnect
-        }
-      }, 5000);
-    };
+    const eventSource = createConnection();
+    activeConnections.set(connectionKey, { eventSource, refCount: 1 });
 
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
-      isConnectedRef.current = false;
-      setConnected(false);
+      // Clear reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      const connection = activeConnections.get(connectionKey);
+      if (connection) {
+        connection.refCount--;
+        // Only close if no one is using it
+        if (connection.refCount <= 0) {
+          connection.eventSource.close();
+          activeConnections.delete(connectionKey);
+          setConnectedRef.current(false);
+        }
+      }
     };
-  }, [userType, onNewNotification, playNotificationSound, addNotification, setConnected]);
+  }, [userType]); // Only depend on userType - callbacks are stored in refs
 
   // Add notifications from server (for initial load)
   const addNotifications = useCallback((newNotifications: Notification[]) => {

@@ -97,8 +97,8 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         location.pathname.includes("realtime-chat") ||
         location.pathname.includes("chat");
 
-    // 👇 Show mobile header only on main navigation routes (except profile page)
-    const showMobileHeader = !location.pathname.startsWith("/model/profile") && mobileNavigationItems.some(item => {
+    // 👇 Show mobile header only on main navigation routes (hide on chat and profile pages)
+    const showMobileHeader = !hideMobileNav && !location.pathname.startsWith("/model/profile") && mobileNavigationItems.some(item => {
         if (item.url === "/model" && location.pathname === "/model") return true;
         if (item.url !== "/model" && location.pathname.startsWith(item.url)) return true;
         return false;
@@ -162,7 +162,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
                 </div>
             </div>
 
-            <div className="w-full sm:w-4/5 flex flex-col min-h-screen pb-16 sm:pb-0">
+            <div className="w-full sm:w-4/5 flex flex-col min-h-screen">
                 {showMobileHeader && (
                     <div className="sm:hidden flex items-center justify-between px-4 py-2 border-b bg-white sticky top-0 z-30">
                         <Link to="/model/profile"
