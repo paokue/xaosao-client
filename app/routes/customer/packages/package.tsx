@@ -18,6 +18,28 @@ import { getPackages } from "~/services/package.server"
 import { calculateDiscountPercent, formatCurrency } from "~/utils"
 import type { ISubscriptionPlanWithCurrentResponse } from "~/interfaces/packages"
 
+// Helper function to get package translation key from database name
+const getPackageKey = (name: string): string => {
+   const nameMap: Record<string, string> = {
+      '1 week': '1Week',
+      '1 month': '1Month',
+      '3 months': '3Months',
+   };
+   return nameMap[name.toLowerCase()] || name.replace(/\s+/g, '');
+};
+
+// Feature keys mapping from database feature names to translation keys
+const featureKeyMap: Record<string, string> = {
+   'Unlimited Profile Likes': 'unlimitedLikes',
+   'Smart Pass & Skip Option': 'smartPass',
+   'Advanced Partner Filtering Tools': 'advancedFiltering',
+   'Private In-App Chat Access': 'privateChat',
+   'Easy Date Booking System': 'easyBooking',
+   'Profile Boost & Spotlight': 'profileBoost',
+   'Ad-Free User Experience': 'adFree',
+   'Priority Customer Support': 'prioritySupport',
+};
+
 interface LoaderReturn {
    plans: ISubscriptionPlanWithCurrentResponse[];
 }
@@ -54,7 +76,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                >
                   <ArrowLeft className="h-5 w-5 text-rose-500 group-hover:-translate-x-1 transition-transform" />
                   <span className="text-sm font-light text-gray-600 group-hover:text-rose-500 transition-colors">
-                     Back
+                     {t('packages.list.back')}
                   </span>
                </button>
                <Link
@@ -102,8 +124,12 @@ export default function PricingPage({ loaderData }: TransactionProps) {
 
                      <CardContent className="p-4">
                         <div className="text-center mb-4 space-y-2">
-                           <h3 className="text-xl font-bold text-gray-800">{plan.name}</h3>
-                           <p className="text-gray-600 font-light">{plan.description}</p>
+                           <h3 className="text-xl font-bold text-gray-800">
+                              {t(`packages.items.${getPackageKey(plan.name)}.name`, { defaultValue: plan.name })}
+                           </h3>
+                           <p className="text-gray-600 font-light">
+                              {t(`packages.items.${getPackageKey(plan.name)}.description`, { defaultValue: plan.description })}
+                           </p>
                            <div className="mb-6">
                               <p className="text-xl font-light text-gray-900">
                                  {formatCurrency(plan.price)}
@@ -113,12 +139,17 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                         </div>
 
                         <div className="space-y-4 mb-8">
-                           {plan.features && Object.values(plan.features).map((feature, featureIndex) => (
-                              <div key={featureIndex} className="flex items-center space-x-3 text-sm">
-                                 <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                 <span className="text-gray-700 font-light">{feature}</span>
-                              </div>
-                           ))}
+                           {plan.features && Object.values(plan.features).map((feature, featureIndex) => {
+                              const featureKey = featureKeyMap[feature as string];
+                              return (
+                                 <div key={featureIndex} className="flex items-center space-x-3 text-sm">
+                                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                                    <span className="text-gray-700 font-light">
+                                       {featureKey ? t(`packages.features.${featureKey}`) : feature}
+                                    </span>
+                                 </div>
+                              );
+                           })}
                         </div>
 
                         <Button
@@ -180,7 +211,7 @@ export default function PricingPage({ loaderData }: TransactionProps) {
                            <CardContent className="p-1">
                               <div className="text-center mb-4 space-y-2">
                                  <h3 className={`text-lg font-bold ${selectedPlan.id === plan.id ? "text-white" : "text-gray-800"}`}>
-                                    {plan.name}
+                                    {t(`packages.items.${getPackageKey(plan.name)}.name`, { defaultValue: plan.name })}
                                  </h3>
                                  <p className={`text-md font-light ${selectedPlan.id === plan.id ? "text-white" : "text-gray-900"}`}>
                                     {formatCurrency(plan.price)}
@@ -198,17 +229,26 @@ export default function PricingPage({ loaderData }: TransactionProps) {
 
             {/* Display selected plan details */}
             <div className="mt-4 p-3 bg-rose-50 rounded-lg border border-rose-200">
-               <h4 className="text-md font-bold text-gray-800 mb-2">{selectedPlan.name} - {t('packages.list.features')}</h4>
-               <p className="text-sm text-gray-600 mb-3">{selectedPlan.description}</p>
+               <h4 className="text-md font-bold text-gray-800 mb-2">
+                  {t(`packages.items.${getPackageKey(selectedPlan.name)}.name`, { defaultValue: selectedPlan.name })} - {t('packages.list.features')}
+               </h4>
+               <p className="text-sm text-gray-600 mb-3">
+                  {t(`packages.items.${getPackageKey(selectedPlan.name)}.description`, { defaultValue: selectedPlan.description })}
+               </p>
             </div>
 
             <div className="space-y-4 mb-8 w-full px-3 py-4 border rounded-md">
-               {selectedPlan.features && Object.values(selectedPlan.features).map((feature, index) => (
-                  <div key={index} className="flex items-center space-x-3 text-sm">
-                     <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                     <span className="text-gray-700 font-light">{feature}</span>
-                  </div>
-               ))}
+               {selectedPlan.features && Object.values(selectedPlan.features).map((feature, index) => {
+                  const featureKey = featureKeyMap[feature as string];
+                  return (
+                     <div key={index} className="flex items-center space-x-3 text-sm">
+                        <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700 font-light">
+                           {featureKey ? t(`packages.features.${featureKey}`) : feature}
+                        </span>
+                     </div>
+                  );
+               })}
             </div>
 
             <div className="fixed bottom-0 z-50 bg-white w-full h-auto left-0 p-3 border-t shadow-lg">

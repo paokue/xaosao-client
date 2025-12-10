@@ -319,6 +319,30 @@
       "continue": "Countinue",
       "features": "Features"
     },
+    "items": {
+      "1Week": {
+        "name": "1 Week",
+        "description": "Explore all premium features and start connecting right away."
+      },
+      "1Month": {
+        "name": "1 Month",
+        "description": "Enjoy unlimited access for a month and meet more potential matches."
+      },
+      "3Months": {
+        "name": "3 Months",
+        "description": "Get the best deal for long-term dating and real connections."
+      }
+    },
+    "features": {
+      "unlimitedLikes": "Unlimited Profile Likes",
+      "smartPass": "Smart Pass & Skip Option",
+      "advancedFiltering": "Advanced Partner Filtering Tools",
+      "privateChat": "Private In-App Chat Access",
+      "easyBooking": "Easy Date Booking System",
+      "profileBoost": "Profile Boost & Spotlight",
+      "adFree": "Ad-Free User Experience",
+      "prioritySupport": "Priority Customer Support"
+    },
     "payment": {
       "title": "Subscription Payment",
       "upgradeTitle": "Subscription Upgrade",
