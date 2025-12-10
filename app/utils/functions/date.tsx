@@ -17,8 +17,9 @@ export function calculateAgeFromDOB(dob: string | Date): number {
     return age;
 }
 
-// Format currency 
-export function formatCurrency(amount: number) {
+// Format currency
+export function formatCurrency(amount: number | undefined | null) {
+    if (amount === undefined || amount === null) return "0 Kip";
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " Kip";
 }
 

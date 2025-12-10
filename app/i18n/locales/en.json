@@ -1640,5 +1640,23 @@
       "failed": "Failed to confirm service",
       "invalidRequest": "Invalid request"
     }
+  },
+  "modelNotifications": {
+    "title": "Notifications",
+    "new": "new",
+    "subtitle": "Stay updated with your bookings",
+    "live": "Live",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications",
+    "noNotificationsYet": "No notifications yet",
+    "noNotificationsDescription": "You'll see booking updates and messages here",
+    "seeAll": "See all notifications",
+    "loadMore": "Load more",
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    }
   }
 }

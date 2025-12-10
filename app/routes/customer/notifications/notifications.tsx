@@ -1,6 +1,3 @@
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useFetcher, type LoaderFunction } from "react-router";
 import {
   Bell,
   Calendar,
@@ -12,9 +9,14 @@ import {
   XCircle,
   ChevronRight,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useFetcher, type LoaderFunction } from "react-router";
 
-import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+
+// services and hooks
 import { requireUserSession } from "~/services/auths.server";
 import {
   getCustomerNotifications,
@@ -69,29 +71,29 @@ export async function action({ request }: { request: Request }) {
 function getNotificationIcon(type: string, isRead: boolean) {
   switch (type) {
     case "booking_created":
-      return <Calendar className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-blue-500"}`} />;
+      return <Calendar className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-blue-500"}`} />;
     case "booking_confirmed":
-      return <CheckCircle2 className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
+      return <CheckCircle2 className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
     case "booking_rejected":
     case "booking_cancelled":
-      return <XCircle className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-red-500"}`} />;
+      return <XCircle className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-red-500"}`} />;
     case "booking_checkin_model":
-      return <MapPin className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-purple-500"}`} />;
+      return <MapPin className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-purple-500"}`} />;
     case "booking_completed":
     case "booking_confirmed_completion":
-      return <Check className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
+      return <Check className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
     case "payment_released":
     case "payment_refunded":
-      return <CreditCard className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-green-500"}`} />;
+      return <CreditCard className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-green-500"}`} />;
     case "booking_disputed":
-      return <MessageCircle className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-orange-500"}`} />;
+      return <MessageCircle className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-orange-500"}`} />;
     default:
-      return <Bell className={`h-5 w-5 sm:h-6 sm:w-6 ${isRead ? "text-gray-400" : "text-gray-500"}`} />;
+      return <Bell className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-gray-500"}`} />;
   }
 }
 
 // Format relative time
-function formatRelativeTime(dateString: string) {
+function formatRelativeTime(dateString: string, t: (key: string, options?: any) => string) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -99,10 +101,10 @@ function formatRelativeTime(dateString: string) {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t("modelNotifications.time.justNow");
+  if (diffMins < 60) return t("modelNotifications.time.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("modelNotifications.time.hoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("modelNotifications.time.daysAgo", { count: diffDays });
 
   return date.toLocaleDateString();
 }
@@ -112,6 +114,7 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const { notifications: serverNotifications } = loaderData;
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // Use the store directly for state
   const {
@@ -123,13 +126,11 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
     markAllAsRead,
   } = useNotificationStore();
 
-  // Use the hook to handle SSE connection
   const { addNotifications } = useNotifications({
     userType: "customer",
     playSound: true,
   });
 
-  // Initialize with server-loaded notifications only if not already initialized
   useEffect(() => {
     if (!isInitialized && serverNotifications.length > 0) {
       addNotifications(serverNotifications);
@@ -137,12 +138,16 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
   }, [serverNotifications, isInitialized, addNotifications]);
 
   const unreadCount = getUnreadCount();
+  const visibleNotifications = notifications.slice(0, visibleCount);
+  const hasMore = notifications.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 20);
+  };
 
   const handleNotificationClick = (notification: Notification) => {
-    // Mark as read in store
     markAsRead(notification.id);
 
-    // Persist to database via API
     fetcher.submit(
       {
         notificationId: notification.id,
@@ -154,39 +159,36 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
       }
     );
 
-    // Navigate based on notification type
     if (notification.data?.bookingId) {
       navigate(`/customer/book-service/detail/${notification.data.bookingId}`);
     }
   };
 
   const handleMarkAllAsRead = () => {
-    // Mark all as read in store
     markAllAsRead();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:bg-white">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto min-h-screen bg-gray-50 sm:bg-white">
       <div className="sticky top-0 z-10 bg-white border-b px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-rose-100 rounded-full">
-              <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-rose-500" />
+              <Bell className="h-4 w-4 text-rose-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Notifications
+                <h1 className="text-md sm:text-lg font-semibold text-gray-900">
+                  {t("modelNotifications.title")}
                 </h1>
                 {unreadCount > 0 && (
                   <Badge className="bg-rose-500 text-white text-xs px-2 py-0.5">
-                    {unreadCount} new
+                    {unreadCount} {t("modelNotifications.new")}
                   </Badge>
                 )}
               </div>
               <p className="text-xs sm:text-sm text-gray-500">
-                Stay updated with your bookings
+                {t("modelNotifications.subtitle")}
               </p>
             </div>
           </div>
@@ -194,7 +196,7 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
             {isConnected && (
               <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                Live
+                {t("modelNotifications.live")}
               </span>
             )}
             {unreadCount > 0 && (
@@ -207,7 +209,7 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
                   className="text-xs sm:text-sm text-rose-600 border-rose-200 hover:bg-rose-50"
                   onClick={handleMarkAllAsRead}
                 >
-                  Mark all read
+                  {t("modelNotifications.markAllRead")}
                 </Button>
               </form>
             )}
@@ -215,71 +217,80 @@ export default function CustomerNotifications({ loaderData }: PageProps) {
         </div>
       </div>
 
-      {/* Notifications List */}
       <div className="max-w-4xl mx-auto">
         {notifications.length > 0 ? (
           <div className="bg-white sm:bg-transparent">
-            {notifications.map((notification, index) => (
+            {visibleNotifications.map((notification, index) => (
               <div
                 key={notification.id}
                 className={`
-                  flex items-center gap-4 px-4 sm:px-8 py-4 sm:py-5 cursor-pointer
+                  flex items-center gap-4 px-2 sm:px-4 py-4 sm:py-5 cursor-pointer
                   transition-colors hover:bg-gray-50
                   ${!notification.isRead ? "bg-rose-50/50 sm:bg-rose-50/30" : ""}
-                  ${index !== notifications.length - 1 ? "border-b border-gray-100" : ""}
+                  ${index !== visibleNotifications.length - 1 ? "border-b border-gray-100" : ""}
                 `}
                 onClick={() => handleNotificationClick(notification)}
               >
-                {/* Unread indicator */}
                 <div className="flex-shrink-0 w-2">
                   {!notification.isRead && (
                     <div className="w-2 h-2 bg-rose-500 rounded-full" />
                   )}
                 </div>
 
-                {/* Icon */}
                 <div className={`
-                  flex-shrink-0 p-2.5 sm:p-3 rounded-full
-                  ${notification.isRead ? "bg-gray-100" : "bg-white shadow-sm"}
+                  flex-shrink-0 p-2 rounded-full
+                  ${notification.isRead ? "bg-gray-100" : "bg-gray-100 shadow-sm"}
                 `}>
                   {getNotificationIcon(notification.type, !!notification.isRead)}
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className={`
+                  <div className="flex items-center justify-start gap-2">
+                    <h3 className={`
                     text-sm sm:text-base font-medium truncate
                     ${notification.isRead ? "text-gray-500" : "text-gray-900"}
                   `}>
-                    {notification.title}
-                  </h3>
+                      {notification.title}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-gray-400">
+                      {formatRelativeTime(notification.createdAt, t)}
+                    </p>
+                  </div>
                   <p className={`
                     text-xs sm:text-sm mt-0.5 line-clamp-2
                     ${notification.isRead ? "text-gray-400" : "text-gray-600"}
                   `}>
                     {notification.message}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
-                    {formatRelativeTime(notification.createdAt)}
-                  </p>
                 </div>
 
-                {/* Arrow */}
                 <ChevronRight className={`
                   flex-shrink-0 h-5 w-5
-                  ${notification.isRead ? "text-gray-300" : "text-gray-400"}
+                  ${notification.isRead ? "text-gray-500" : "text-gray-500"}
                 `} />
               </div>
             ))}
+            {hasMore && (
+              <div className="py-4 text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                  onClick={handleLoadMore}
+                >
+                  {t("modelNotifications.loadMore")}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-20 px-4">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bell className="h-10 w-10 text-gray-300" />
             </div>
-            <h3 className="text-gray-800 font-medium text-lg mb-2">No notifications</h3>
+            <h3 className="text-gray-800 font-medium text-lg mb-2">{t("modelNotifications.noNotifications")}</h3>
             <p className="text-gray-500 text-sm sm:text-base">
-              You'll see booking updates and messages here
+              {t("modelNotifications.noNotificationsDescription")}
             </p>
           </div>
         )}

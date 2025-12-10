@@ -1677,5 +1677,23 @@
       "failed": "ไม่สามารถยืนยันบริการได้",
       "invalidRequest": "คำขอไม่ถูกต้อง"
     }
+  },
+  "modelNotifications": {
+    "title": "การแจ้งเตือน",
+    "new": "ใหม่",
+    "subtitle": "ติดตามการจองของคุณ",
+    "live": "สด",
+    "markAllRead": "อ่านทั้งหมด",
+    "noNotifications": "ไม่มีการแจ้งเตือน",
+    "noNotificationsYet": "ยังไม่มีการแจ้งเตือน",
+    "noNotificationsDescription": "คุณจะเห็นการอัปเดตการจองและข้อความที่นี่",
+    "seeAll": "ดูการแจ้งเตือนทั้งหมด",
+    "loadMore": "โหลดเพิ่มเติม",
+    "time": {
+      "justNow": "เมื่อสักครู่",
+      "minutesAgo": "{{count}} นาทีที่แล้ว",
+      "hoursAgo": "{{count}} ชั่วโมงที่แล้ว",
+      "daysAgo": "{{count}} วันที่แล้ว"
+    }
   }
 }

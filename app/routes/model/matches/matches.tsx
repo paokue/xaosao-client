@@ -423,7 +423,6 @@ export default function ModelMatchesPage() {
                             newParams.set("passedOnly", "true");
                             newParams.set("passedPage", "1");
                         }
-
                         navigate(`?${newParams.toString()}`, { replace: true });
                     }}
                     className="w-full space-y-2"

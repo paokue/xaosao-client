@@ -1673,5 +1673,23 @@
       "failed": "ບໍ່ສາມາດຢືນຢັນບໍລິການໄດ້",
       "invalidRequest": "ຄຳຂໍບໍ່ຖືກຕ້ອງ"
     }
+  },
+  "modelNotifications": {
+    "title": "ການແຈ້ງເຕືອນ",
+    "new": "ໃໝ່",
+    "subtitle": "ຕິດຕາມການຈອງຂອງທ່ານ",
+    "live": "ສົດ",
+    "markAllRead": "ອ່ານທັງໝົດ",
+    "noNotifications": "ບໍ່ມີການແຈ້ງເຕືອນ",
+    "noNotificationsYet": "ຍັງບໍ່ມີການແຈ້ງເຕືອນ",
+    "noNotificationsDescription": "ທ່ານຈະເຫັນການອັບເດດການຈອງ ແລະ ຂໍ້ຄວາມຢູ່ບ່ອນນີ້",
+    "seeAll": "ເບິ່ງການແຈ້ງເຕືອນທັງໝົດ",
+    "loadMore": "ໂຫຼດເພີ່ມເຕີມ",
+    "time": {
+      "justNow": "ຫາກໍ່ນີ້",
+      "minutesAgo": "{{count}} ນາທີກ່ອນ",
+      "hoursAgo": "{{count}} ຊົ່ວໂມງກ່ອນ",
+      "daysAgo": "{{count}} ມື້ກ່ອນ"
+    }
   }
 }

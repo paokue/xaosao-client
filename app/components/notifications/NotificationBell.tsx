@@ -1,8 +1,9 @@
+import { Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useFetcher } from "react-router";
-import { Bell } from "lucide-react";
-import { useNotificationStore, type Notification } from "~/stores/notification.store";
+import { useTranslation } from "react-i18next";
 import { useNotifications } from "~/hooks/useNotifications";
+import { useNotificationStore, type Notification } from "~/stores/notification.store";
 import {
   Popover,
   PopoverContent,
@@ -17,7 +18,7 @@ interface NotificationBellProps {
 }
 
 // Format relative time
-function formatRelativeTime(dateString: string) {
+function formatRelativeTime(dateString: string, t: (key: string, options?: any) => string) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -25,10 +26,10 @@ function formatRelativeTime(dateString: string) {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t("modelNotifications.time.justNow");
+  if (diffMins < 60) return t("modelNotifications.time.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("modelNotifications.time.hoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("modelNotifications.time.daysAgo", { count: diffDays });
 
   return date.toLocaleDateString();
 }
@@ -38,6 +39,7 @@ export function NotificationBell({
   initialCount = 0,
   initialNotifications = []
 }: NotificationBellProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const fetcher = useFetcher();
 
@@ -104,11 +106,11 @@ export function NotificationBell({
       </PopoverTrigger>
       <PopoverContent className="w-70 p-0" align="end">
         <div className="flex items-center justify-between p-3">
-          <h4 className="font-medium text-sm">Notifications</h4>
+          <h4 className="font-medium text-sm">{t("modelNotifications.title")}</h4>
           {isConnected && (
             <span className="flex items-center gap-1 text-xs text-emerald-600">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              Live
+              {t("modelNotifications.live")}
             </span>
           )}
         </div>
@@ -135,7 +137,7 @@ export function NotificationBell({
                         {notification.message}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-1">
-                        {formatRelativeTime(notification.createdAt)}
+                        {formatRelativeTime(notification.createdAt, t)}
                       </p>
                     </div>
                   </div>
@@ -145,7 +147,7 @@ export function NotificationBell({
           ) : (
             <div className="flex flex-col items-center justify-center py-8">
               <Bell className="h-10 w-10 text-gray-300 mb-2" />
-              <p className="text-sm text-gray-500">No notifications yet</p>
+              <p className="text-sm text-gray-500">{t("modelNotifications.noNotificationsYet")}</p>
             </div>
           )}
         </div>
@@ -155,7 +157,7 @@ export function NotificationBell({
             className="block w-full text-center text-sm text-rose-600 hover:text-rose-700 py-1"
             onClick={() => setIsOpen(false)}
           >
-            See all notifications
+            {t("modelNotifications.seeAll")}
           </Link>
         </div>
       </PopoverContent>

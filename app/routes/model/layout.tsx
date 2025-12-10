@@ -108,7 +108,7 @@ export default function ModelLayout({ loaderData }: LayoutProps) {
         <div className="flex min-h-screen w-full relative">
             <div className="w-1/5 p-6 hidden sm:flex flex-col items-start justify-between sm:sticky sm:top-0 sm:h-screen">
                 <div className="w-full">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
                             <div className="relative">
                                 <div className="w-14 h-14 border-[2px] border-rose-500 rounded-full flex items-center justify-center hover:border-rose-600">
