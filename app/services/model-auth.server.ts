@@ -55,10 +55,12 @@ interface ModelRegistrationData {
   user_name: string;
   gender: "male" | "female" | "other";
   profile_image?: string;
+  user_type: "customer" | "model";
 }
 
 interface ModelLogin {
   phone_number: string;
+  user_type: "customer" | "model";
 }
 
 interface LoginSuccessResponse {
@@ -323,6 +325,7 @@ export async function modelLogin({
 
   const modelData: ModelLogin = {
     phone_number: String(whatsapp),
+    user_type: "model",
   };
 
   const chatLogin = await loginModelOnChat(modelData);
@@ -497,6 +500,7 @@ export async function modelRegister(
         user_name: modelData.username,
         gender: modelData.gender,
         profile_image: modelData.profile || "",
+        user_type: "model",
       };
 
       const chatRes = await registerModelWithoutOTP(modelChatData);

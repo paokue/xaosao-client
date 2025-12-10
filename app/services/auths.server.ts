@@ -41,10 +41,12 @@ interface UserRegistrationData {
   user_name: string;
   gender: "male" | "female" | "other";
   profile_image?: string;
+  user_type: "customer" | "model";
 }
 
 interface UserLogin {
   phone_number: string;
+  user_type: "customer" | "model";
 }
 
 interface LoginSuccessResponse {
@@ -302,6 +304,7 @@ export async function customerLogin({
 
   const userData: UserLogin = {
     phone_number: String(whatsapp),
+    user_type: "customer",
   };
 
   const chatLogin = await loginOnChat(userData);
@@ -476,6 +479,7 @@ export async function customerRegister(
         user_name: customerData.username,
         gender: customerData.gender,
         profile_image: customerData.profile || "",
+        user_type: "customer",
       };
 
       const chatRes = await registerUserWithoutOTP(userData);
