@@ -12,8 +12,8 @@ import {
     FilePenLine,
     MoreVertical,
 } from 'lucide-react';
-import { Link, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useNavigation, useSearchParams, type LoaderFunction } from 'react-router';
 
 // Services and Utils
 import { formatCurrency } from '~/utils';
@@ -25,9 +25,9 @@ import type { ITransactionResponse } from '~/interfaces/transaction';
 // components
 import { Button } from '~/components/ui/button';
 import Pagination from '~/components/ui/pagination';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import { requireUserSession } from '~/services/auths.server';
 import { getCustomerTransactions, getWalletByCustomerId } from '~/services/wallet.server';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 
 interface LoaderReturn {
     wallet: IWalletResponse;

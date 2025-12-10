@@ -376,7 +376,6 @@ export default function WalletTopUpPage() {
                                         </label>
                                     </div>
                                 )}
-                                {/* always keep input in form */}
                                 <input
                                     type="file"
                                     accept="image/*,application/pdf"
@@ -425,10 +424,6 @@ export default function WalletTopUpPage() {
     return (
         <Modal onClose={closeHandler} className="w-full h-screen sm:h-auto sm:w-2/4 space-y-2 py-8 px-4 sm:px-4 sm:p-0 border">
             <Form method="post" encType="multipart/form-data" className="space-y-4 mt-10 sm:mt-0">
-                {/* <div className="flex items-center justify-start space-x-2" onClick={closeHandler}>
-                    <ArrowLeft className="text-gray-500" size={20} />
-                    <span>{t('wallet.topup.backToWallet')}</span>
-                </div> */}
                 <div className="space-y-1">
                     <h1 className="text-lg text-gray-800">
                         {step === 1 && t('wallet.topup.steps.amount')}
@@ -473,6 +468,7 @@ export default function WalletTopUpPage() {
                             </button>}
                         {step > 1 && step < 4 && (
                             <button
+                                type="button"
                                 onClick={() => setStep(step - 1)}
                                 className="cursor-pointer px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                             >

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Loader, Settings, Upload, UserRoundPen, X } from 'lucide-react';
+import { AlertCircle, BadgeCheck, ChevronLeft, ChevronRight, Loader, Upload, UserRoundPen, X } from 'lucide-react';
 import { redirect, useActionData, useFetcher, useNavigate, useNavigation, useSearchParams, type ActionFunctionArgs, type LoaderFunction } from 'react-router';
 
 // components
@@ -149,6 +149,19 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
 
     const DEFAULT_IMAGE = "https://coffective.com/wp-content/uploads/2018/06/default-featured-image.png.jpg";
     const isLoading = navigation.state === "loading";
+
+    const getInterests = (): string[] => {
+        if (!customerData?.interests) return [];
+        if (Array.isArray(customerData.interests)) return customerData.interests;
+        if (typeof customerData.interests === 'string') {
+            try {
+                return JSON.parse(customerData.interests);
+            } catch {
+                return [];
+            }
+        }
+        return Object.values(customerData.interests);
+    };
     const isUpdating =
         navigation.state !== "idle" && navigation.formMethod === "PATCH"
     const isSubmitting =
@@ -377,7 +390,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
 
                         <div className="flex items-center justify-between w-full">
                             <div className="w-full text-center border-r">
-                                <div className="text-xl text-black mb-1">{customerData.interactions.passCount}</div>
+                                <div className="text-xl text-black mb-1">{customerData.interactions.passCount ?? 0}</div>
                                 <div className="text-xs text-rose-600 uppercase font-bold">{t('profile.passYou')}</div>
                             </div>
                             <div className="w-full text-center">
@@ -426,7 +439,7 @@ export default function ProfilePage({ loaderData }: TransactionProps) {
                         <div className="hidden sm:block w-full mb-8">
                             <h3 className="text-sm font-semibold text-gray-800 mb-3">{t('profile.interests')}</h3>
                             <div className="flex flex-wrap gap-2">
-                                {Object.values(customerData?.interests ?? {}).map((interest, index) => (
+                                {getInterests().map((interest, index) => (
                                     <Badge
                                         key={index}
                                         variant="outline"
