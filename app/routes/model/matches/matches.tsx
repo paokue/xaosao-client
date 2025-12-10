@@ -30,7 +30,7 @@ import Pagination from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 // services
-import { requireModelSession } from "~/services/model-auth.server";
+import { requireModelSession, getModelTokenFromSession } from "~/services/model-auth.server";
 import {
     getForYouCustomers,
     getCustomersWhoLikedMe,
@@ -38,6 +38,7 @@ import {
     createModelInteraction,
     getModelDashboardData,
 } from "~/services/model.server";
+import { modelAddFriend } from "~/services/interaction.server";
 import { capitalize } from "~/utils/functions/textFormat";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
@@ -118,12 +119,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
         location: url.searchParams.get("location") || undefined,
         relationshipStatus:
             url.searchParams.get("relationshipStatus") || undefined,
-        modelLat: url.searchParams.get("lat")
-            ? Number(url.searchParams.get("lat"))
-            : undefined,
-        modelLng: url.searchParams.get("lng")
-            ? Number(url.searchParams.get("lng"))
-            : undefined,
+        // Use model's GPS coordinates from database for distance filtering
+        modelLat: modelLatitude || undefined,
+        modelLng: modelLongitude || undefined,
     };
 
     // Flags to determine partial loads
@@ -240,6 +238,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const pass = formData.get("pass");
     const customerIdEntry = formData.get("customerId");
     const addFriend = formData.get("isFriend") === "true";
+    const token = await getModelTokenFromSession(request);
 
     if (!customerIdEntry || typeof customerIdEntry !== "string") {
         return {
@@ -252,8 +251,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (request.method === "POST") {
         if (addFriend === true) {
-            // TODO: Implement add friend functionality for model side
-            return redirect(`/model/matches?toastMessage=Add+friend+functionality+coming+soon!&toastType=warning`);
+            try {
+                const res = await modelAddFriend(modelId, customerId, token);
+                if (res?.success) {
+                    return redirect(`/model/matches?toastMessage=Add+friend+successfully!&toastType=success`);
+                }
+            } catch (error: any) {
+                return redirect(`/model/matches?toastMessage=${encodeURIComponent(error.message)}&toastType=error`);
+            }
         } else {
             const actionValue = (like ?? pass) as FormDataEntryValue | null;
             if (!actionValue || typeof actionValue !== "string") {
@@ -319,22 +324,18 @@ export default function ModelMatchesPage() {
     } = useLoaderData<LoaderReturn>();
     const actionData = useActionData<typeof action>();
 
-    // local UI state
     const [tabValue, setTabValue] = React.useState<"foryou" | "likeme" | "favourite" | "passed">(
         "foryou"
     );
     const [drawerOpen, setDrawerOpen] = React.useState(false);
 
-    // Show submission overlay while a POST form is being processed
     const isSubmitting =
         navigation.state !== "idle" && navigation.formMethod === "POST";
     const isLoading = navigation.state === "loading";
 
-    // Alert visibility control (auto-hide after 5s)
     const [showAlert, setShowAlert] = React.useState<boolean>(Boolean(actionData));
 
     React.useEffect(() => {
-        // Sync tab with search params when route changes / on mount
         if (searchParams.has("likeMeOnly")) setTabValue("likeme");
         else if (searchParams.has("favouriteOnly")) setTabValue("favourite");
         else if (searchParams.has("passedOnly")) setTabValue("passed");
@@ -342,7 +343,6 @@ export default function ModelMatchesPage() {
     }, [searchParams]);
 
     React.useEffect(() => {
-        // When actionData arrives, show the alert for 5 seconds then hide it.
         if (actionData) {
             setShowAlert(true);
             const timer = setTimeout(() => {
@@ -404,7 +404,6 @@ export default function ModelMatchesPage() {
                 <Tabs
                     value={tabValue}
                     onValueChange={(val) => {
-                        // Keep local tab state for immediate UI responsiveness
                         setTabValue(val as any);
                         const newParams = new URLSearchParams();
 
@@ -425,27 +424,25 @@ export default function ModelMatchesPage() {
                             newParams.set("passedPage", "1");
                         }
 
-                        // Navigate with replace so browser history isn't filled when switching tabs
                         navigate(`?${newParams.toString()}`, { replace: true });
                     }}
                     className="w-full space-y-2"
                 >
                     <TabsList className="w-full">
-                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-xs sm:text-sm">
+                        <TabsTrigger value="foryou" className="cursor-pointer uppercase text-sm">
                             {t('matches.forYou')}
                         </TabsTrigger>
-                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-xs sm:text-sm">
+                        <TabsTrigger value="likeme" className="cursor-pointer uppercase text-sm">
                             {t('matches.likeMe')}
                         </TabsTrigger>
-                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-xs sm:text-sm">
+                        <TabsTrigger value="favourite" className="cursor-pointer uppercase text-sm">
                             {t('matches.favourite')}
                         </TabsTrigger>
-                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-xs sm:text-sm">
+                        <TabsTrigger value="passed" className="cursor-pointer uppercase text-sm">
                             {t('matches.passed')}
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Server action alerts (auto-hide) */}
                     {actionData && showAlert && actionData?.success && (
                         <Alert variant="default" className="border-green-300 text-green-500 bg-green-50">
                             <BadgeCheck className="text-green-600" />
@@ -570,22 +567,6 @@ export default function ModelMatchesPage() {
                                                     <option value="female">{t('matches.female')}</option>
                                                     <option value="male">{t('matches.male')}</option>
                                                     <option value="other">{t('matches.other')}</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-gray-700 font-medium">{t('matches.location')}</label>
-                                                <select
-                                                    name="location"
-                                                    className="w-full mt-2 p-2 border rounded-md focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
-                                                    defaultValue={searchParams.get("location") || ""}
-                                                >
-                                                    <option value="">{t('matches.anyLocation')}</option>
-                                                    <option value="Turkey">Turkey</option>
-                                                    <option value="Spain">Spain</option>
-                                                    <option value="France">France</option>
-                                                    <option value="USA">USA</option>
-                                                    <option value="UK">UK</option>
                                                 </select>
                                             </div>
 

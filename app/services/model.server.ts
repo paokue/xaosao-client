@@ -1428,17 +1428,23 @@ export async function getForYouCustomers(
   }
 
   // Age range filter
+  // To include someone aged X, they could be born anywhere from (today - X - 1 years + 1 day) to (today - X years)
+  // For age range [minAge, maxAge]:
+  // - Youngest (minAge): DOB <= (today - minAge years)
+  // - Oldest (maxAge): DOB > (today - maxAge - 1 years) which means DOB >= (today - maxAge - 1 years + 1 day)
   if (ageRange) {
     const today = new Date();
+    // maxDate: youngest person in range (age = minAge)
     const maxDate = new Date(
       today.getFullYear() - ageRange[0],
       today.getMonth(),
       today.getDate()
     );
+    // minDate: oldest person in range (age = maxAge, could be born up to almost maxAge+1 years ago)
     const minDate = new Date(
-      today.getFullYear() - ageRange[1],
+      today.getFullYear() - ageRange[1] - 1,
       today.getMonth(),
-      today.getDate()
+      today.getDate() + 1
     );
     whereClause.dob = {
       gte: minDate,
@@ -1561,6 +1567,16 @@ export async function getCustomersWhoLikedMe(
               action: true,
             },
           },
+          friend_contacts: {
+            where: {
+              modelId: modelId,
+            },
+            select: {
+              id: true,
+              customerId: true,
+              contactType: true,
+            },
+          },
         },
       },
     },
@@ -1571,7 +1587,15 @@ export async function getCustomersWhoLikedMe(
     take: perPage,
   });
 
-  const customers = interactions.map((i) => i.customer);
+  // Add isContact and modelAction derived fields
+  const customers = interactions.map((i) => ({
+    ...i.customer,
+    isContact: i.customer.friend_contacts.length > 0,
+    modelAction:
+      i.customer.model_interactions.length > 0
+        ? i.customer.model_interactions[0].action
+        : null,
+  }));
 
   const totalPages = Math.ceil(totalCount / perPage);
 
@@ -1625,6 +1649,16 @@ export async function getCustomersByModelInteraction(
               action: true,
             },
           },
+          friend_contacts: {
+            where: {
+              modelId: modelId,
+            },
+            select: {
+              id: true,
+              customerId: true,
+              contactType: true,
+            },
+          },
         },
       },
     },
@@ -1635,7 +1669,15 @@ export async function getCustomersByModelInteraction(
     take: perPage,
   });
 
-  const customers = interactions.map((i) => i.customer);
+  // Add isContact and modelAction derived fields
+  const customers = interactions.map((i) => ({
+    ...i.customer,
+    isContact: i.customer.friend_contacts.length > 0,
+    modelAction:
+      i.customer.model_interactions.length > 0
+        ? i.customer.model_interactions[0].action
+        : null,
+  }));
 
   const totalPages = Math.ceil(totalCount / perPage);
 

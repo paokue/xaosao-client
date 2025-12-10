@@ -1,5 +1,5 @@
 import { Form, useNavigate } from "react-router";
-import { MapPin, MessageSquareText, Heart, X, UserPlus, User } from "lucide-react";
+import { MapPin, MessageSquareText, Heart, X, UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // swiper imports
@@ -53,8 +53,13 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                                     onClick={() => navigate(`/model/customer-profile/${customer.id}`)}
                                 />
                             ) : (
-                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                    <User className="w-16 h-16 text-gray-400" />
+                                <div
+                                    className="w-full h-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center cursor-pointer"
+                                    onClick={() => navigate(`/model/customer-profile/${customer.id}`)}
+                                >
+                                    <div className="text-6xl font-bold text-rose-300">
+                                        {customer.firstName?.charAt(0)?.toUpperCase() || "?"}
+                                    </div>
                                 </div>
                             )}
                         </SwiperSlide>
@@ -126,8 +131,8 @@ export default function CustomerCard({ customer, modelLatitude, modelLongitude }
                                     Number(customer.longitude),
                                     Number(modelLatitude),
                                     Number(modelLongitude)
-                                ).toFixed(1)} ${t('matches.km')}`
-                                : `-- ${t('matches.km')}`
+                                ).toFixed(1)} km`
+                                : `-- km`
                             }
                         </span>
                     </div>
