@@ -3,6 +3,7 @@ import { default as bcrypt } from "bcryptjs";
 import { differenceInYears } from "date-fns";
 import { createAuditLogs } from "./log.server";
 import { FieldValidationError } from "./base.server";
+import { notifyCustomerLikeReceived } from "./notification.server";
 
 const { compare, hash } = bcrypt;
 
@@ -1726,6 +1727,22 @@ export async function createModelInteraction(
       data: { action },
     });
 
+    // Send notification if changing to LIKE
+    if (action === "LIKE") {
+      try {
+        const model = await prisma.model.findUnique({
+          where: { id: modelId },
+          select: { firstName: true, lastName: true },
+        });
+        const modelName = model
+          ? `${model.firstName || ""} ${model.lastName || ""}`.trim()
+          : "Someone";
+        await notifyCustomerLikeReceived(customerId, modelId, modelName);
+      } catch (notifyError) {
+        console.error("Failed to send like notification:", notifyError);
+      }
+    }
+
     return {
       success: true,
       message: `Successfully ${action === "LIKE" ? "liked" : "passed"} customer`,
@@ -1740,6 +1757,22 @@ export async function createModelInteraction(
       action,
     },
   });
+
+  // Send notification when model likes a customer
+  if (action === "LIKE") {
+    try {
+      const model = await prisma.model.findUnique({
+        where: { id: modelId },
+        select: { firstName: true, lastName: true },
+      });
+      const modelName = model
+        ? `${model.firstName || ""} ${model.lastName || ""}`.trim()
+        : "Someone";
+      await notifyCustomerLikeReceived(customerId, modelId, modelName);
+    } catch (notifyError) {
+      console.error("Failed to send like notification:", notifyError);
+    }
+  }
 
   return {
     success: true,

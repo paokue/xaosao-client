@@ -1,6 +1,12 @@
 import { prisma } from "./database.server";
 import { FieldValidationError } from "./base.server";
 import type { InteractionAction } from "@prisma/client";
+import {
+  notifyModelLikeReceived,
+  notifyCustomerLikeReceived,
+  notifyModelFriendRequest,
+  notifyCustomerFriendRequest,
+} from "./notification.server";
 
 interface ChatInputCredentials {
   phone_number: string;
@@ -55,6 +61,22 @@ export async function createCustomerInteraction(
     });
 
     if (res1.id) {
+      // Send notification when customer likes a model
+      if (actionType === "LIKE") {
+        try {
+          const customer = await prisma.customer.findUnique({
+            where: { id: customerId },
+            select: { firstName: true, lastName: true },
+          });
+          const customerName = customer
+            ? `${customer.firstName || ""} ${customer.lastName || ""}`.trim()
+            : "Someone";
+          await notifyModelLikeReceived(modelId, customerId, customerName);
+        } catch (notifyError) {
+          console.error("Failed to send like notification:", notifyError);
+        }
+      }
+
       return {
         success: true,
         error: false,
@@ -116,7 +138,12 @@ export async function customerAddFriend(
       },
     });
 
-    // console.log("PK MODEL:::", model);
+    const customer = await prisma.customer.findFirst({
+      where: {
+        id: adderId,
+      },
+      select: { firstName: true, lastName: true },
+    });
 
     const existing = await prisma.friend_contacts.findUnique({
       where: {
@@ -145,6 +172,16 @@ export async function customerAddFriend(
     });
 
     if (res.id) {
+      // Send friend request notification to model
+      try {
+        const customerName = customer
+          ? `${customer.firstName || ""} ${customer.lastName || ""}`.trim()
+          : "Someone";
+        await notifyModelFriendRequest(contactId, adderId, customerName);
+      } catch (notifyError) {
+        console.error("Failed to send friend request notification:", notifyError);
+      }
+
       const inputData: ChatInputCredentials = {
         phone_number: String(model?.whatsapp),
         full_name: model?.firstName + " " + model?.lastName,
@@ -152,16 +189,34 @@ export async function customerAddFriend(
         added_by_me: adderId,
       };
 
-      const res = await createContact(inputData, token);
+      try {
+        const contactRes = await createContact(inputData, token);
 
-      if (res.success) {
+        if (contactRes.success) {
+          return {
+            success: true,
+            error: false,
+            message: "Add friend success!",
+          };
+        }
+      } catch (contactError: any) {
+        console.error("Create chat contact failed:", contactError);
+        // Friend is already added to database, just chat contact creation failed
+        // Return success anyway
         return {
           success: true,
           error: false,
-          message: "Add friend success!",
+          message: "Friend added successfully! (Chat contact pending)",
         };
       }
     }
+
+    // If we get here, something went wrong
+    return {
+      success: false,
+      error: true,
+      message: "Failed to add friend!",
+    };
   } catch (error: any) {
     console.log("CUSTOMER_ADD_FRIEND:", error);
     throw new FieldValidationError({
@@ -182,6 +237,13 @@ export async function modelAddFriend(
       where: {
         id: contactId,
       },
+    });
+
+    const model = await prisma.model.findFirst({
+      where: {
+        id: adderId,
+      },
+      select: { firstName: true, lastName: true },
     });
 
     const existing = await prisma.friend_contacts.findUnique({
@@ -211,6 +273,16 @@ export async function modelAddFriend(
     });
 
     if (res.id) {
+      // Send friend request notification to customer
+      try {
+        const modelName = model
+          ? `${model.firstName || ""} ${model.lastName || ""}`.trim()
+          : "Someone";
+        await notifyCustomerFriendRequest(contactId, adderId, modelName);
+      } catch (notifyError) {
+        console.error("Failed to send friend request notification:", notifyError);
+      }
+
       const inputData: ChatInputCredentials = {
         phone_number: String(customer?.whatsapp),
         full_name: customer?.firstName + " " + customer?.lastName,

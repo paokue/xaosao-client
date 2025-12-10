@@ -8,6 +8,15 @@ import {
   CheckCircle2,
   ChevronRight,
   MessageCircle,
+  Heart,
+  Users,
+  UserPlus,
+  UserCheck,
+  MessageSquare,
+  Eye,
+  BadgeCheck,
+  Wallet,
+  Sparkles,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -69,6 +78,7 @@ export async function action({ request }: { request: Request }) {
 
 function getNotificationIcon(type: string, isRead: boolean) {
   switch (type) {
+    // Booking notifications
     case "booking_created":
       return <Calendar className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-blue-500"}`} />;
     case "booking_confirmed":
@@ -85,6 +95,32 @@ function getNotificationIcon(type: string, isRead: boolean) {
       return <CreditCard className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-green-500"}`} />;
     case "booking_disputed":
       return <MessageCircle className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-orange-500"}`} />;
+    // Social/Matching notifications
+    case "like_received":
+      return <Heart className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-rose-500"}`} />;
+    case "match_new":
+      return <Users className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-pink-500"}`} />;
+    case "friend_request":
+      return <UserPlus className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-blue-500"}`} />;
+    case "friend_accepted":
+      return <UserCheck className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
+    // Chat notifications
+    case "new_message":
+      return <MessageSquare className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-indigo-500"}`} />;
+    // Profile notifications
+    case "profile_viewed":
+      return <Eye className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-cyan-500"}`} />;
+    case "profile_approved":
+    case "profile_verified":
+      return <BadgeCheck className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-emerald-500"}`} />;
+    // Transaction notifications
+    case "withdraw_approved":
+      return <Wallet className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-green-500"}`} />;
+    case "withdraw_rejected":
+      return <Wallet className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-red-500"}`} />;
+    // System notifications
+    case "welcome":
+      return <Sparkles className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-amber-500"}`} />;
     default:
       return <Bell className={`h-4 w-4 ${isRead ? "text-gray-400" : "text-gray-500"}`} />;
   }

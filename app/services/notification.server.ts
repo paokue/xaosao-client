@@ -6,6 +6,7 @@ import { EventEmitter } from "events";
 // ========================================
 
 export type NotificationType =
+  // Booking notifications
   | "booking_created"
   | "booking_confirmed"
   | "booking_rejected"
@@ -17,7 +18,24 @@ export type NotificationType =
   | "booking_disputed"
   | "payment_released"
   | "payment_refunded"
-  | "match_new";
+  // Social/Matching notifications
+  | "like_received"
+  | "match_new"
+  | "friend_request"
+  | "friend_accepted"
+  // Chat notifications
+  | "new_message"
+  // Profile notifications
+  | "profile_viewed"
+  | "profile_approved"
+  | "profile_verified"
+  // Transaction notifications
+  | "deposit_approved"
+  | "deposit_rejected"
+  | "withdraw_approved"
+  | "withdraw_rejected"
+  // System notifications
+  | "welcome";
 
 interface NotificationPayload {
   type: NotificationType;
@@ -554,5 +572,341 @@ export async function notifyAutoReleasePayment(
     title: "Booking Auto-Completed",
     message: `Your booking has been automatically completed after the 48-hour confirmation window.`,
     data: { bookingId },
+  });
+}
+
+// ========================================
+// Social/Matching Notification Helpers
+// ========================================
+
+/**
+ * Send notification when someone likes a model's profile
+ */
+export async function notifyModelLikeReceived(
+  modelId: string,
+  customerId: string,
+  customerName: string
+) {
+  await createModelNotification(modelId, {
+    type: "like_received",
+    title: "New Like",
+    message: `${customerName} liked your profile.`,
+    data: { customerId },
+  });
+}
+
+/**
+ * Send notification when someone likes a customer's profile
+ */
+export async function notifyCustomerLikeReceived(
+  customerId: string,
+  modelId: string,
+  modelName: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "like_received",
+    title: "New Like",
+    message: `${modelName} liked your profile.`,
+    data: { modelId },
+  });
+}
+
+/**
+ * Send notification when a new match is created (mutual like)
+ */
+export async function notifyNewMatch(
+  modelId: string,
+  customerId: string,
+  modelName: string,
+  customerName: string
+) {
+  // Notify model
+  await createModelNotification(modelId, {
+    type: "match_new",
+    title: "New Match!",
+    message: `You and ${customerName} have matched! Start a conversation now.`,
+    data: { customerId },
+  });
+
+  // Notify customer
+  await createCustomerNotification(customerId, {
+    type: "match_new",
+    title: "New Match!",
+    message: `You and ${modelName} have matched! Start a conversation now.`,
+    data: { modelId },
+  });
+}
+
+/**
+ * Send notification when model receives a friend request
+ */
+export async function notifyModelFriendRequest(
+  modelId: string,
+  customerId: string,
+  customerName: string
+) {
+  await createModelNotification(modelId, {
+    type: "friend_request",
+    title: "Friend Request",
+    message: `${customerName} sent you a friend request.`,
+    data: { customerId },
+  });
+}
+
+/**
+ * Send notification when customer receives a friend request
+ */
+export async function notifyCustomerFriendRequest(
+  customerId: string,
+  modelId: string,
+  modelName: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "friend_request",
+    title: "Friend Request",
+    message: `${modelName} sent you a friend request.`,
+    data: { modelId },
+  });
+}
+
+/**
+ * Send notification when friend request is accepted - notify model
+ */
+export async function notifyModelFriendAccepted(
+  modelId: string,
+  customerId: string,
+  customerName: string
+) {
+  await createModelNotification(modelId, {
+    type: "friend_accepted",
+    title: "Friend Request Accepted",
+    message: `${customerName} accepted your friend request.`,
+    data: { customerId },
+  });
+}
+
+/**
+ * Send notification when friend request is accepted - notify customer
+ */
+export async function notifyCustomerFriendAccepted(
+  customerId: string,
+  modelId: string,
+  modelName: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "friend_accepted",
+    title: "Friend Request Accepted",
+    message: `${modelName} accepted your friend request.`,
+    data: { modelId },
+  });
+}
+
+// ========================================
+// Chat Notification Helpers
+// ========================================
+
+/**
+ * Send notification for new message to model
+ */
+export async function notifyModelNewMessage(
+  modelId: string,
+  customerId: string,
+  customerName: string,
+  messagePreview: string,
+  conversationId?: string
+) {
+  await createModelNotification(modelId, {
+    type: "new_message",
+    title: "New Message",
+    message: `${customerName}: ${messagePreview.substring(0, 50)}${messagePreview.length > 50 ? "..." : ""}`,
+    data: { customerId, conversationId },
+  });
+}
+
+/**
+ * Send notification for new message to customer
+ */
+export async function notifyCustomerNewMessage(
+  customerId: string,
+  modelId: string,
+  modelName: string,
+  messagePreview: string,
+  conversationId?: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "new_message",
+    title: "New Message",
+    message: `${modelName}: ${messagePreview.substring(0, 50)}${messagePreview.length > 50 ? "..." : ""}`,
+    data: { modelId, conversationId },
+  });
+}
+
+// ========================================
+// Profile Notification Helpers
+// ========================================
+
+/**
+ * Send notification when someone views model's profile
+ */
+export async function notifyModelProfileViewed(
+  modelId: string,
+  customerId: string,
+  customerName: string
+) {
+  await createModelNotification(modelId, {
+    type: "profile_viewed",
+    title: "Profile Viewed",
+    message: `${customerName} viewed your profile.`,
+    data: { customerId },
+  });
+}
+
+/**
+ * Send notification when someone views customer's profile
+ */
+export async function notifyCustomerProfileViewed(
+  customerId: string,
+  modelId: string,
+  modelName: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "profile_viewed",
+    title: "Profile Viewed",
+    message: `${modelName} viewed your profile.`,
+    data: { modelId },
+  });
+}
+
+/**
+ * Send notification when model profile is approved by admin
+ */
+export async function notifyModelProfileApproved(modelId: string) {
+  await createModelNotification(modelId, {
+    type: "profile_approved",
+    title: "Profile Approved",
+    message: "Your profile has been approved! You can now receive booking requests.",
+    data: {},
+  });
+}
+
+/**
+ * Send notification when model identity is verified
+ */
+export async function notifyModelProfileVerified(modelId: string) {
+  await createModelNotification(modelId, {
+    type: "profile_verified",
+    title: "Profile Verified",
+    message: "Your identity has been verified! Your profile now shows a verification badge.",
+    data: {},
+  });
+}
+
+/**
+ * Send notification when customer identity is verified
+ */
+export async function notifyCustomerProfileVerified(customerId: string) {
+  await createCustomerNotification(customerId, {
+    type: "profile_verified",
+    title: "Profile Verified",
+    message: "Your identity has been verified! Your profile now shows a verification badge.",
+    data: {},
+  });
+}
+
+// ========================================
+// Transaction Notification Helpers
+// ========================================
+
+/**
+ * Send notification when customer deposit is approved
+ */
+export async function notifyCustomerDepositApproved(
+  customerId: string,
+  amount: number,
+  transactionId?: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "deposit_approved",
+    title: "Deposit Approved",
+    message: `Your deposit of ${amount.toLocaleString()} LAK has been approved and added to your wallet.`,
+    data: { amount, transactionId },
+  });
+}
+
+/**
+ * Send notification when customer deposit is rejected
+ */
+export async function notifyCustomerDepositRejected(
+  customerId: string,
+  amount: number,
+  reason?: string,
+  transactionId?: string
+) {
+  await createCustomerNotification(customerId, {
+    type: "deposit_rejected",
+    title: "Deposit Rejected",
+    message: `Your deposit of ${amount.toLocaleString()} LAK has been rejected.${reason ? ` Reason: ${reason}` : ""}`,
+    data: { amount, reason, transactionId },
+  });
+}
+
+/**
+ * Send notification when model withdrawal is approved
+ */
+export async function notifyModelWithdrawApproved(
+  modelId: string,
+  amount: number,
+  transactionId?: string
+) {
+  await createModelNotification(modelId, {
+    type: "withdraw_approved",
+    title: "Withdrawal Approved",
+    message: `Your withdrawal of ${amount.toLocaleString()} LAK has been approved and processed.`,
+    data: { amount, transactionId },
+  });
+}
+
+/**
+ * Send notification when model withdrawal is rejected
+ */
+export async function notifyModelWithdrawRejected(
+  modelId: string,
+  amount: number,
+  reason?: string,
+  transactionId?: string
+) {
+  await createModelNotification(modelId, {
+    type: "withdraw_rejected",
+    title: "Withdrawal Rejected",
+    message: `Your withdrawal request of ${amount.toLocaleString()} LAK has been rejected.${reason ? ` Reason: ${reason}` : ""} The amount has been returned to your wallet.`,
+    data: { amount, reason, transactionId },
+  });
+}
+
+// ========================================
+// System Notification Helpers
+// ========================================
+
+/**
+ * Send welcome notification to new model
+ */
+export async function notifyModelWelcome(modelId: string, modelName: string) {
+  await createModelNotification(modelId, {
+    type: "welcome",
+    title: "Welcome to XaoSao!",
+    message: `Hi ${modelName}! Welcome to XaoSao. Complete your profile to start receiving booking requests.`,
+    data: {},
+  });
+}
+
+/**
+ * Send welcome notification to new customer
+ */
+export async function notifyCustomerWelcome(customerId: string, customerName: string) {
+  await createCustomerNotification(customerId, {
+    type: "welcome",
+    title: "Welcome to XaoSao!",
+    message: `Hi ${customerName}! Welcome to XaoSao. Explore and discover amazing models near you.`,
+    data: {},
   });
 }
